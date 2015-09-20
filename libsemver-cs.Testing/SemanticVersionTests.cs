@@ -259,6 +259,8 @@ namespace McSherry.SemVer
             #region Definitions
             var cmp = new SemanticVersion[]
             {
+                null,
+
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
@@ -310,8 +312,8 @@ namespace McSherry.SemVer
             #endregion
 
             // Test the [CompareTo] method.
-            Assert.AreEqual(cmp[0].CompareTo<SemanticVersion>(cmp[1]),
-                            Ordering.Lesser,
+            Assert.AreEqual(cmp[1].CompareTo<SemanticVersion>(cmp[0]),
+                            Ordering.Greater,
                             "Comparison failed (0).");
             Assert.AreEqual(cmp[1].CompareTo<SemanticVersion>(cmp[2]),
                             Ordering.Lesser,
@@ -331,6 +333,9 @@ namespace McSherry.SemVer
             Assert.AreEqual(cmp[6].CompareTo<SemanticVersion>(cmp[7]),
                             Ordering.Lesser,
                             "Comparison failed (6).");
+            Assert.AreEqual(cmp[7].CompareTo<SemanticVersion>(cmp[8]),
+                            Ordering.Lesser,
+                            "Comparison failed (7).");
 
             // To be extra sure, stick them in a collection, sort it, and
             // check the order they come out of the collection in. We jumble
@@ -339,7 +344,7 @@ namespace McSherry.SemVer
             sl.Sort();
 
             // [cmp] is already in the correct lowest-to-highest order.
-            Assert.IsTrue(sl.SequenceEqual(cmp), "Comparison failed (7).");
+            Assert.IsTrue(sl.SequenceEqual(cmp), "Comparison failed (8).");
         }
     }
 }

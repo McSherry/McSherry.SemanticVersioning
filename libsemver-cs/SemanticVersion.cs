@@ -596,6 +596,11 @@ namespace McSherry.SemVer
         /// </returns>
         public int CompareTo(SemanticVersion semver)
         {
+            // If what we're comparing to is null, then it must
+            // be the lowest precedence because it has no value.
+            if (object.ReferenceEquals(semver, null))
+                return CompareTo_Greater;
+
             #region Three-part Comparison
             // First thing to do is compare the major versions. If one
             // is greater than the other, then we don't need to perform
