@@ -21,7 +21,7 @@ using System;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace McSherry.SemVer
+namespace McSherry.SemanticVersioning
 {
     /// <summary>
     /// <para>

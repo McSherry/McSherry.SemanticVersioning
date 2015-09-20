@@ -23,7 +23,7 @@ using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace McSherry.SemVer
+namespace McSherry.SemanticVersioning
 {
     /// <summary>
     /// <para>

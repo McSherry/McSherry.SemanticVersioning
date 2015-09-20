@@ -25,7 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Numerics;
 
-namespace McSherry.SemVer
+namespace McSherry.SemanticVersioning
 {
     /// <summary>
     /// <para>

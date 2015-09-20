@@ -7,7 +7,7 @@
     <ProjectGuid>{8C0FD5FE-7C51-45C7-A6B6-7D73FA74588F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>McSherry.SemVer</RootNamespace>
+    <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
     <AssemblyName>libsemver-cs</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
