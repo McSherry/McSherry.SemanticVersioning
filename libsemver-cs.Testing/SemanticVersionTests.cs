@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 using System;
+using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -126,6 +127,120 @@ namespace McSherry.SemVer
             // zeroes.
             Assert.IsFalse(SemanticVersion.IsValidIdentifier("0150"),
                            "Unexpected acceptance: numeric leading zero.");
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests that <see cref="SemanticVersion.ToString"/> produces
+        /// the expected result.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Stringifying()
+        {
+            // Make sure that the output is correct for correct input.
+            Assert.AreEqual(new SemanticVersion(1, 2, 3).ToString(), "1.2.3",
+                            "Unexpected [ToString] result (0).");
+
+            Assert.AreEqual(
+                new SemanticVersion(
+                    major:          1,
+                    minor:          2,
+                    patch:          3,
+                    identifiers:    new[] { "rc", "1" },
+                    metadata:       new[] { "201509" }).ToString(),
+                "1.2.3-rc.1+201509",
+                "Unexpected [ToString] result (0).");
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests the <see cref="SemanticVersion"/> constructor to make sure it
+        /// acts as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Constructing()
+        {
+            // Make sure that the expected exceptions are thrown for
+            // invalid input.
+
+            // Negative three-part components
+            new Action(() => new SemanticVersion(-1, 0, 0))
+                .AssertThrows<ArgumentOutOfRangeException>(
+                    "Did not throw on invalid input (0).");
+            new Action(() => new SemanticVersion(0, -1, 0))
+                .AssertThrows<ArgumentOutOfRangeException>(
+                    "Did not throw on invalid input (1).");
+            new Action(() => new SemanticVersion(0, 0, -1))
+                .AssertThrows<ArgumentOutOfRangeException>(
+                    "Did not throw on invalid input (2).");
+
+
+            // Null identifier/metadata collections
+            new Action(delegate
+            {
+                new SemanticVersion(0, 0, 0, null, Enumerable.Empty<string>());
+            }).AssertThrows<ArgumentNullException>(
+                "Did not throw on invalid input (3).");
+
+            new Action(delegate
+            {
+                new SemanticVersion(0, 0, 0, Enumerable.Empty<string>(), null);
+            }).AssertThrows<ArgumentNullException>(
+                "Did not throw on invalid input (4).");
+
+
+            // Identifier/metadata collections *containing* null.
+            new Action(delegate
+            {
+                new SemanticVersion(
+                    major:          0,
+                    minor:          0,
+                    patch:          0,
+                    identifiers:    new string[] { null },
+                    metadata:       Enumerable.Empty<string>()
+                    );
+            }).AssertThrows<ArgumentNullException>(
+                "Did not throw on invalid input (5).");
+
+            new Action(delegate
+            {
+                new SemanticVersion(
+                    major:          0,
+                    minor:          0,
+                    patch:          0,
+                    identifiers:    Enumerable.Empty<string>(),
+                    metadata:       new string[] { null }
+                    );
+            }).AssertThrows<ArgumentNullException>(
+                "Did not throw on invalid input (6).");
+
+
+            // Identifier/metadata collections containing an invalid value.
+            new Action(delegate
+            {
+                new SemanticVersion(
+                    major:          0,
+                    minor:          0,
+                    patch:          0,
+                    identifiers:    new string[] { "0150" }, // Leading zero
+                    metadata:       Enumerable.Empty<string>()
+                    );
+            }).AssertThrowsExact<ArgumentException>(
+                "Did not throw on invalid input (7).");
+
+            new Action(delegate
+            {
+                new SemanticVersion(
+                    major:          0,
+                    minor:          0,
+                    patch:          0,
+                    identifiers:    Enumerable.Empty<string>(),
+                    metadata:       new string[] { "Löffel" } // Invalid character
+                    );
+            }).AssertThrowsExact<ArgumentException>(
+                "Did not throw on invalid input (8).");
         }
     }
 }

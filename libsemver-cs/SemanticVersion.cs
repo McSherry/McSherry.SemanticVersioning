@@ -51,6 +51,7 @@ namespace McSherry.SemVer
     /// </list>
     /// </remarks>
     public sealed class SemanticVersion
+        : IEquatable<SemanticVersion>
     {
         private static readonly Regex _metaRegex;
 
@@ -372,6 +373,157 @@ namespace McSherry.SemVer
         {
             get;
             private set;
+        }
+
+        // object Overrides
+        /// <summary>
+        /// <para>
+        /// Determines whether the specified object is equal to
+        /// the current object.
+        /// </para>
+        /// </summary>
+        /// <param name="obj">
+        /// The object to compare with the current object.
+        /// </param>
+        /// <returns>
+        /// True if the specified and current objects are equal,
+        /// false if otherwise.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This method takes build metadata items into account when comparing,
+        /// and so may return false for equivalent versions with differing build
+        /// metadata.
+        /// </para>
+        /// </remarks>
+        public override bool Equals(object obj)
+        {
+            var sv = obj as SemanticVersion;
+
+            return sv != null && this.Equals(semver: sv);
+        }
+        /// <summary>
+        /// <para>
+        /// Returns the hash code for this instance.
+        /// </para>
+        /// </summary>
+        /// <returns>
+        /// The hash code for this instance.
+        /// </returns>
+        public override int GetHashCode()
+        {
+            // Prime number as a starting value.
+            int hash = 536870909;
+
+            unchecked
+            {
+                // 1103 is another prime
+                hash += 1103 * this.Major.GetHashCode();
+                hash += 1103 * this.Minor.GetHashCode();
+                hash += 1103 * this.Patch.GetHashCode();
+                hash += 1103 * this.Identifiers.GetHashCode();
+                hash += 1103 * this.Metadata.GetHashCode();
+            }
+
+            return hash;
+        }
+        /// <summary>
+        /// <para>
+        /// Returns a string that represents the current 
+        /// <see cref="SemanticVersion"/>.
+        /// </para>
+        /// </summary>
+        /// <returns>
+        /// A string representing the current <see cref="SemanticVersion"/>.
+        /// </returns>
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            // The three numeric version components are always present,
+            // so we can add them to the builder without any checks.
+            sb.AppendFormat("{0}.{1}.{2}", this.Major, this.Minor, this.Patch);
+
+            // Pre-release identifiers always come before metadata, but we need
+            // to make sure there are identifiers to add first.
+            if (this.Identifiers.Any())
+            {
+                // Identifiers are separated from the three-part version by
+                // a hyphen character.
+                sb.Append('-');
+
+                // Each identifier is separated from the others by a period.
+                this.Identifiers.Aggregate(
+                    seed: sb,
+                    func: (bdr, id) => bdr.AppendFormat("{0}.", id));
+
+                // The way we concatenated the identifiers above, we'll be
+                // left with a trailing period. We want to get rid of this.
+                sb.Remove(
+                    startIndex: sb.Length - 1, 
+                    length:     1
+                    );
+            }
+
+            // Like with the pre-release identifiers, we want to make sure there
+            // is metadata to add before we attempt to add it.
+            if (this.Metadata.Any())
+            {
+                // Metadata is separated from the three-part version/pre-release
+                // identifiers by a plus character.
+                sb.Append('+');
+
+                // Like pre-release identifiers, each metadata item is separated
+                // from other metadata items with a period.
+                this.Metadata.Aggregate(
+                    seed:   sb,
+                    func:   (bdr, md) => bdr.AppendFormat("{0}.", md));
+
+                // Like before, we're left with a trailing period.
+                sb.Remove(
+                    startIndex: sb.Length - 1,
+                    length:     1
+                    );
+            }
+            
+            // We've constructed the string, so now we just need to return it.
+            return sb.ToString();
+        }
+
+        // IEquatable<SemanticVersion> methods
+        /// <summary>
+        /// <para>
+        /// Determines whether the specified <see cref="SemanticVersion"/>
+        /// is equal to the current version.
+        /// </para>
+        /// </summary>
+        /// <param name="semver">
+        /// The <see cref="SemanticVersion"/> to compare with the current
+        /// version.
+        /// </param>
+        /// <returns>
+        /// True if the specified and current <see cref="SemanticVersion"/>s
+        /// are equal, false if otherwise.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This method takes build metadata items into account when comparing,
+        /// and so may return false for equivalent versions with differing build
+        /// metadata.
+        /// </para>
+        /// </remarks>
+        public bool Equals(SemanticVersion semver)
+        {
+            // This is an instance method and so requires an instance to work,
+            // so if we're passed [null] it can't be equal.
+            if (object.ReferenceEquals(semver, null))
+                return false;
+
+            return this.Major == semver.Major                           &&
+                   this.Minor == semver.Minor                           &&
+                   this.Patch == semver.Patch                           &&
+                   this.Identifiers.SequenceEqual(semver.Identifiers)   &&
+                   this.Metadata.SequenceEqual(semver.Metadata);
         }
     }
 }
