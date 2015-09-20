@@ -23,6 +23,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Numerics;
 
 namespace McSherry.SemVer
 {
@@ -51,8 +52,12 @@ namespace McSherry.SemVer
     /// </list>
     /// </remarks>
     public sealed class SemanticVersion
-        : IEquatable<SemanticVersion>
+        : IEquatable<SemanticVersion>, IComparable<SemanticVersion>
     {
+        private const int CompareTo_Greater = 1,
+                          CompareTo_Equal   = 0,
+                          CompareTo_Lesser  = -1;
+
         private static readonly Regex _metaRegex;
 
         private static IDictionary<string, SemanticVersion> _memDict;
@@ -105,7 +110,7 @@ namespace McSherry.SemVer
             // We have to check the length is greater than [1] because a
             // single ['0'] character as an identifier is valid.
             if (identifier.Length > 1 && identifier.First() == '0' &&
-                identifier.All(c => c >= '0' && c <= '9'))
+                identifier.All(IsNumber))
                 return false;
 
             // It's passed the tests, so it's a valid identifier.
@@ -138,6 +143,29 @@ namespace McSherry.SemVer
 
             // It's passed the tests, so it's a valid metadata item.
             return true;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Determines whether a given character is a number.
+        /// </para>
+        /// </summary>
+        /// <param name="c">
+        /// The character to check.
+        /// </param>
+        /// <returns>
+        /// True if <paramref name="c"/> is a number, false if
+        /// otherwise.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This method differs from <see cref="Char.IsNumber(char)"/> in
+        /// that it only considers numbers between 0 and 9 valid.
+        /// </para>
+        /// </remarks>
+        internal static bool IsNumber(char c)
+        {
+            return c >= '0' && c <= '9';
         }
 
 
@@ -524,6 +552,233 @@ namespace McSherry.SemVer
                    this.Patch == semver.Patch                           &&
                    this.Identifiers.SequenceEqual(semver.Identifiers)   &&
                    this.Metadata.SequenceEqual(semver.Metadata);
+        }
+
+        // IComparable<SemanticVersion> methods
+        /// <summary>
+        /// <para>
+        /// Compares the current <see cref="SemanticVersion"/> with
+        /// another version to determine relative precedence.
+        /// </para>
+        /// </summary>
+        /// <param name="semver">
+        /// The <see cref="SemanticVersion"/> to compare to the current
+        /// version.
+        /// </param>
+        /// <returns>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Value</term>
+        ///         <term>Meaning</term>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Less than zero</term>
+        ///         <term>
+        ///             The current <see cref="SemanticVersion"/> has
+        ///             lesser precedence than <paramref name="semver"/>.
+        ///         </term>
+        ///     </item>
+        ///     <item>
+        ///         <term>Zero</term>
+        ///         <term>
+        ///             The current <see cref="SemanticVersion"/> is
+        ///             of equal precedence to <paramref name="semver"/>.
+        ///         </term>
+        ///     </item>
+        ///     <item>
+        ///         <term>Greater than zero</term>
+        ///         <term>
+        ///             The current <see cref="SemanticVersion"/> has
+        ///             greater precedence than <paramref name="semver"/>.
+        ///         </term>
+        ///     </item>
+        /// </list>
+        /// </returns>
+        public int CompareTo(SemanticVersion semver)
+        {
+            #region Three-part Comparison
+            // First thing to do is compare the major versions. If one
+            // is greater than the other, then we don't need to perform
+            // further checks.
+            if (this.Major > semver.Major)
+            {
+                return CompareTo_Greater;
+            }
+            else if (this.Major < semver.Major)
+            {
+                return CompareTo_Lesser; // Lesser precedence
+            }
+
+            // If we're here, the major versions are equal, so we need
+            // to perform the same comparison for the minor versions.
+            if (this.Minor > semver.Minor)
+            {
+                return CompareTo_Greater;
+            }
+            else if (this.Minor < semver.Minor)
+            {
+                return CompareTo_Lesser;
+            }
+
+            // Again, if we're here, the minors are equal, and we do the
+            // same comparison for patch versions.
+            if (this.Patch > semver.Patch)
+            {
+                return CompareTo_Greater;
+            }
+            else if (this.Patch < semver.Patch)
+            {
+                return CompareTo_Lesser;
+            }
+            #endregion
+
+            // If we *still* haven't returned from the method, then we need
+            // to start checking the pre-release identifiers. Build metadata
+            // isn't counted in a precedence comparison.
+
+            // If only one of the versions has pre-release identifiers, then
+            // the version with the identifiers is of lower precedence.
+            if (this.Identifiers.Count == 0 ^ semver.Identifiers.Count == 0)
+            {
+                // We've got no pre-release identifiers, so the other one must
+                // have them and is of lower precednece.
+                if (this.Identifiers.Count == 0)
+                {
+                    return CompareTo_Greater;
+                }
+                // If we do have them, then we're of lower precedence.
+                else
+                {
+                    return CompareTo_Lesser;
+                }
+            }
+            // If both versions have equal three-part components and have no
+            // pre-release identifiers, then they are of equal precedence.
+            else if (this.Identifiers.Count == 0 && semver.Identifiers.Count == 0)
+            {
+                return CompareTo_Equal; // Equal precedence
+            }
+            // If the both versions have identical (content and ordering) sets
+            // of pre-release identifiers, then they are of equal precedence.
+            else if (this.Identifiers.SequenceEqual(semver.Identifiers))
+            {
+                return CompareTo_Equal;
+            }
+
+            // If both versions have pre-release identifiers, then this is where
+            // things start to get more complicated. We now have to go through
+            // the pre-release identifiers and compare them to determine which
+            // version has higher precedence.
+
+            var prEnumThis = this.Identifiers.GetEnumerator();
+            var prEnumThat = semver.Identifiers.GetEnumerator();
+
+            // We have to iterate through two collections at once, so we can't
+            // use a [foreach] here.
+            while (prEnumThis.MoveNext() & prEnumThat.MoveNext())
+            {
+                // We already know that the sets of pre-release identifiers are
+                // not identical, so we need to find the first difference. To do
+                // this, we just continue to the next iteration when the two
+                // identifiers are equal.
+                if (prEnumThis.Current == prEnumThat.Current)
+                    continue;
+
+                // We know that the items are different, so the first thing we
+                // test for is whether the items are numeric.
+                bool thisIsNumber = prEnumThis.Current.All(IsNumber),
+                     thatIsNumber = prEnumThat.Current.All(IsNumber);
+
+                // If both identifiers are numeric, then we perform a numeric
+                // comparison of them.
+                if (thisIsNumber && thatIsNumber)
+                {
+                    #region Number Comparison
+                    // We're going to first try the comparison using longs.
+                    try
+                    {
+                        long thisVal = long.Parse(prEnumThis.Current),
+                             thatVal = long.Parse(prEnumThat.Current);
+
+                        // If this version's pre-release identifier's value
+                        // is greater, then this version is of greater
+                        // precedence.
+                        if (thisVal > thatVal)
+                        {
+                            return CompareTo_Greater;
+                        }
+                        // We already know they're not equal, so if ours
+                        // isn't greater it must be lessser.
+                        else
+                        {
+                            return CompareTo_Lesser;
+                        }
+                    }
+                    // It's possible that the identifier will be too
+                    // large for a [long], so if we get an [OverflowException]
+                    // we're going to switch to a [BigInteger] and do the
+                    // comparison again.
+                    catch (OverflowException)
+                    {
+                        BigInteger thisVal = BigInteger.Parse(prEnumThis.Current),
+                                   thatVal = BigInteger.Parse(prEnumThat.Current);
+
+                        // Same as in the try part of this try-catch.
+                        if (thisVal > thatVal)
+                        {
+                            return CompareTo_Greater;
+                        }
+                        else
+                        {
+                            return CompareTo_Lesser;
+                        }
+                    }
+                    #endregion
+                }
+                // If only one is numeric, then the one that is not numeric has
+                // higher precedence.
+                else if (thisIsNumber)
+                {
+                    // This is a number, so we have lower precedence.
+                    return CompareTo_Lesser;
+                }
+                else if (thatIsNumber)
+                {
+                    // That is a number, so we have higher precedence.
+                    return CompareTo_Greater;
+                }
+
+                // If neither is numeric, then we have to compare differently.
+                // Non-numeric identifiers are compared based on their ASCII
+                // values.
+                //
+                // The simple way for us to do this is to use an ordinal
+                // comparison (which takes the numeric values and compares
+                // them).
+                return String.CompareOrdinal(prEnumThis.Current, 
+                                             prEnumThat.Current);
+            }
+
+            // When we end up here, we know that the identifier collections are
+            // not of equal length. We also know that, since we're here, the items
+            // in the longest collection are a superset of the items in the
+            // shortest collection. We know this because we can only get here if
+            // the above [while] loop hits the [continue] every time.
+
+            // We now have to use the lengths of the collections to determine
+            // which has higher precedence. Whichever collection has more items
+            // has higher precedence.
+            if (this.Identifiers.Count > semver.Identifiers.Count)
+            {
+                // We have more items, so we are of higher precedence.
+                return CompareTo_Greater;
+            }
+            else
+            {
+                // We know they're not equal, so we must have fewer items
+                // and so lower precedence.
+                return CompareTo_Lesser;
+            }
         }
     }
 }

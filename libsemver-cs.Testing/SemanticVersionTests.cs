@@ -242,5 +242,104 @@ namespace McSherry.SemVer
             }).AssertThrowsExact<ArgumentException>(
                 "Did not throw on invalid input (8).");
         }
+
+        /// <summary>
+        /// <para>
+        /// Tests <see cref="SemanticVersion"/>'s implementation of
+        /// <see cref="IComparable{T}"/> to ensure it acts as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Comparing()
+        {
+            Assert.IsTrue(typeof(IComparable<SemanticVersion>)
+                            .IsAssignableFrom(typeof(SemanticVersion)),
+                          "SemanticVersion is not IComparable<SemanticVersion>.");
+
+            #region Definitions
+            var cmp = new SemanticVersion[]
+            {
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    new[] { "alpha" },
+                                    metadata:       Enumerable.Empty<string>()),
+
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    new[] { "alpha", "1" },
+                                    metadata:       Enumerable.Empty<string>()),
+
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    new[] { "alpha", "beta" },
+                                    metadata:       Enumerable.Empty<string>()),
+
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    new[] { "beta" },
+                                    metadata:       Enumerable.Empty<string>()),
+
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    new[] { "beta", "2" },
+                                    metadata:       Enumerable.Empty<string>()),
+
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    new[] { "beta", "11" },
+                                    metadata:       Enumerable.Empty<string>()),
+
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    new[] { "rc", "1" },
+                                    metadata:       Enumerable.Empty<string>()),
+
+                new SemanticVersion(major:          1,
+                                    minor:          0,
+                                    patch:          0,
+                                    identifiers:    Enumerable.Empty<string>(),
+                                    metadata:       Enumerable.Empty<string>()),
+            };
+            #endregion
+
+            // Test the [CompareTo] method.
+            Assert.AreEqual(cmp[0].CompareTo<SemanticVersion>(cmp[1]),
+                            Ordering.Lesser,
+                            "Comparison failed (0).");
+            Assert.AreEqual(cmp[1].CompareTo<SemanticVersion>(cmp[2]),
+                            Ordering.Lesser,
+                            "Comparison failed (1).");
+            Assert.AreEqual(cmp[2].CompareTo<SemanticVersion>(cmp[3]),
+                            Ordering.Lesser,
+                            "Comparison failed (2).");
+            Assert.AreEqual(cmp[3].CompareTo<SemanticVersion>(cmp[4]),
+                            Ordering.Lesser,
+                            "Comparison failed (3).");
+            Assert.AreEqual(cmp[4].CompareTo<SemanticVersion>(cmp[5]),
+                            Ordering.Lesser,
+                            "Comparison failed (4).");
+            Assert.AreEqual(cmp[5].CompareTo<SemanticVersion>(cmp[6]),
+                            Ordering.Lesser,
+                            "Comparison failed (5).");
+            Assert.AreEqual(cmp[6].CompareTo<SemanticVersion>(cmp[7]),
+                            Ordering.Lesser,
+                            "Comparison failed (6).");
+
+            // To be extra sure, stick them in a collection, sort it, and
+            // check the order they come out of the collection in. We jumble
+            // up the items by ordering them using a newly-generated GUID.
+            var sl = new List<SemanticVersion>(cmp.OrderBy(ks => Guid.NewGuid()));
+            sl.Sort();
+
+            // [cmp] is already in the correct lowest-to-highest order.
+            Assert.IsTrue(sl.SequenceEqual(cmp), "Comparison failed (7).");
+        }
     }
 }

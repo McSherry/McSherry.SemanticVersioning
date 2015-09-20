@@ -24,6 +24,37 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace McSherry.SemVer
 {
     /// <summary>
+    /// <para>
+    /// Represents the ways a comparable item may compare to another
+    /// comparable item.
+    /// </para>
+    /// </summary>
+    public enum Ordering
+    {
+        /// <summary>
+        /// <para>
+        /// The item is greater. When sorted, it comes before the
+        /// other item.
+        /// </para>
+        /// </summary>
+        Greater,
+        /// <summary>
+        /// <para>
+        /// The item is equal. When sorted, it occurs in the same
+        /// position as the other item.
+        /// </para>
+        /// </summary>
+        Equal,
+        /// <summary>
+        /// <para>
+        /// The item is lesser. When sorted, it comes after the
+        /// other item.
+        /// </para>
+        /// </summary>
+        Lesser,
+    }
+
+    /// <summary>
     /// Provides extension methods related to unit tests.
     /// </summary>
     public static class TestingExtensions
@@ -113,6 +144,41 @@ namespace McSherry.SemVer
             }
 
             Assert.Fail(msg ?? "Method did not throw an exception.");
+        }
+
+        /// <summary>
+        /// <para>
+        /// Compares the provided <see cref="IComparable{T}"/> with
+        /// another object of type <typeparamref name="T"/>, and
+        /// returns an <see cref="Ordering"/> indicating their
+        /// relation.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the objects to compare.
+        /// </typeparam>
+        /// <param name="comparable">
+        /// The object that will perform the comparison.
+        /// </param>
+        /// <param name="comparand">
+        /// The object that <paramref name="comparable"/> will be
+        /// comparing against.
+        /// </param>
+        /// <returns>
+        /// An <see cref="Ordering"/> indicating the relation of
+        /// <paramref name="comparable"/> and <paramref name="comparand"/>.
+        /// </returns>
+        public static Ordering CompareTo<T>(this IComparable<T> comparable,
+                                            T comparand)
+        {
+            int comparison = comparable.CompareTo(comparand);
+
+            if (comparison < 0)
+                return Ordering.Lesser;
+            else if (comparison > 0)
+                return Ordering.Greater;
+            else
+                return Ordering.Equal;
         }
     }
 }
