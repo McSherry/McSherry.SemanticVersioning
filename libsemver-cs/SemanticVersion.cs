@@ -59,8 +59,6 @@ namespace McSherry.SemanticVersioning
                           CompareTo_Equal   =  0,
                           CompareTo_Lesser  = -1;
 
-        private static readonly Regex _metaRegex;
-
         private static IDictionary<string, SemanticVersion> _memDict;
 
         static SemanticVersion()
@@ -77,11 +75,6 @@ namespace McSherry.SemanticVersioning
             // We're using a [ConcurrentDictionary] because the cache is
             // static and may be used across threads.
             _memDict = new ConcurrentDictionary<string, SemanticVersion>();
-
-            // We're going to save ourselves some trouble and just use a
-            // regular expression to check each individual build metadata
-            // item.
-            _metaRegex = new Regex("^[0-9A-Za-z-]+$");
         }
 
         /// <summary>
@@ -230,91 +223,6 @@ namespace McSherry.SemanticVersioning
         public static bool operator <=(SemanticVersion l, SemanticVersion r)
         {
             return (l == r) || (l < r);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Checks whether a provided <see cref="string"/> is a valid
-        /// pre-release identifier.
-        /// </para>
-        /// </summary>
-        /// <param name="identifier">
-        /// The pre-release identifier to check.
-        /// </param>
-        /// <returns>
-        /// True if <paramref name="identifier"/> is a valid pre-release
-        /// identifier, false if otherwise.
-        /// </returns>
-        public static bool IsValidIdentifier(string identifier)
-        {
-            // The rules for identifiers are a superset of the rules
-            // for metadata items, so if it isn't a build metadata
-            // item the it can't be an identifier.
-            if (!SemanticVersion.IsValidMetadata(identifier))
-                return false;
-
-            // If the identifier is numeric (i.e. entirely numbers), then
-            // it cannot have a leading zero.
-            //
-            // We have to check the length is greater than [1] because a
-            // single ['0'] character as an identifier is valid.
-            if (identifier.Length > 1 && identifier.First() == '0' &&
-                identifier.All(IsNumber))
-                return false;
-
-            // It's passed the tests, so it's a valid identifier.
-            return true;
-        }
-        /// <summary>
-        /// <para>
-        /// Checks whether a provided <see cref="string"/> is a valid
-        /// build metadata item.
-        /// </para>
-        /// </summary>
-        /// <param name="metadata">
-        /// The build metadata item to check.
-        /// </param>
-        /// <returns>
-        /// True if <paramref name="metadata"/> is a valid pre-release
-        /// identifier, false if otherwise.
-        /// </returns>
-        public static bool IsValidMetadata(string metadata)
-        {
-            // Metadata items cannot be empty, and cannot contain
-            // whitespace.
-            if (String.IsNullOrWhiteSpace(metadata))
-                return false;
-
-            // A metadata item may only contain characters that are
-            // alphanumeric or the hyphen character.
-            if (!_metaRegex.IsMatch(metadata))
-                return false;
-
-            // It's passed the tests, so it's a valid metadata item.
-            return true;
-        }
-
-        /// <summary>
-        /// <para>
-        /// Determines whether a given character is a number.
-        /// </para>
-        /// </summary>
-        /// <param name="c">
-        /// The character to check.
-        /// </param>
-        /// <returns>
-        /// True if <paramref name="c"/> is a number, false if
-        /// otherwise.
-        /// </returns>
-        /// <remarks>
-        /// <para>
-        /// This method differs from <see cref="Char.IsNumber(char)"/> in
-        /// that it only considers numbers between 0 and 9 valid.
-        /// </para>
-        /// </remarks>
-        internal static bool IsNumber(char c)
-        {
-            return c >= '0' && c <= '9';
         }
 
 
@@ -489,14 +397,14 @@ namespace McSherry.SemanticVersioning
             }
             #endregion
             #region Validity check
-            if (!identifiers.All(IsValidIdentifier))
+            if (!identifiers.All(Helper.IsValidIdentifier))
             {
                 throw new ArgumentException(
                     message:    "One or more pre-release identifiers is invalid.",
                     paramName:  nameof(identifiers));
             }
 
-            if (!metadata.All(IsValidMetadata))
+            if (!metadata.All(Helper.IsValidMetadata))
             {
                 throw new ArgumentException(
                     message:    "One or more build metadata items is invalid.",
@@ -908,8 +816,8 @@ namespace McSherry.SemanticVersioning
 
                 // We know that the items are different, so the first thing we
                 // test for is whether the items are numeric.
-                bool thisIsNumber = prEnumThis.Current.All(IsNumber),
-                     thatIsNumber = prEnumThat.Current.All(IsNumber);
+                bool thisIsNumber = prEnumThis.Current.All(Helper.IsNumber),
+                     thatIsNumber = prEnumThat.Current.All(Helper.IsNumber);
 
                 // If both identifiers are numeric, then we perform a numeric
                 // comparison of them.

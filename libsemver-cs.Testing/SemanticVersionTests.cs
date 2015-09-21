@@ -69,7 +69,7 @@ namespace McSherry.SemanticVersioning
             // checking that they are valid.
             for (int i = 0; i < validItems.Length; i++)
             {
-                Assert.IsTrue(SemanticVersion.IsValidMetadata(validItems[i]),
+                Assert.IsTrue(Helper.IsValidMetadata(validItems[i]),
                               String.Format(
                                   "Unexpected rejection: item {0} (\"{1}\").",
                                   i, validItems[i]
@@ -93,7 +93,7 @@ namespace McSherry.SemanticVersioning
             // Iterate through all the items we expect to be invalid.
             for (int i = 0; i < invItems.Length; i++)
             {
-                Assert.IsFalse(SemanticVersion.IsValidMetadata(invItems[i]),
+                Assert.IsFalse(Helper.IsValidMetadata(invItems[i]),
                                String.Format(
                                    "Unexpected acceptance: item {0} (\"{1}\").",
                                    i, invItems[i]
@@ -115,17 +115,17 @@ namespace McSherry.SemanticVersioning
 
             // A lone zero does not count as a leading zero, and must be
             // considered valid.
-            Assert.IsTrue(SemanticVersion.IsValidIdentifier("0"),
+            Assert.IsTrue(Helper.IsValidIdentifier("0"),
                           "Unexpected rejection: single zero.");
 
             // Leading zeroes don't matter if the identifier is not a
             // numeric identifier.
-            Assert.IsTrue(SemanticVersion.IsValidIdentifier("00nonnumber"),
+            Assert.IsTrue(Helper.IsValidIdentifier("00nonnumber"),
                           "Unexpected rejection: non-numeric leading zero.");
 
             // If the identifier is numeric, then we can't have any leading
             // zeroes.
-            Assert.IsFalse(SemanticVersion.IsValidIdentifier("0150"),
+            Assert.IsFalse(Helper.IsValidIdentifier("0150"),
                            "Unexpected acceptance: numeric leading zero.");
         }
 

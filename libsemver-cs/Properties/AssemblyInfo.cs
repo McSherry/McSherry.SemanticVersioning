@@ -32,6 +32,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright 2015 © Liam McSherry")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+[assembly: InternalsVisibleTo("libsemver-cs.Testing")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
