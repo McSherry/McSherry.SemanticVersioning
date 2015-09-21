@@ -51,11 +51,12 @@ namespace McSherry.SemanticVersioning
     ///     </item>
     /// </list>
     /// </remarks>
+    [Serializable]
     public sealed class SemanticVersion
         : IEquatable<SemanticVersion>, IComparable<SemanticVersion>
     {
-        private const int CompareTo_Greater = 1,
-                          CompareTo_Equal   = 0,
+        private const int CompareTo_Greater =  1,
+                          CompareTo_Equal   =  0,
                           CompareTo_Lesser  = -1;
 
         private static readonly Regex _metaRegex;
@@ -81,6 +82,59 @@ namespace McSherry.SemanticVersioning
             // regular expression to check each individual build metadata
             // item.
             _metaRegex = new Regex("^[0-9A-Za-z-]+$");
+        }
+
+        /// <summary>
+        /// <para>
+        /// Determines whether the two specified <see cref="SemanticVersion"/>s
+        /// are equal in value.
+        /// </para>
+        /// </summary>
+        /// <param name="lsv">
+        /// The first <see cref="SemanticVersion"/> to compare.
+        /// </param>
+        /// <param name="rsv">
+        /// The second <see cref="SemanticVersion"/> to compare.
+        /// </param>
+        /// <returns>
+        /// True if the provided <see cref="SemanticVersion"/>s are
+        /// equal in value. False if otherwise.
+        /// </returns>
+        public static bool operator ==(SemanticVersion lsv, SemanticVersion rsv)
+        {
+            // If only one of the two operands is null, they are not equal.
+            if (ReferenceEquals(lsv, null) ^ ReferenceEquals(rsv, null))
+                return false;
+            // If we get here, we know that either both or neither of the
+            // operands are null. To determine if it's both, we just need
+            // to test whether one is null. If one is, both are, and if
+            // both are null, then they are equal.
+            else if (ReferenceEquals(lsv, null))
+                return true;
+            // If we're here, then both have values, so we delegate the work
+            // to the implementation of [IEquatable<T>].
+            else
+                return lsv.Equals(rsv);
+        }
+        /// <summary>
+        /// <para>
+        /// Determines whether the two specified <see cref="SemanticVersion"/>s
+        /// are not equal in value.
+        /// </para>
+        /// </summary>
+        /// <param name="lsv">
+        /// The first <see cref="SemanticVersion"/> to compare.
+        /// </param>
+        /// <param name="rsv">
+        /// The second <see cref="SemanticVersion"/> to compare.
+        /// </param>
+        /// <returns>
+        /// True if the provided <see cref="SemanticVersion"/>s are
+        /// not equal in value. False if otherwise.
+        /// </returns>
+        public static bool operator !=(SemanticVersion lsv, SemanticVersion rsv)
+        {
+            return !(lsv == rsv);
         }
 
         /// <summary>

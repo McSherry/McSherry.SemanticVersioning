@@ -232,7 +232,7 @@ namespace McSherry.SemanticVersioning
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
-        public void Comparing()
+        public void Comparison()
         {
             Assert.IsTrue(typeof(IComparable<SemanticVersion>)
                             .IsAssignableFrom(typeof(SemanticVersion)),
@@ -327,6 +327,64 @@ namespace McSherry.SemanticVersioning
 
             // [cmp] is already in the correct lowest-to-highest order.
             Assert.IsTrue(sl.SequenceEqual(cmp), "Comparison failed (8).");
+
+            // These tests are mentioned by the MSDN docs, so we're going to
+            // use them here just to make sure everything is working fine.
+            Assert.AreEqual(cmp[1].CompareTo(cmp[1]), 0, 
+                            "Comparison failed (9).");
+            Assert.AreEqual(cmp[1].CompareTo(cmp[2]),
+                            -cmp[2].CompareTo(cmp[1]),
+                            "Comparison failed (10).");
+        }
+        /// <summary>
+        /// <para>
+        /// Tests that <see cref="SemanticVersion"/>'s implementation
+        /// of <see cref="IEquatable{T}"/> works as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Equality()
+        {
+            var sv0 = new SemanticVersion(1, 5, 0);
+            var sv1 = new SemanticVersion(1, 5, 0, Enumerable.Empty<string>());
+            var sv2 = new SemanticVersion(1, 5, 0, Enumerable.Empty<string>(),
+                                                   Enumerable.Empty<string>());
+            var sv3 = new SemanticVersion(1, 6, 0);
+
+            Assert.AreEqual(sv0, sv1, "Equality check failed (0).");
+            Assert.AreEqual(sv0, sv2, "Equality check failed (1).");
+            Assert.AreEqual(sv1, sv2, "Equality check failed (2).");
+            Assert.AreNotEqual(sv0, sv3, "Equality check failed (3).");
+
+            // Now we test the equality operators.
+            //
+            // Our [SemanticVersion] class is immutable, so it makes sense
+            // to overload these to check value equality instead of reference
+            // equality.
+            Assert.IsTrue(sv0 == sv1, "Operator check failed (0).");
+            Assert.IsTrue(sv0 == sv2, "Operator check failed (1).");
+            Assert.IsTrue(sv1 == sv2, "Operator check failed (2).");
+            Assert.IsTrue(sv0 != sv3, "Operator check failed (3).");
+
+            // Now the tests mentioned in the guidelines for overloading
+            // [Equals].
+            Assert.IsTrue(sv0.Equals(sv1), "Guideline test failed (0).");
+            Assert.IsTrue(sv1.Equals(sv0), "Guideline test failed (1).");
+            Assert.IsTrue(sv1.Equals(sv0) && sv1.Equals(sv2) && sv0.Equals(sv2),
+                          "Guideline test failed (2).");
+            Assert.IsFalse(sv0.Equals(null), "Guideline test failed (3).");
+
+            // The guideline tests again, but for our operators.
+            Assert.IsTrue(sv0 == sv1, "Guideline test failed (4).");
+            Assert.IsTrue(sv1 == sv0, "Guideline test failed (5).");
+            Assert.IsTrue(sv1 == sv0 && sv1 == sv2 && sv0 == sv2,
+                          "Guideline test failed (6).");
+            Assert.IsFalse(sv0 == null, "Guideline test failed (7).");
+
+            // Two null [SemanticVersion]s should be equal, so we're going to
+            // test for that, too.
+            SemanticVersion nsv0 = null, nsv1 = null;
+            Assert.IsTrue(nsv0 == nsv1, "Null equality check failed (0).");
         }
     }
 }
