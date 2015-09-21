@@ -350,6 +350,9 @@ namespace McSherry.SemanticVersioning
             var sv2 = new SemanticVersion(1, 5, 0, Enumerable.Empty<string>(),
                                                    Enumerable.Empty<string>());
             var sv3 = new SemanticVersion(1, 6, 0);
+            var sv4 = new SemanticVersion(1, 6, 0, new[] { "rc", "1" });
+            var sv5 = new SemanticVersion(1, 6, 0, Enumerable.Empty<string>(),
+                                                   new[] { "d116bf47" });
 
             Assert.AreEqual(sv0, sv1, "Equality check failed (0).");
             Assert.AreEqual(sv0, sv2, "Equality check failed (1).");
@@ -385,6 +388,58 @@ namespace McSherry.SemanticVersioning
             // test for that, too.
             SemanticVersion nsv0 = null, nsv1 = null;
             Assert.IsTrue(nsv0 == nsv1, "Null equality check failed (0).");
+
+            // [Equals] and the equality operator must take into account metadata
+            // and pre-release identifiers.
+            Assert.AreNotEqual(sv3, sv4, "Inequality check failed (0).");
+            Assert.AreNotEqual(sv3, sv5, "Inequality check failed (1).");
+            Assert.AreNotEqual(sv4, sv5, "Inequality check failed (2).");
+
+            Assert.IsFalse(sv3 == sv4, "Inequality check failed (3).");
+            Assert.IsFalse(sv3 == sv5, "Inequality check failed (4).");
+            Assert.IsFalse(sv4 == sv5, "Inequality check failed (5).");
+        }
+        /// <summary>
+        /// <para>
+        /// Tests that <see cref="SemanticVersion.EquivalentTo(SemanticVersion)"/>
+        /// works as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Equivalence()
+        {
+            // [EquivalentTo] ignores any information that isn't relevant to
+            // determining the compatibility of two versions. Basically, it
+            // ignores any metadata.
+
+            var sv0 = new SemanticVersion(1, 7, 0);
+            var sv1 = new SemanticVersion(1, 7, 0, new[] { "beta", "3" });
+            var sv2 = new SemanticVersion(1, 7, 0, Enumerable.Empty<string>(),
+                                                   new[] { "d116bf47" });
+            var sv3 = new SemanticVersion(1, 7, 0, new[] { "beta", "3" },
+                                                   new[] { "d116bf47" });
+
+            Assert.IsTrue(sv0.EquivalentTo(sv2), "Equivalence check failed (0).");
+            Assert.IsTrue(sv1.EquivalentTo(sv3), "Equivalence check failed (1).");
+
+            Assert.IsFalse(sv0.EquivalentTo(sv1), "Equivalence incorrect (0).");
+            Assert.IsFalse(sv1.EquivalentTo(sv2), "Equivalence incorrect (1).");
+            Assert.IsFalse(sv2.EquivalentTo(sv3), "Equivalence incorrect (2).");
+
+            // Now we want to make sure that equivalence is working in both
+            // directs (e.g. A = B and B = A).
+            Assert.IsTrue(sv0.EquivalentTo(sv2) && sv2.EquivalentTo(sv0),
+                          "Equivalence not commutative (0).");
+            Assert.IsTrue(sv1.EquivalentTo(sv3) && sv3.EquivalentTo(sv1),
+                          "Equivalence not commutative (1).");
+
+            // And we might as well check the same for inequivalence.
+            Assert.IsTrue(!sv0.EquivalentTo(sv1) && !sv1.EquivalentTo(sv0),
+                          "Inequivalence not commutative (0).");
+            Assert.IsTrue(!sv1.EquivalentTo(sv2) && !sv2.EquivalentTo(sv1),
+                          "Inequivalence not commutative (1).");
+            Assert.IsTrue(!sv2.EquivalentTo(sv3) && !sv3.EquivalentTo(sv2),
+                          "Inequivalence not commutative (2).");
         }
     }
 }

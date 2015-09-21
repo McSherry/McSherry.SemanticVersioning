@@ -90,31 +90,31 @@ namespace McSherry.SemanticVersioning
         /// are equal in value.
         /// </para>
         /// </summary>
-        /// <param name="lsv">
+        /// <param name="l">
         /// The first <see cref="SemanticVersion"/> to compare.
         /// </param>
-        /// <param name="rsv">
+        /// <param name="r">
         /// The second <see cref="SemanticVersion"/> to compare.
         /// </param>
         /// <returns>
         /// True if the provided <see cref="SemanticVersion"/>s are
         /// equal in value. False if otherwise.
         /// </returns>
-        public static bool operator ==(SemanticVersion lsv, SemanticVersion rsv)
+        public static bool operator ==(SemanticVersion l, SemanticVersion r)
         {
             // If only one of the two operands is null, they are not equal.
-            if (ReferenceEquals(lsv, null) ^ ReferenceEquals(rsv, null))
+            if (ReferenceEquals(l, null) ^ ReferenceEquals(r, null))
                 return false;
             // If we get here, we know that either both or neither of the
             // operands are null. To determine if it's both, we just need
             // to test whether one is null. If one is, both are, and if
             // both are null, then they are equal.
-            else if (ReferenceEquals(lsv, null))
+            else if (ReferenceEquals(l, null))
                 return true;
             // If we're here, then both have values, so we delegate the work
             // to the implementation of [IEquatable<T>].
             else
-                return lsv.Equals(rsv);
+                return l.Equals(r);
         }
         /// <summary>
         /// <para>
@@ -122,19 +122,19 @@ namespace McSherry.SemanticVersioning
         /// are not equal in value.
         /// </para>
         /// </summary>
-        /// <param name="lsv">
+        /// <param name="l">
         /// The first <see cref="SemanticVersion"/> to compare.
         /// </param>
-        /// <param name="rsv">
+        /// <param name="r">
         /// The second <see cref="SemanticVersion"/> to compare.
         /// </param>
         /// <returns>
         /// True if the provided <see cref="SemanticVersion"/>s are
         /// not equal in value. False if otherwise.
         /// </returns>
-        public static bool operator !=(SemanticVersion lsv, SemanticVersion rsv)
+        public static bool operator !=(SemanticVersion l, SemanticVersion r)
         {
-            return !(lsv == rsv);
+            return !(l == r);
         }
 
         /// <summary>
@@ -494,6 +494,37 @@ namespace McSherry.SemanticVersioning
             private set;
         }
 
+        /// <summary>
+        /// <para>
+        /// Determines whether the specified <see cref="SemanticVersion"/>
+        /// is equivalent to the current version.
+        /// </para>
+        /// </summary>
+        /// <param name="semver">
+        /// The <see cref="SemanticVersion"/> to compare against.
+        /// </param>
+        /// <returns>
+        /// True if the current <see cref="SemanticVersion"/> is equivalent
+        /// to <paramref name="semver"/>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This differs from <see cref="Equals(SemanticVersion)"/> in that
+        /// the value of <see cref="Metadata"/> is ignored.
+        /// </para>
+        /// </remarks>
+        public bool EquivalentTo(SemanticVersion semver)
+        {
+            // If [semver] is null, we can't be equivalent to it.
+            if (object.ReferenceEquals(semver, null))
+                return false;
+
+            return this.Major == semver.Major                           &&
+                   this.Minor == semver.Minor                           &&
+                   this.Patch == semver.Patch                           &&
+                   this.Identifiers.SequenceEqual(semver.Identifiers);
+        }
+
         // object Overrides
         /// <summary>
         /// <para>
@@ -519,7 +550,7 @@ namespace McSherry.SemanticVersioning
         {
             var sv = obj as SemanticVersion;
 
-            return sv != null && this.Equals(semver: sv);
+            return !ReferenceEquals(sv, null) && this.Equals(semver: sv);
         }
         /// <summary>
         /// <para>
