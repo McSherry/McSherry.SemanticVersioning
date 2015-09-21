@@ -139,6 +139,58 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Determines whether one <see cref="SemanticVersion"/> has greater
+        /// precedence than another.
+        /// </para>
+        /// </summary>
+        /// <param name="l">
+        /// The <see cref="SemanticVersion"/> to check for greater precedence.
+        /// </param>
+        /// <param name="r">
+        /// The <see cref="SemanticVersion"/> to compare against.
+        /// </param>
+        /// <returns>
+        /// True if <paramref name="l"/> has greater precedence than
+        /// <paramref name="r"/>. False if otherwise.
+        /// </returns>
+        public static bool operator >(SemanticVersion l, SemanticVersion r)
+        {
+            // If they're equal, then one cannot have greater precedence than
+            // the other. Similarly, if [l] is null, it cannot have greater
+            // precedence than [r] (because null always has lowest precedence).
+            if (l == r || l == null)
+                return false;
+
+            // We know that [l] is not null, so we're free to call its [CompareTo]
+            // method and let that compare it to [r]. We use [>=] because the
+            // method is free to return any value greater than or equal to [1].
+            return l.CompareTo(r) >= CompareTo_Greater;
+        }
+        /// <summary>
+        /// <para>
+        /// Determines whether one <see cref="SemanticVersion"/> has lesser
+        /// precedence than another.
+        /// </para>
+        /// </summary>
+        /// <param name="l">
+        /// The <see cref="SemanticVersion"/> to check for lesser precedence.
+        /// </param>
+        /// <param name="r">
+        /// The <see cref="SemanticVersion"/> to compare against.
+        /// </param>
+        /// <returns>
+        /// True if <paramref name="l"/> has lesser precedence than
+        /// <paramref name="r"/>. False if otherwise.
+        /// </returns>
+        public static bool operator <(SemanticVersion l, SemanticVersion r)
+        {
+            // No need for extra code, we can just swap the operands around and
+            // use our already-defined [operator>] implementation.
+            return r > l;
+        }
+
+        /// <summary>
+        /// <para>
         /// Checks whether a provided <see cref="string"/> is a valid
         /// pre-release identifier.
         /// </para>

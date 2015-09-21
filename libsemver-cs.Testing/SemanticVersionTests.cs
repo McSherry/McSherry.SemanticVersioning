@@ -150,7 +150,7 @@ namespace McSherry.SemanticVersioning
                     identifiers:    new[] { "rc", "1" },
                     metadata:       new[] { "201509" }).ToString(),
                 "1.2.3-rc.1+201509",
-                "Unexpected [ToString] result (0).");
+                "Unexpected [ToString] result (1).");
         }
 
         /// <summary>
@@ -335,6 +335,37 @@ namespace McSherry.SemanticVersioning
             Assert.AreEqual(cmp[1].CompareTo(cmp[2]),
                             -cmp[2].CompareTo(cmp[1]),
                             "Comparison failed (10).");
+
+
+            // Now we have to do practically the same tests again, but this time
+            // testing the comparison operators rather than the [CompareTo]
+            // method.
+            Assert.IsTrue(cmp[1] > cmp[0], "Operator comparison failed (0).");
+            Assert.IsTrue(cmp[2] > cmp[1], "Operator comparison failed (1).");
+            Assert.IsTrue(cmp[3] > cmp[2], "Operator comparison failed (2).");
+            Assert.IsTrue(cmp[4] > cmp[3], "Operator comparison failed (3).");
+            Assert.IsTrue(cmp[5] > cmp[4], "Operator comparison failed (4).");
+            Assert.IsTrue(cmp[6] > cmp[5], "Operator comparison failed (5).");
+            Assert.IsTrue(cmp[7] > cmp[6], "Operator comparison failed (6).");
+            Assert.IsTrue(cmp[8] > cmp[7], "Operator comparison failed (7).");
+
+            // Same tests, but with the other operator.
+            Assert.IsTrue(cmp[0] < cmp[1], "Operator comparison failed (8).");
+            Assert.IsTrue(cmp[1] < cmp[2], "Operator comparison failed (9).");
+            Assert.IsTrue(cmp[2] < cmp[3], "Operator comparison failed (10).");
+            Assert.IsTrue(cmp[3] < cmp[4], "Operator comparison failed (11).");
+            Assert.IsTrue(cmp[4] < cmp[5], "Operator comparison failed (12).");
+            Assert.IsTrue(cmp[5] < cmp[6], "Operator comparison failed (13).");
+            Assert.IsTrue(cmp[6] < cmp[7], "Operator comparison failed (14).");
+            Assert.IsTrue(cmp[7] < cmp[8], "Operator comparison failed (15).");
+
+            // These are the ones mentioned by the MSDN docs.
+            Assert.IsFalse(cmp[1] > cmp[1], "Operator comparison failed (16).");
+            Assert.IsFalse(cmp[1] < cmp[1], "Operator comparison failed (17).");
+            Assert.IsTrue((cmp[1] > cmp[2]) == !(cmp[2] > cmp[1]),
+                          "Operator comparison failed (18).");
+            Assert.IsTrue((cmp[1] < cmp[2]) == !(cmp[2] < cmp[1]),
+                          "Operator comparison failed (19).");
         }
         /// <summary>
         /// <para>
