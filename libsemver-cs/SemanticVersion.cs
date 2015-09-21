@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace McSherry.SemanticVersioning
 {
@@ -52,6 +51,7 @@ namespace McSherry.SemanticVersioning
     /// </list>
     /// </remarks>
     [Serializable]
+    [CLSCompliant(true)]
     public sealed class SemanticVersion
         : IEquatable<SemanticVersion>, IComparable<SemanticVersion>
     {
@@ -595,7 +595,7 @@ namespace McSherry.SemanticVersioning
 
             // The three numeric version components are always present,
             // so we can add them to the builder without any checks.
-            sb.AppendFormat("{0}.{1}.{2}", this.Major, this.Minor, this.Patch);
+            sb.Append($"{this.Major}.{this.Minor}.{this.Patch}");
 
             // Pre-release identifiers always come before metadata, but we need
             // to make sure there are identifiers to add first.
@@ -608,7 +608,7 @@ namespace McSherry.SemanticVersioning
                 // Each identifier is separated from the others by a period.
                 this.Identifiers.Aggregate(
                     seed: sb,
-                    func: (bdr, id) => bdr.AppendFormat("{0}.", id));
+                    func: (bdr, id) => bdr.Append($"{id}."));
 
                 // The way we concatenated the identifiers above, we'll be
                 // left with a trailing period. We want to get rid of this.
@@ -630,7 +630,7 @@ namespace McSherry.SemanticVersioning
                 // from other metadata items with a period.
                 this.Metadata.Aggregate(
                     seed:   sb,
-                    func:   (bdr, md) => bdr.AppendFormat("{0}.", md));
+                    func:   (bdr, md) => bdr.Append($"{md}."));
 
                 // Like before, we're left with a trailing period.
                 sb.Remove(

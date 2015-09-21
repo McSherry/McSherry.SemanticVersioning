@@ -69,11 +69,10 @@ namespace McSherry.SemanticVersioning
             // checking that they are valid.
             for (int i = 0; i < validItems.Length; i++)
             {
-                Assert.IsTrue(Helper.IsValidMetadata(validItems[i]),
-                              String.Format(
-                                  "Unexpected rejection: item {0} (\"{1}\").",
-                                  i, validItems[i]
-                                  ));
+                Assert.IsTrue(
+                    Helper.IsValidMetadata(validItems[i]),
+                    $"Unexpected rejection: item {i} (\"{validItems[i]}\")."
+                    );
             }
 
             var invItems = new string[]
@@ -93,11 +92,10 @@ namespace McSherry.SemanticVersioning
             // Iterate through all the items we expect to be invalid.
             for (int i = 0; i < invItems.Length; i++)
             {
-                Assert.IsFalse(Helper.IsValidMetadata(invItems[i]),
-                               String.Format(
-                                   "Unexpected acceptance: item {0} (\"{1}\").",
-                                   i, invItems[i]
-                                   ));
+                Assert.IsFalse(
+                    Helper.IsValidIdentifier(invItems[i]),
+                    $"Unexpected acceptance: item {i} (\"{invItems[i]}\")."
+                    );
             }
         }
         /// <summary>
