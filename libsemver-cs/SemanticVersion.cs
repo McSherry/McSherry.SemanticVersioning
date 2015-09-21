@@ -18,12 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Numerics;
 
 namespace McSherry.SemanticVersioning
 {
@@ -236,6 +236,43 @@ namespace McSherry.SemanticVersioning
             // make modifications.
             this.Identifiers = _prIds.AsReadOnly();
             this.Metadata = _metadata.AsReadOnly();
+        }
+        /// <summary>
+        /// <para>
+        /// Creates a new <see cref="SemanticVersion"/> using the
+        /// provided version components and pre-release identifiers.
+        /// </para>
+        /// </summary>
+        /// <param name="major">
+        /// The semantic version's major version.
+        /// </param>
+        /// <param name="minor">
+        /// The semantic version's minor version.
+        /// </param>
+        /// <param name="patch">
+        /// The semantic version's patch version.
+        /// </param>
+        /// <param name="identifiers">
+        /// The semantic version's pre-release identifiers.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when any of <paramref name="major,"/>
+        /// <paramref name="minor"/>, and <paramref name="patch"/>
+        /// is negative.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="identifiers"/> or any of its
+        /// items are null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when any of the items in <paramref name="identifiers"/>
+        /// are not valid pre-release identifiers.
+        /// </exception>
+        public SemanticVersion(int major, int minor, int patch,
+                               IEnumerable<string> identifiers)
+            : this(major, minor, patch, identifiers, Enumerable.Empty<string>())
+        {
+
         }
         /// <summary>
         /// <para>

@@ -178,11 +178,9 @@ namespace McSherry.SemanticVersioning
 
 
             // Null identifier/metadata collections
-            new Action(delegate
-            {
-                new SemanticVersion(0, 0, 0, null, Enumerable.Empty<string>());
-            }).AssertThrows<ArgumentNullException>(
-                "Did not throw on invalid input (3).");
+            new Action(() => new SemanticVersion(0, 0, 0, null))
+                .AssertThrows<ArgumentNullException>(
+                    "Did not throw on invalid input (3).");
 
             new Action(delegate
             {
@@ -192,17 +190,9 @@ namespace McSherry.SemanticVersioning
 
 
             // Identifier/metadata collections *containing* null.
-            new Action(delegate
-            {
-                new SemanticVersion(
-                    major:          0,
-                    minor:          0,
-                    patch:          0,
-                    identifiers:    new string[] { null },
-                    metadata:       Enumerable.Empty<string>()
-                    );
-            }).AssertThrows<ArgumentNullException>(
-                "Did not throw on invalid input (5).");
+            new Action(() => new SemanticVersion(0, 0, 0, new string[] { null }))
+                .AssertThrows<ArgumentNullException>(
+                    "Did not throw on invalid input (5).");
 
             new Action(delegate
             {
@@ -218,17 +208,9 @@ namespace McSherry.SemanticVersioning
 
 
             // Identifier/metadata collections containing an invalid value.
-            new Action(delegate
-            {
-                new SemanticVersion(
-                    major:          0,
-                    minor:          0,
-                    patch:          0,
-                    identifiers:    new string[] { "0150" }, // Leading zero
-                    metadata:       Enumerable.Empty<string>()
-                    );
-            }).AssertThrowsExact<ArgumentException>(
-                "Did not throw on invalid input (7).");
+            new Action(() => new SemanticVersion(0, 0, 0, new[] { "0150" }))
+                .AssertThrowsExact<ArgumentException>(
+                    "Did not throw on invalid input (7).");
 
             new Action(delegate
             {
