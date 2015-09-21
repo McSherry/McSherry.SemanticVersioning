@@ -188,6 +188,49 @@ namespace McSherry.SemanticVersioning
             // use our already-defined [operator>] implementation.
             return r > l;
         }
+        /// <summary>
+        /// <para>
+        /// Determines whether the precedence of one <see cref="SemanticVersion"/>
+        /// is equal to or greater than the precedence of another.
+        /// </para>
+        /// </summary>
+        /// <param name="l">
+        /// The <see cref="SemanticVersion"/> to check for equal or greater
+        /// precedence.
+        /// </param>
+        /// <param name="r">
+        /// The <see cref="SemanticVersion"/> to compare against.
+        /// </param>
+        /// <returns>
+        /// True if the precedence of <paramref name="l"/> is equal to or
+        /// greater than the precedence of <paramref name="r"/>. False if
+        /// otherwise.
+        /// </returns>
+        public static bool operator >=(SemanticVersion l, SemanticVersion r)
+        {
+            return (l == r) || (l > r);
+        }
+        /// <summary>
+        /// <para>
+        /// Determines whether the precedence of one <see cref="SemanticVersion"/>
+        /// is equal to or less than the precedence of another.
+        /// </para>
+        /// </summary>
+        /// <param name="l">
+        /// The <see cref="SemanticVersion"/> to check for equal or lesser
+        /// precedence.
+        /// </param>
+        /// <param name="r">
+        /// The <see cref="SemanticVersion"/> to compare against.
+        /// </param>
+        /// <returns>
+        /// True if the precedence of <paramref name="l"/> is equal to or less
+        /// than the precedence of <paramref name="r"/>. False if otherwise.
+        /// </returns>
+        public static bool operator <=(SemanticVersion l, SemanticVersion r)
+        {
+            return (l == r) || (l < r);
+        }
 
         /// <summary>
         /// <para>

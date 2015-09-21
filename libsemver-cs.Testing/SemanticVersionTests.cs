@@ -293,6 +293,7 @@ namespace McSherry.SemanticVersioning
             };
             #endregion
 
+            #region CompareTo
             // Test the [CompareTo] method.
             Assert.AreEqual(cmp[1].CompareTo<SemanticVersion>(cmp[0]),
                             Ordering.Greater,
@@ -319,6 +320,15 @@ namespace McSherry.SemanticVersioning
                             Ordering.Lesser,
                             "Comparison failed (7).");
 
+            // These tests are mentioned by the MSDN docs, so we're going to
+            // use them here just to make sure everything is working fine.
+            Assert.AreEqual(cmp[1].CompareTo(cmp[1]), 0,
+                            "Comparison failed (9).");
+            Assert.AreEqual(cmp[1].CompareTo(cmp[2]),
+                            -cmp[2].CompareTo(cmp[1]),
+                            "Comparison failed (10).");
+            #endregion
+            #region Sorting
             // To be extra sure, stick them in a collection, sort it, and
             // check the order they come out of the collection in. We jumble
             // up the items by ordering them using a newly-generated GUID.
@@ -327,16 +337,8 @@ namespace McSherry.SemanticVersioning
 
             // [cmp] is already in the correct lowest-to-highest order.
             Assert.IsTrue(sl.SequenceEqual(cmp), "Comparison failed (8).");
-
-            // These tests are mentioned by the MSDN docs, so we're going to
-            // use them here just to make sure everything is working fine.
-            Assert.AreEqual(cmp[1].CompareTo(cmp[1]), 0, 
-                            "Comparison failed (9).");
-            Assert.AreEqual(cmp[1].CompareTo(cmp[2]),
-                            -cmp[2].CompareTo(cmp[1]),
-                            "Comparison failed (10).");
-
-
+            #endregion
+            #region Operators > and <
             // Now we have to do practically the same tests again, but this time
             // testing the comparison operators rather than the [CompareTo]
             // method.
@@ -366,6 +368,32 @@ namespace McSherry.SemanticVersioning
                           "Operator comparison failed (18).");
             Assert.IsTrue((cmp[1] < cmp[2]) == !(cmp[2] < cmp[1]),
                           "Operator comparison failed (19).");
+            #endregion
+            #region Operators >= and <=
+            // We're also testing the [>=] and [<=] operators.
+            Assert.IsTrue(cmp[8] >= cmp[8], "Operator comparison failed (20).");
+            Assert.IsTrue(cmp[8] >= cmp[7], "Operator comparison failed (21).");
+            Assert.IsTrue(cmp[8] >= cmp[6], "Operator comparison failed (22).");
+            Assert.IsTrue(cmp[8] >= cmp[5], "Operator comparison failed (23).");
+            Assert.IsTrue(cmp[8] >= cmp[4], "Operator comparison failed (24).");
+            Assert.IsTrue(cmp[8] >= cmp[3], "Operator comparison failed (25).");
+            Assert.IsTrue(cmp[8] >= cmp[2], "Operator comparison failed (26).");
+            Assert.IsTrue(cmp[8] >= cmp[1], "Operator comparison failed (27).");
+            Assert.IsTrue(cmp[8] >= cmp[0], "Operator comparison failed (28).");
+
+            Assert.IsTrue(cmp[0] <= cmp[0], "Operator comparison failed (29).");
+            Assert.IsTrue(cmp[0] <= cmp[1], "Operator comparison failed (30).");
+            Assert.IsTrue(cmp[0] <= cmp[2], "Operator comparison failed (31).");
+            Assert.IsTrue(cmp[0] <= cmp[3], "Operator comparison failed (32).");
+            Assert.IsTrue(cmp[0] <= cmp[4], "Operator comparison failed (33).");
+            Assert.IsTrue(cmp[0] <= cmp[5], "Operator comparison failed (34).");
+            Assert.IsTrue(cmp[0] <= cmp[6], "Operator comparison failed (35).");
+            Assert.IsTrue(cmp[0] <= cmp[7], "Operator comparison failed (36).");
+            Assert.IsTrue(cmp[0] <= cmp[8], "Operator comparison failed (37).");
+
+            Assert.IsFalse(cmp[1] <= cmp[0], "Operator comparison failed (38).");
+            Assert.IsFalse(cmp[0] >= cmp[1], "Operator comparison failed (39).");
+            #endregion
         }
         /// <summary>
         /// <para>
