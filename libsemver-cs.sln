@@ -7,6 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libsemver-cs", "libsemver-c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libsemver-cs.Testing", "libsemver-cs.Testing\libsemver-cs.Testing.csproj", "{1094D088-AAC1-457A-B515-652B09BC11BD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{41F18D65-5C24-468B-9912-CDB10DC31AD4}"
+	ProjectSection(SolutionItems) = preProject
+		LICENCE.txt = LICENCE.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
