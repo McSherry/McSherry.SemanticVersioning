@@ -498,5 +498,152 @@ namespace McSherry.SemanticVersioning
             Assert.IsTrue(!sv2.EquivalentTo(sv3) && !sv3.EquivalentTo(sv2),
                           "Inequivalence not commutative (2).");
         }
+        /// <summary>
+        /// <para>
+        /// Tests to make sure that the behaviour of the
+        ///  <see cref="SemanticVersion.CompatibleWith(SemanticVersion)"/>
+        /// method is as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Compatibility()
+        {
+            // Backwards-compatibility determination is not commutative,
+            // so a few of these tests will just be reversed parameters.
+
+            #region "Always False" checks (numbers 0 to 10)
+            {
+                // First thing we're going to do is a basic test of the "always
+                // false" conditions listed in the remarks for [CompatibleWith].
+                // These are:
+                //
+                //      - Major version of zero on either version
+                //      - Different Major versions
+                //      - Null [SemanticVersion] instance
+                //
+                // We can't really test here that these are *always* true, but
+                // that doesn't mean we shouldn't try testing them anyway.
+                var af_sv0 = new SemanticVersion(0, 5, 0);
+                var af_sv1 = new SemanticVersion(0, 6, 0);
+                var af_sv2 = new SemanticVersion(1, 2, 0);
+                var af_sv3 = new SemanticVersion(2, 2, 0);
+                var af_sv4 = (SemanticVersion)null;
+
+                // Zero major versions
+                Assert.IsFalse(af_sv0.CompatibleWith(af_sv1),
+                               "Incorrect compatibility (0).");
+                Assert.IsFalse(af_sv1.CompatibleWith(af_sv0),
+                               "Incorrect compatibility (1).");
+                Assert.IsFalse(af_sv1.CompatibleWith(af_sv2),
+                               "Incorrect compatibility (2).");
+                Assert.IsFalse(af_sv2.CompatibleWith(af_sv1),
+                               "Incorrect compatibility (3).");
+                // Zero major versions, equivalent versions
+                Assert.IsTrue(af_sv1.CompatibleWith(af_sv1),
+                               "Incorrect compatibility (4).");
+
+                // Different major versions
+                Assert.IsFalse(af_sv2.CompatibleWith(af_sv3),
+                               "Incorrect compatibility (5).");
+                Assert.IsFalse(af_sv3.CompatibleWith(af_sv2),
+                               "Incorrect compatibility (6).");
+
+                // Null version
+                Assert.IsFalse(af_sv0.CompatibleWith(af_sv4),
+                               "Incorrect compatibility (7).");
+                Assert.IsFalse(af_sv1.CompatibleWith(af_sv4),
+                               "Incorrect compatibility (8).");
+                Assert.IsFalse(af_sv2.CompatibleWith(af_sv4),
+                               "Incorrect compatibility (9).");
+                Assert.IsFalse(af_sv3.CompatibleWith(af_sv4),
+                               "Incorrect compatibility (10).");
+            }
+            #endregion
+            #region Pre-release Versions (numbers 11 to 22)
+            {
+                // Pre-release versions are a bit more difficult with
+                // their compatibility. See [CompatibleWith] remarks
+                // and code comments for more information.
+
+                // No pre-release identifiers for the "control" comparison.
+                //
+                // This should be compatible with [pr_sv3] and [pr_sv4] as
+                // they are both pre-release versions of versions later than
+                // this one, so they should (for standards compliance) implement
+                // the APIs this depends on.
+                var pr_sv0 = new SemanticVersion(1, 0, 0);
+
+                // These two can't be compatible because they are equal in all
+                // but pre-release identifiers.
+                var pr_sv1 = new SemanticVersion(1, 0, 0, new[] { "rc", "1" });
+                var pr_sv2 = new SemanticVersion(1, 0, 0, new[] { "rc", "2" });
+
+                Assert.IsFalse(pr_sv0.CompatibleWith(pr_sv1),
+                               "Incorrect compatibility (11).");
+                Assert.IsFalse(pr_sv1.CompatibleWith(pr_sv0),
+                               "Incorrect compatibility (12).");
+
+                Assert.IsFalse(pr_sv0.CompatibleWith(pr_sv2),
+                               "Incorrect compatibility (13).");
+                Assert.IsFalse(pr_sv2.CompatibleWith(pr_sv0),
+                               "Incorrect compatibility (14).");
+
+                Assert.IsFalse(pr_sv1.CompatibleWith(pr_sv2),
+                               "Incorrect compatibility (15).");
+                Assert.IsFalse(pr_sv2.CompatibleWith(pr_sv1),
+                               "Incorrect compatibility (16).");
+
+                // These two can't be compatible because they are both pre-release
+                // versions.
+                var pr_sv3 = new SemanticVersion(1, 1, 0, new[] { "rc" });
+                var pr_sv4 = new SemanticVersion(1, 2, 0, new[] { "rc" });
+
+                Assert.IsFalse(pr_sv3.CompatibleWith(pr_sv4),
+                               "Incorrect compatibility (17).");
+                Assert.IsFalse(pr_sv4.CompatibleWith(pr_sv3),
+                               "Incorrect compatibility (18).");
+
+                Assert.IsTrue(pr_sv0.CompatibleWith(pr_sv3),
+                               "Incorrect compatibility (19).");
+                Assert.IsFalse(pr_sv3.CompatibleWith(pr_sv0),
+                               "Incorrect compatibility (20).");
+
+                Assert.IsTrue(pr_sv0.CompatibleWith(pr_sv4),
+                               "Incorrect compatibility (21).");
+                Assert.IsFalse(pr_sv4.CompatibleWith(pr_sv0),
+                               "Incorrect compatibility (22).");
+
+            }
+            #endregion
+            #region Regular checks (numbers 23 to 30)
+            {
+                var sv0 = new SemanticVersion(1, 0, 0);
+                var sv1 = new SemanticVersion(1, 1, 0);
+
+                Assert.IsTrue(sv0.CompatibleWith(sv1),
+                              "Incorrect compatibility (23).");
+                Assert.IsFalse(sv1.CompatibleWith(sv0),
+                               "Incorrect compatibility (24).");
+
+                var sv2 = new SemanticVersion(2, 0, 0);
+                var sv3 = new SemanticVersion(2, 2, 0);
+
+                Assert.IsTrue(sv2.CompatibleWith(sv3),
+                              "Incorrect compatibility (25).");
+                Assert.IsFalse(sv3.CompatibleWith(sv2),
+                               "Incorrect compatibility (26).");
+
+                Assert.IsFalse(sv0.CompatibleWith(sv2),
+                               "Incorrect compatibility (27).");
+                Assert.IsFalse(sv1.CompatibleWith(sv2),
+                               "Incorrect compatibility (28).");
+
+                Assert.IsFalse(sv0.CompatibleWith(sv3),
+                               "Incorrect compatibility (29).");
+                Assert.IsFalse(sv1.CompatibleWith(sv3),
+                               "Incorrect compatibility (30).");
+            }
+            #endregion
+        }
     }
 }

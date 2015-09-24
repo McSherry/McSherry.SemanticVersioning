@@ -201,7 +201,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool operator >=(SemanticVersion l, SemanticVersion r)
         {
-            return (l == r) || (l > r);
+            return l.EquivalentTo(r) || (l > r);
         }
         /// <summary>
         /// <para>
@@ -222,7 +222,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool operator <=(SemanticVersion l, SemanticVersion r)
         {
-            return (l == r) || (l < r);
+            return l.EquivalentTo(r) || (l < r);
         }
 
 
@@ -526,6 +526,133 @@ namespace McSherry.SemanticVersioning
                    this.Minor == semver.Minor                           &&
                    this.Patch == semver.Patch                           &&
                    this.Identifiers.SequenceEqual(semver.Identifiers);
+        }
+        /// <summary>
+        /// <para>
+        /// Determines whether the specified <see cref="SemanticVersion"/> is
+        /// backwards-compatible with the current version. 
+        /// </para>
+        /// </summary>
+        /// <param name="semver">
+        /// The <see cref="SemanticVersion"/> to test for backwards
+        /// compatibility.
+        /// </param>
+        /// <returns>
+        /// True if <paramref name="semver"/> is backwards-compatible with
+        /// the current version. False if otherwise.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// The following situations will always produce a false result:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///         <description>
+        ///             The <see cref="Major"/> versions of the compared
+        ///             <see cref="SemanticVersion"/>s differ.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <description>
+        ///             The <see cref="Major"/> versions of either of the
+        ///             compared versions are equal to zero (unless the
+        ///             two versions are equivalent).
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <description>
+        ///             The parameter <paramref name="semver"/> is null.
+        ///         </description>
+        ///     </item>
+        /// </list>
+        /// <para>
+        /// If none of the above conditions are met, compatibility is determined
+        /// through simple precedence comparison, where a version will only ever
+        /// be considered compatible if it is of equal or greater precedence.
+        /// </para>
+        /// <para>
+        /// It should be noted that a <paramref name="semver"/> value with
+        /// pre-release identifiers will be considered backwards-compatible 
+        /// provided its
+        /// <see cref="Major"/>-<see cref="Minor"/>-<see cref="Patch"/>
+        /// trio is greater than the trio of this version and the
+        /// <see cref="Major"/> versions are equal. This is because, even
+        /// though it is a pre-release version, it is within the same
+        /// major version, and so should, if the Semantic Versioning
+        /// specification is being properly adhered to, be backwards-compatible.
+        /// </para>
+        /// </remarks>
+        public bool CompatibleWith(SemanticVersion semver)
+        {
+            // If it's null, it definitely can't be compatible.
+            if (object.ReferenceEquals(semver, null))
+                return false;
+
+            // If the version is equivalent to us, then we're obviously 
+            // compatible because we're the same version.
+            if (this.EquivalentTo(semver))
+                return true;
+
+            // A change in the major version indicates a breaking change, so
+            // if they don't have the same major version we cannot be sure
+            // that they will be compatible.
+            if (this.Major != semver.Major)
+                return false;
+
+            // A major version of zero indicates that the version is not yet
+            // stable, and each new release may contain breaking changes. As a
+            // result, we can't determine if the versions are compatible.
+            if (this.Major == 0 || semver.Major == 0)
+                return false;
+
+            // This is to determine whether a version with pre-release identifers
+            // is backwards-compatible with this version.
+            //
+            // We first check to see whether we have any identifiers. We can only
+            // proceed if we don't.
+            //
+            // If we don't have any identifiers, we check to see whether the other
+            // version does. If it doesn't have any, we don't need to perform this
+            // check.
+            //
+            // If the other version has identifiers, it can only be considered
+            // backwards-compatible if either of the following conditions are
+            // true:
+            //
+            //      - The other version's minor version is greater; or
+            //      - The minor versions are equal, but the other version
+            //        has a greater patch version than we do.
+            //
+            // If either of the conditions are met, it is backwards-compatible and
+            // we can return [true].
+            //
+            // We don't need to check to make sure the major versions are the same
+            // because that check has already been made earlier in the method.
+            if (!this.Identifiers.Any() && semver.Identifiers.Count > 0 &&
+                ((semver.Minor > this.Minor) ||
+                 (semver.Minor == this.Minor && semver.Patch > this.Patch)))
+                return true;
+
+            // If this is a pre-release version, the other version isn't, and
+            // the above test failed, then the other version is not backwards-
+            // -compatible with this version.
+            if (this.Identifiers.Any() && !semver.Identifiers.Any())
+                return false;
+
+            // If both versions are pre-release versions, they cannot be
+            // compatible because neither has a finalised/stable API that it
+            // depends on.
+            if (this.Identifiers.Any() && semver.Identifiers.Any())
+                return false;
+
+            // If we've passed all the checks, we know that the versions have
+            // the same major version but are not equivalent. To determine if
+            // [semver] is backwards-compatible, we need to check to make sure
+            // it has greater precedence than we do.
+            //
+            // [semver] must have greater precedence because a version with
+            // lesser precedence may not contain features that we rely on.
+            return semver > this;
         }
 
         // object Overrides
