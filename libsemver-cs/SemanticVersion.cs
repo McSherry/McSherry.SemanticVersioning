@@ -232,6 +232,28 @@ namespace McSherry.SemanticVersioning
         /// <summary>
         /// <para>
         /// Creates a new <see cref="SemanticVersion"/> using the
+        /// provided version components, with <see cref="Patch"/>
+        /// set to zero.
+        /// </para>
+        /// </summary>
+        /// <param name="major">
+        /// The semantic version's major version.
+        /// </param>
+        /// <param name="minor">
+        /// The semantic version's minor version.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="major"/> or 
+        /// <paramref name="minor"/> is negative.
+        /// </exception>
+        public SemanticVersion(int major, int minor)
+            : this(major, minor, patch: 0)
+        {
+
+        }
+        /// <summary>
+        /// <para>
+        /// Creates a new <see cref="SemanticVersion"/> using the
         /// provided version components.
         /// </para>
         /// </summary>
@@ -245,7 +267,7 @@ namespace McSherry.SemanticVersioning
         /// The semantic version's patch version.
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when any of <paramref name="major,"/>
+        /// Thrown when any of <paramref name="major"/>,
         /// <paramref name="minor"/>, and <paramref name="patch"/>
         /// is negative.
         /// </exception>
@@ -313,7 +335,7 @@ namespace McSherry.SemanticVersioning
         /// The semantic version's pre-release identifiers.
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when any of <paramref name="major,"/>
+        /// Thrown when any of <paramref name="major"/>,
         /// <paramref name="minor"/>, and <paramref name="patch"/>
         /// is negative.
         /// </exception>
@@ -354,7 +376,7 @@ namespace McSherry.SemanticVersioning
         /// The semantic version's build metadata items.
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when any of <paramref name="major,"/>
+        /// Thrown when any of <paramref name="major"/>,
         /// <paramref name="minor"/>, and <paramref name="patch"/>
         /// is negative.
         /// </exception>

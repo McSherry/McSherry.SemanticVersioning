@@ -19,9 +19,10 @@
 // SOFTWARE.
 using System;
 using System.Linq;
-using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using static System.Linq.Enumerable;
 
 namespace McSherry.SemanticVersioning
 {
@@ -153,12 +154,12 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
-        /// Tests the <see cref="SemanticVersion"/> constructor to make sure it
-        /// acts as expected.
+        /// Tests the <see cref="SemanticVersion"/> constructors to make sure
+        /// they act as expected when given invalid input.
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
-        public void Constructing()
+        public void ConstructingInvalid()
         {
             // Make sure that the expected exceptions are thrown for
             // invalid input.
@@ -182,7 +183,7 @@ namespace McSherry.SemanticVersioning
 
             new Action(delegate
             {
-                new SemanticVersion(0, 0, 0, Enumerable.Empty<string>(), null);
+                new SemanticVersion(0, 0, 0, Empty<string>(), null);
             }).AssertThrows<ArgumentNullException>(
                 "Did not throw on invalid input (4).");
 
@@ -198,7 +199,7 @@ namespace McSherry.SemanticVersioning
                     major:          0,
                     minor:          0,
                     patch:          0,
-                    identifiers:    Enumerable.Empty<string>(),
+                    identifiers:    Empty<string>(),
                     metadata:       new string[] { null }
                     );
             }).AssertThrows<ArgumentNullException>(
@@ -216,11 +217,90 @@ namespace McSherry.SemanticVersioning
                     major:          0,
                     minor:          0,
                     patch:          0,
-                    identifiers:    Enumerable.Empty<string>(),
+                    identifiers:    Empty<string>(),
                     metadata:       new string[] { "Löffel" } // Invalid character
                     );
             }).AssertThrowsExact<ArgumentException>(
                 "Did not throw on invalid input (8).");
+
+            // Negative two-part components
+            new Action(() => new SemanticVersion(-1, 0))
+                .AssertThrows<ArgumentOutOfRangeException>(
+                    "Did not throw on invalid input (9).");
+            new Action(() => new SemanticVersion(0, -1))
+                .AssertThrows<ArgumentOutOfRangeException>(
+                    "Did not throw on invalid input (10).");
+        }
+        /// <summary>
+        /// <para>
+        /// Tests the <see cref="SemanticVersion"/> constructors to make sure
+        /// they act as expected when given valid input.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void ConstructingValid()
+        {
+            // These tests are fairly simple, we just test each constructor
+            // available with something we know is valid and test the values
+            // of the [SemanticVersion]'s properties afterwards.
+
+            #region (int, int) 0-4
+            {
+                var sv = new SemanticVersion(1, 6);
+
+                Assert.AreEqual(sv.Major, 1, "Incorrect initialisation (0).");
+                Assert.AreEqual(sv.Minor, 6, "Incorrect initialisation (1).");
+                Assert.AreEqual(sv.Patch, 0, "Incorrect initialisation (2).");
+
+                Assert.IsTrue(sv.Identifiers.SequenceEqual(Empty<string>()),
+                              "Incorrect initialisation (3).");
+                Assert.IsTrue(sv.Metadata.SequenceEqual(Empty<string>()),
+                              "Incorrect initialisation (4).");
+            }
+            #endregion
+            #region (int, int, int) 5-9
+            {
+                var sv = new SemanticVersion(1, 2, 8);
+
+                Assert.AreEqual(sv.Major, 1, "Incorrect initialisation (5).");
+                Assert.AreEqual(sv.Minor, 2, "Incorrect initialisation (6).");
+                Assert.AreEqual(sv.Patch, 8, "Incorrect initialisation (7).");
+
+                Assert.IsTrue(sv.Identifiers.SequenceEqual(Empty<string>()),
+                              "Incorrect initialisation (8).");
+                Assert.IsTrue(sv.Metadata.SequenceEqual(Empty<string>()),
+                              "Incorrect initialisation (9).");
+            }
+            #endregion
+            #region (int, int, int, IEnumerable<string> 10-14
+            {
+                var sv = new SemanticVersion(2, 5, 6, new[] { "rc" });
+
+                Assert.AreEqual(sv.Major, 2, "Incorrect initialisation (10).");
+                Assert.AreEqual(sv.Minor, 5, "Incorrect initialisation (11).");
+                Assert.AreEqual(sv.Patch, 6, "Incorrect initialisation (12).");
+
+                Assert.IsTrue(sv.Identifiers.SequenceEqual(new[] { "rc" }),
+                              "Incorrect initialisation (13).");
+                Assert.IsTrue(sv.Metadata.SequenceEqual(Empty<string>()),
+                              "Incorrect initialisation (14).");
+            }
+            #endregion
+            #region (int, int, int, IEnumerable<string>, IEnumerable<string>)
+            {
+                var sv = new SemanticVersion(5, 1, 2, new[] { "rc" }, 
+                                                      new[] { "2015" });
+
+                Assert.AreEqual(sv.Major, 5, "Incorrect initialisation (15).");
+                Assert.AreEqual(sv.Minor, 1, "Incorrect initialisation (16).");
+                Assert.AreEqual(sv.Patch, 2, "Incorrect initialisation (17).");
+
+                Assert.IsTrue(sv.Identifiers.SequenceEqual(new[] { "rc" }),
+                              "Incorrect initialisation (18).");
+                Assert.IsTrue(sv.Metadata.SequenceEqual(new[] { "2015" }),
+                              "Incorrect initialisation (19).");
+            }
+            #endregion
         }
 
         /// <summary>
@@ -245,49 +325,49 @@ namespace McSherry.SemanticVersioning
                                     minor:          0,
                                     patch:          0,
                                     identifiers:    new[] { "alpha" },
-                                    metadata:       Enumerable.Empty<string>()),
+                                    metadata:       Empty<string>()),
 
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
                                     identifiers:    new[] { "alpha", "1" },
-                                    metadata:       Enumerable.Empty<string>()),
+                                    metadata:       Empty<string>()),
 
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
                                     identifiers:    new[] { "alpha", "beta" },
-                                    metadata:       Enumerable.Empty<string>()),
+                                    metadata:       Empty<string>()),
 
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
                                     identifiers:    new[] { "beta" },
-                                    metadata:       Enumerable.Empty<string>()),
+                                    metadata:       Empty<string>()),
 
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
                                     identifiers:    new[] { "beta", "2" },
-                                    metadata:       Enumerable.Empty<string>()),
+                                    metadata:       Empty<string>()),
 
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
                                     identifiers:    new[] { "beta", "11" },
-                                    metadata:       Enumerable.Empty<string>()),
+                                    metadata:       Empty<string>()),
 
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
                                     identifiers:    new[] { "rc", "1" },
-                                    metadata:       Enumerable.Empty<string>()),
+                                    metadata:       Empty<string>()),
 
                 new SemanticVersion(major:          1,
                                     minor:          0,
                                     patch:          0,
-                                    identifiers:    Enumerable.Empty<string>(),
-                                    metadata:       Enumerable.Empty<string>()),
+                                    identifiers:    Empty<string>(),
+                                    metadata:       Empty<string>()),
             };
             #endregion
 
@@ -403,12 +483,12 @@ namespace McSherry.SemanticVersioning
         public void Equality()
         {
             var sv0 = new SemanticVersion(1, 5, 0);
-            var sv1 = new SemanticVersion(1, 5, 0, Enumerable.Empty<string>());
-            var sv2 = new SemanticVersion(1, 5, 0, Enumerable.Empty<string>(),
-                                                   Enumerable.Empty<string>());
+            var sv1 = new SemanticVersion(1, 5, 0, Empty<string>());
+            var sv2 = new SemanticVersion(1, 5, 0, Empty<string>(),
+                                                   Empty<string>());
             var sv3 = new SemanticVersion(1, 6, 0);
             var sv4 = new SemanticVersion(1, 6, 0, new[] { "rc", "1" });
-            var sv5 = new SemanticVersion(1, 6, 0, Enumerable.Empty<string>(),
+            var sv5 = new SemanticVersion(1, 6, 0, Empty<string>(),
                                                    new[] { "d116bf47" });
 
             Assert.AreEqual(sv0, sv1, "Equality check failed (0).");
@@ -471,7 +551,7 @@ namespace McSherry.SemanticVersioning
 
             var sv0 = new SemanticVersion(1, 7, 0);
             var sv1 = new SemanticVersion(1, 7, 0, new[] { "beta", "3" });
-            var sv2 = new SemanticVersion(1, 7, 0, Enumerable.Empty<string>(),
+            var sv2 = new SemanticVersion(1, 7, 0, Empty<string>(),
                                                    new[] { "d116bf47" });
             var sv3 = new SemanticVersion(1, 7, 0, new[] { "beta", "3" },
                                                    new[] { "d116bf47" });
