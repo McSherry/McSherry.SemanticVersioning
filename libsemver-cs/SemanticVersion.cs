@@ -201,7 +201,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool operator >=(SemanticVersion l, SemanticVersion r)
         {
-            return l.EquivalentTo(r) || (l > r);
+            return (l?.EquivalentTo(r) == true || l == r) || (l > r);
         }
         /// <summary>
         /// <para>
@@ -222,7 +222,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool operator <=(SemanticVersion l, SemanticVersion r)
         {
-            return l.EquivalentTo(r) || (l < r);
+            return (l?.EquivalentTo(r) == true || l == r) || (l < r);
         }
 
 
