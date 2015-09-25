@@ -53,11 +53,17 @@ namespace McSherry.SemanticVersioning
     [Serializable]
     [CLSCompliant(true)]
     public sealed class SemanticVersion
-        : IEquatable<SemanticVersion>, IComparable<SemanticVersion>
+        : IEquatable<SemanticVersion>, IComparable<SemanticVersion>,
+          IFormattable
     {
         private const int CompareTo_Greater =  1,
                           CompareTo_Equal   =  0,
                           CompareTo_Lesser  = -1;
+
+        private const string IFmt_Default       = "G",
+                             IFmt_PrefixDefault = "g",
+                             IFmt_Concise       = "C",
+                             IFmt_PrefixConcise = "c";
 
         private static IDictionary<string, SemanticVersion> _memDict;
 
@@ -201,7 +207,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool operator >=(SemanticVersion l, SemanticVersion r)
         {
-            return (l?.EquivalentTo(r) == true || l == r) || (l > r);
+            return l?.EquivalentTo(r) == true || l == r || (l > r);
         }
         /// <summary>
         /// <para>
@@ -222,7 +228,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool operator <=(SemanticVersion l, SemanticVersion r)
         {
-            return (l?.EquivalentTo(r) == true || l == r) || (l < r);
+            return l?.EquivalentTo(r) == true || l == r || (l < r);
         }
 
 
@@ -740,56 +746,9 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public override string ToString()
         {
-            var sb = new StringBuilder();
-
-            // The three numeric version components are always present,
-            // so we can add them to the builder without any checks.
-            sb.Append($"{this.Major}.{this.Minor}.{this.Patch}");
-
-            // Pre-release identifiers always come before metadata, but we need
-            // to make sure there are identifiers to add first.
-            if (this.Identifiers.Any())
-            {
-                // Identifiers are separated from the three-part version by
-                // a hyphen character.
-                sb.Append('-');
-
-                // Each identifier is separated from the others by a period.
-                this.Identifiers.Aggregate(
-                    seed: sb,
-                    func: (bdr, id) => bdr.Append($"{id}."));
-
-                // The way we concatenated the identifiers above, we'll be
-                // left with a trailing period. We want to get rid of this.
-                sb.Remove(
-                    startIndex: sb.Length - 1, 
-                    length:     1
-                    );
-            }
-
-            // Like with the pre-release identifiers, we want to make sure there
-            // is metadata to add before we attempt to add it.
-            if (this.Metadata.Any())
-            {
-                // Metadata is separated from the three-part version/pre-release
-                // identifiers by a plus character.
-                sb.Append('+');
-
-                // Like pre-release identifiers, each metadata item is separated
-                // from other metadata items with a period.
-                this.Metadata.Aggregate(
-                    seed:   sb,
-                    func:   (bdr, md) => bdr.Append($"{md}."));
-
-                // Like before, we're left with a trailing period.
-                sb.Remove(
-                    startIndex: sb.Length - 1,
-                    length:     1
-                    );
-            }
-            
-            // We've constructed the string, so now we just need to return it.
-            return sb.ToString();
+            // We want to use the default format, so we pass null to the
+            // method accepting a format and let it figure it out.
+            return this.ToString(null);
         }
 
         // IEquatable<SemanticVersion> methods
@@ -1058,6 +1017,286 @@ namespace McSherry.SemanticVersioning
                 // and so lower precedence.
                 return CompareTo_Lesser;
             }
+        }
+
+        // IFormattable methods
+        /// <summary>
+        /// <para>
+        /// Formats the value of the current <see cref="SemanticVersion"/>
+        /// as specified.
+        /// </para>
+        /// </summary>
+        /// <param name="format">
+        /// The format to use, or null for the default format.
+        /// </param>
+        /// <param name="provider">
+        /// The format provider to use, or null for the default provider. 
+        /// This parameter is ignored.
+        /// </param>
+        /// <returns>
+        /// A string representation of the current <see cref="SemanticVersion"/>,
+        /// formatted as specified.
+        /// </returns>
+        /// <exception cref="FormatException">
+        /// Thrown when the format specifier given in <paramref name="format"/>
+        /// is not recognised or is invalid.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// The format of a Semantic Version is not dependent on culture
+        /// information, and so the value of <paramref name="provider"/>
+        /// is ignored.
+        /// </para>
+        /// <para>
+        /// The value of <paramref name="format"/> should contain one of
+        /// the below-listed format specifiers. Custom format patterns
+        /// are not supported. If <paramref name="format"/> is null, the
+        /// default format specifier, "G", is used in its place.
+        /// </para>
+        /// <para>
+        /// The list of recognised format specifiers is given in the
+        /// below table.
+        /// </para>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Format Specifier</term>
+        ///         <term>Description</term>
+        ///         <term>Example</term>
+        ///     </listheader>
+        /// 
+        ///     <item>
+        ///         <term><c>"c"</c></term>
+        ///         <term>
+        ///             Prefixed concise format. Identical
+        ///             to the concise format (<c>"C"</c>),
+        ///             except prefixed with a lowercase "v".
+        ///         </term>
+        ///         <term>
+        ///             <para>v1.8</para>
+        ///             <para>v1.15.1</para>
+        ///             <para>v2.1-beta.3</para>
+        ///         </term>
+        ///     </item>
+        ///     <item>
+        ///         <term><c>"C"</c></term>
+        ///         <term>
+        ///             Concise format. Omits metadata items,
+        ///             and only includes the <see cref="Patch"/>
+        ///             version if it is non-zero.
+        ///         </term>
+        ///         <term>
+        ///             <para>1.8</para>
+        ///             <para>1.15.1</para>
+        ///             <para>2.1-beta.3</para>
+        ///         </term>
+        ///     </item>
+        /// 
+        ///     <item>
+        ///         <term><c>"g"</c></term>
+        ///         <term>
+        ///             Prefixed default format. Identical to
+        ///             the default format (<c>"G"</c>), except
+        ///             prefixed with a lowercase "v".
+        ///         </term>
+        ///         <term>
+        ///             <para>v1.7.0-alpha.2+20150925.f8f2cb1a</para>
+        ///             <para>v1.2.5</para>
+        ///             <para>v2.0.1-rc.1</para>
+        ///         </term>
+        ///     </item>
+        ///     <item>
+        ///         <term><c>"G"</c>, <c>null</c></term>
+        ///         <term>
+        ///             The default format, as given by the
+        ///             Semantic Versioning 2.0.0 specification.
+        ///         </term>
+        ///         <term>
+        ///             <para>1.7.0-alpha.2+20150925.f8f2cb1a</para>
+        ///             <para>1.2.5</para>
+        ///             <para>2.0.1-rc.1</para>
+        ///         </term>
+        ///     </item>
+        /// </list>
+        /// </remarks>
+        public string ToString(string format, IFormatProvider provider)
+        {
+            // If [format] is null, we treat it as the default
+            // format specifier.
+            if (format == null)
+                format = IFmt_Default;
+
+            var sb = new StringBuilder();
+
+            switch (format)
+            {
+                #region Default and Prefixed Default
+                // Same as default, we just stick a "v" prefix
+                // on the start.
+                case IFmt_PrefixDefault:
+                {
+                    sb.Append("v");
+                }
+                goto case IFmt_Default;
+
+                // The default way of formatting. This uses the
+                // format given by the Semantic Versioning spec:
+                //
+                //      maj.min.patch[-identifiers][+metadata]
+                //
+                // This is essentially our "old" (i.e. before we
+                // implemented [IFormattable]) implementation of
+                // the [ToString()] method.
+                case IFmt_Default:
+                {
+                    // The three numeric version components are always 
+                    // present, so we can add them to the builder without
+                    // any checks.
+                    sb.Append($"{this.Major}.{this.Minor}.{this.Patch}");
+
+                    // Pre-release identifiers always come before metadata,
+                    // but we need to make sure there are identifiers to add
+                    // first.
+                    if (this.Identifiers.Any())
+                    {
+                        // Identifiers are separated from the three-part 
+                        // version by a hyphen character.
+                        sb.Append('-');
+
+                        // Each identifier is separated from the others by
+                        // a period.
+                        this.Identifiers.Aggregate(
+                            seed: sb,
+                            func: (bdr, id) => bdr.Append($"{id}."));
+
+                        // The way we concatenated the identifiers above, 
+                        // we'll be left with a trailing period. We want to
+                        // get rid of this.
+                        sb.Remove(
+                            startIndex: sb.Length - 1,
+                            length: 1
+                            );
+                    }
+
+                    // Like with the pre-release identifiers, we want to make sure
+                    // there is metadata to add before we attempt to add it.
+                    if (this.Metadata.Any())
+                    {
+                        // Metadata is separated from the three-part version/pre-
+                        // -release identifiers by a plus character.
+                        sb.Append('+');
+
+                        // Like pre-release identifiers, each metadata item is 
+                        // separated from other metadata items with a period.
+                        this.Metadata.Aggregate(
+                            seed: sb,
+                            func: (bdr, md) => bdr.Append($"{md}."));
+
+                        // Like before, we're left with a trailing period.
+                        sb.Remove(
+                            startIndex: sb.Length - 1,
+                            length: 1
+                            );
+                    }
+                }
+                break;
+                #endregion
+                #region Concise and Prefixed Concise
+                case IFmt_PrefixConcise:
+                {
+                    sb.Append("v");
+                }
+                goto case IFmt_Concise;
+
+                // The concise format isn't something defined in
+                // the Semantic Versioning specification, but it 
+                // is something that is likely to be useful.
+                //
+                // The concise format always omits build metadata
+                // items, and will omit the patch version if it is
+                // equal to zero.
+                case IFmt_Concise:
+                {
+                    // Major-Minor is always included.
+                    sb.Append($"{this.Major}.{this.Minor}");
+
+                    // The patch version must be greater than zero
+                    // to be included.
+                    if (this.Patch > 0)
+                        sb.Append($".{this.Patch}");
+
+                    // If there are any identifiers, include them in
+                    // the version.
+                    if (this.Identifiers.Any())
+                    {
+                        // Identifiers are separated from the maj/min
+                        // by a hyphen.
+                        sb.Append("-");
+
+                        // Identifiers are separated from each other by
+                        // a period.
+                        this.Identifiers.Aggregate(
+                            seed: sb,
+                            func: (bdr, id) => bdr.Append($"{id}."));
+
+                        // TODO: Test this
+                        //
+                        //this.Identifiers.Skip(1).Aggregate(
+                        //    seed: sb.Append(this.Identifiers.First()),
+                        //    func: (bdr, id) => bdr.Append($".{id}"));
+
+                        // The above method of concatenating the
+                        // identifiers will leave a trailing period that
+                        // we need to remove.
+                        sb.Remove(
+                            startIndex: sb.Length - 1,
+                            length:     1
+                            );
+                    }
+                }
+                break;
+                #endregion
+                #region Unrecognised
+                default:
+                {
+                    throw new FormatException(
+                        $@"Unrecognised format specifier ""{format}""."
+                        );
+                }
+                #endregion
+            }
+
+            // The formatted version is added to the builder by the above
+            // code, so all we need to do here is return the contained value.
+            return sb.ToString();
+        }
+        /// <summary>
+        /// <para>
+        /// Formats the value of the current <see cref="SemanticVersion"/>
+        /// as specified.
+        /// </para>
+        /// </summary>
+        /// <param name="format">
+        /// The format to use, or null for the default format.
+        /// </param>
+        /// <returns>
+        /// A string representation of the current <see cref="SemanticVersion"/>,
+        /// formatted as specified.
+        /// </returns>
+        /// <exception cref="FormatException">
+        /// Thrown when the format specifier given in <paramref name="format"/>
+        /// is not recognised or is invalid.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// For information on the acceptable format specifiers, see the
+        /// Remarks section for <see cref="ToString(string, IFormatProvider)"/>.
+        /// </para>
+        /// </remarks>
+        public string ToString(string format)
+        {
+            // Passing null to the method accepting a format provider
+            // means we want to use the default provider where applicable.
+            return this.ToString(format, null);
         }
     }
 }
