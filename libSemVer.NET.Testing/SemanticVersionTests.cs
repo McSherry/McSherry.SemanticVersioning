@@ -151,17 +151,17 @@ namespace McSherry.SemanticVersioning
             // method accepting no arguments. This should produce
             // strings formatted as given in the Semantic Versioning
             // spec.
-            Assert.AreEqual(sv0.ToString(), "1.0.0", 
+            Assert.AreEqual("1.0.0", sv0.ToString(), 
                             "ToString() failure (0).");
-            Assert.AreEqual(sv1.ToString(), "1.1.1",
+            Assert.AreEqual("1.1.1", sv1.ToString(), 
                             "ToString() failure (1).");
-            Assert.AreEqual(sv2.ToString(), "1.2.0-rc.1",
+            Assert.AreEqual("1.2.0-rc.1", sv2.ToString(), 
                             "ToString() failure (2).");
-            Assert.AreEqual(sv3.ToString(), "1.2.1-rc.1",
+            Assert.AreEqual("1.2.1-rc.1", sv3.ToString(), 
                             "ToString() failure (3).");
-            Assert.AreEqual(sv4.ToString(), "1.3.0-rc.1+20150925.1",
+            Assert.AreEqual("1.3.0-rc.1+20150925.1", sv4.ToString(), 
                             "ToString() failure (4).");
-            Assert.AreEqual(sv5.ToString(), "1.3.1-rc.1+20150925.1",
+            Assert.AreEqual("1.3.1-rc.1+20150925.1", sv5.ToString(), 
                             "ToString() failure (5).");
             #endregion
             #region ToString(string, IFormatProvider) + ToString(string)
@@ -171,146 +171,146 @@ namespace McSherry.SemanticVersioning
             #region Format Specifier: "G"
             // First up is the "G" specifier, which should produce the same
             // result as normal [ToString].
-            Assert.AreEqual(sv0.ToString("G", null), sv0.ToString(),
+            Assert.AreEqual(sv0.ToString(), sv0.ToString("G", null), 
                             "Format specifier 'G' failure (0).");
-            Assert.AreEqual(sv1.ToString("G", null), sv1.ToString(),
+            Assert.AreEqual(sv1.ToString(), sv1.ToString("G", null),
                             "Format specifier 'G' failure (1).");
-            Assert.AreEqual(sv2.ToString("G", null), sv2.ToString(),
+            Assert.AreEqual(sv2.ToString(), sv2.ToString("G", null),
                             "Format specifier 'G' failure (2).");
-            Assert.AreEqual(sv3.ToString("G", null), sv3.ToString(),
+            Assert.AreEqual(sv3.ToString(), sv3.ToString("G", null),
                             "Format specifier 'G' failure (3).");
-            Assert.AreEqual(sv4.ToString("G", null), sv4.ToString(),
+            Assert.AreEqual(sv4.ToString(), sv4.ToString("G", null),
                             "Format specifier 'G' failure (4).");
-            Assert.AreEqual(sv5.ToString("G", null), sv5.ToString(),
+            Assert.AreEqual(sv5.ToString(), sv5.ToString("G", null),
                             "Format specifier 'G' failure (5).");
             // We're also going to test the overload that doesn't take an
             // [IFormatProvider] to make sure it produces the same result.
-            Assert.AreEqual(sv0.ToString("G", null), sv0.ToString("G"),
+            Assert.AreEqual(sv0.ToString("G"), sv0.ToString("G", null), 
                             "Format specifier 'G' failure (6).");
-            Assert.AreEqual(sv1.ToString("G", null), sv1.ToString("G"),
+            Assert.AreEqual(sv1.ToString("G"), sv1.ToString("G", null),
                             "Format specifier 'G' failure (7).");
-            Assert.AreEqual(sv2.ToString("G", null), sv2.ToString("G"),
+            Assert.AreEqual(sv2.ToString("G"), sv2.ToString("G", null),
                             "Format specifier 'G' failure (8).");
-            Assert.AreEqual(sv3.ToString("G", null), sv3.ToString("G"),
+            Assert.AreEqual(sv3.ToString("G"), sv3.ToString("G", null),
                             "Format specifier 'G' failure (9).");
-            Assert.AreEqual(sv4.ToString("G", null), sv4.ToString("G"),
+            Assert.AreEqual(sv4.ToString("G"), sv4.ToString("G", null),
                             "Format specifier 'G' failure (10).");
-            Assert.AreEqual(sv5.ToString("G", null), sv5.ToString("G"),
+            Assert.AreEqual(sv5.ToString("G"), sv5.ToString("G", null),
                             "Format specifier 'G' failure (11).");
             #endregion
             #region Format Specifier: "g"
             // The "g" specifier is like "G", but the output is prefixed
             // with a "v".
-            Assert.AreEqual(sv0.ToString("g", null), "v" + sv0.ToString(),
+            Assert.AreEqual("v" + sv0.ToString(), sv0.ToString("g", null),
                             "Format specifier 'g' failure (0).");
-            Assert.AreEqual(sv1.ToString("g", null), "v" + sv1.ToString(),
+            Assert.AreEqual("v" + sv1.ToString(), sv1.ToString("g", null),
                             "Format specifier 'g' failure (1).");
-            Assert.AreEqual(sv2.ToString("g", null), "v" + sv2.ToString(),
+            Assert.AreEqual("v" + sv2.ToString(), sv2.ToString("g", null),
                             "Format specifier 'g' failure (2).");
-            Assert.AreEqual(sv3.ToString("g", null), "v" + sv3.ToString(),
+            Assert.AreEqual("v" + sv3.ToString(), sv3.ToString("g", null),
                             "Format specifier 'g' failure (3).");
-            Assert.AreEqual(sv4.ToString("g", null), "v" + sv4.ToString(),
+            Assert.AreEqual("v" + sv4.ToString(), sv4.ToString("g", null),
                             "Format specifier 'g' failure (4).");
-            Assert.AreEqual(sv5.ToString("g", null), "v" + sv5.ToString(),
+            Assert.AreEqual("v" + sv5.ToString(), sv5.ToString("g", null),
                             "Format specifier 'g' failure (5).");
-            // Now we test the single-argument [ToString] method.
-            Assert.AreEqual(sv0.ToString("g", null), sv0.ToString("g"),
+            
+            Assert.AreEqual(sv0.ToString("g"), sv0.ToString("g", null),
                             "Format specifier 'g' failure (6).");
-            Assert.AreEqual(sv1.ToString("g", null), sv1.ToString("g"),
+            Assert.AreEqual(sv1.ToString("g"), sv1.ToString("g", null),
                             "Format specifier 'g' failure (7).");
-            Assert.AreEqual(sv2.ToString("g", null), sv2.ToString("g"),
+            Assert.AreEqual(sv2.ToString("g"), sv2.ToString("g", null),
                             "Format specifier 'g' failure (8).");
-            Assert.AreEqual(sv3.ToString("g", null), sv3.ToString("g"),
+            Assert.AreEqual(sv3.ToString("g"), sv3.ToString("g", null),
                             "Format specifier 'g' failure (9).");
-            Assert.AreEqual(sv4.ToString("g", null), sv4.ToString("g"),
+            Assert.AreEqual(sv4.ToString("g"), sv4.ToString("g", null),
                             "Format specifier 'g' failure (10).");
-            Assert.AreEqual(sv5.ToString("g", null), sv5.ToString("g"),
+            Assert.AreEqual(sv5.ToString("g"), sv5.ToString("g", null),
                             "Format specifier 'g' failure (11).");
             #endregion
             #region Format Specifier: null
             // The null specifier must produce the same result as "G".
-            Assert.AreEqual(sv0.ToString(null, null), sv0.ToString(),
-                            "Format specifier 'null' failure (0).");
-            Assert.AreEqual(sv1.ToString(null, null), sv1.ToString(),
-                            "Format specifier 'null' failure (1).");
-            Assert.AreEqual(sv2.ToString(null, null), sv2.ToString(),
-                            "Format specifier 'null' failure (2).");
-            Assert.AreEqual(sv3.ToString(null, null), sv3.ToString(),
-                            "Format specifier 'null' failure (3).");
-            Assert.AreEqual(sv4.ToString(null, null), sv4.ToString(),
-                            "Format specifier 'null' failure (4).");
-            Assert.AreEqual(sv5.ToString(null, null), sv5.ToString(),
-                            "Format specifier 'null' failure (5).");
-            // Test the single-arg [ToString] method, too.
-            Assert.AreEqual(sv0.ToString(null, null), sv0.ToString(null),
-                            "Format specifier 'null' failure (6).");
-            Assert.AreEqual(sv1.ToString(null, null), sv1.ToString(null),
-                            "Format specifier 'null' failure (7).");
-            Assert.AreEqual(sv2.ToString(null, null), sv2.ToString(null),
-                            "Format specifier 'null' failure (8).");
-            Assert.AreEqual(sv3.ToString(null, null), sv3.ToString(null),
-                            "Format specifier 'null' failure (9).");
-            Assert.AreEqual(sv4.ToString(null, null), sv4.ToString(null),
-                            "Format specifier 'null' failure (10).");
-            Assert.AreEqual(sv5.ToString(null, null), sv5.ToString(null),
-                            "Format specifier 'null' failure (11).");
+            Assert.AreEqual(sv0.ToString(), sv0.ToString(null, null),
+                            "Format specifier null failure (0).");
+            Assert.AreEqual(sv1.ToString(), sv1.ToString(null, null),
+                            "Format specifier null failure (1).");
+            Assert.AreEqual(sv2.ToString(), sv2.ToString(null, null),
+                            "Format specifier null failure (2).");
+            Assert.AreEqual(sv3.ToString(), sv3.ToString(null, null),
+                            "Format specifier null failure (3).");
+            Assert.AreEqual(sv4.ToString(), sv4.ToString(null, null),
+                            "Format specifier null failure (4).");
+            Assert.AreEqual(sv5.ToString(), sv5.ToString(null, null),
+                            "Format specifier null failure (5).");
+
+            Assert.AreEqual(sv0.ToString(null), sv0.ToString(null, null),
+                            "Format specifier null failure (6).");
+            Assert.AreEqual(sv1.ToString(null), sv1.ToString(null, null),
+                            "Format specifier null failure (7).");
+            Assert.AreEqual(sv2.ToString(null), sv2.ToString(null, null),
+                            "Format specifier null failure (8).");
+            Assert.AreEqual(sv3.ToString(null), sv3.ToString(null, null),
+                            "Format specifier null failure (9).");
+            Assert.AreEqual(sv4.ToString(null), sv4.ToString(null, null),
+                            "Format specifier null failure (10).");
+            Assert.AreEqual(sv5.ToString(null), sv5.ToString(null, null),
+                            "Format specifier null failure (11).");
             #endregion
             #region Format Specifier: "C"
             // The "C" specifier gives us the concise format, where some
             // information may be omitted.
-            Assert.AreEqual(sv0.ToString("C", null), "1.0",
+            Assert.AreEqual("1.0", sv0.ToString("C", null),
                             "Format specifier 'C' failure (0).");
-            Assert.AreEqual(sv1.ToString("C", null), "1.1.1",
+            Assert.AreEqual("1.1.1", sv1.ToString("C", null),
                             "Format specifier 'C' failure (1).");
-            Assert.AreEqual(sv2.ToString("C", null), "1.2-rc.1",
+            Assert.AreEqual("1.2-rc.1", sv2.ToString("C", null),
                             "Format specifier 'C' failure (2).");
-            Assert.AreEqual(sv3.ToString("C", null), "1.2.1-rc.1",
+            Assert.AreEqual("1.2.1-rc.1", sv3.ToString("C", null),
                             "Format specifier 'C' failure (3).");
-            Assert.AreEqual(sv4.ToString("C", null), "1.3-rc.1",
+            Assert.AreEqual("1.3-rc.1", sv4.ToString("C", null),
                             "Format specifier 'C' failure (4).");
-            Assert.AreEqual(sv5.ToString("C", null), "1.3.1-rc.1",
+            Assert.AreEqual("1.3.1-rc.1", sv5.ToString("C", null),
                             "Format specifier 'C' failure (5).");
-            // We need to test the single-argument [ToString] method, too.
-            Assert.AreEqual(sv0.ToString("C", null), sv0.ToString("C"),
+
+            Assert.AreEqual(sv0.ToString("C"), sv0.ToString("C", null),
                             "Format specifier 'C' failure (6).");
-            Assert.AreEqual(sv1.ToString("C", null), sv1.ToString("C"),
+            Assert.AreEqual(sv1.ToString("C"), sv1.ToString("C", null),
                             "Format specifier 'C' failure (7).");
-            Assert.AreEqual(sv2.ToString("C", null), sv2.ToString("C"),
+            Assert.AreEqual(sv2.ToString("C"), sv2.ToString("C", null),
                             "Format specifier 'C' failure (8).");
-            Assert.AreEqual(sv3.ToString("C", null), sv3.ToString("C"),
+            Assert.AreEqual(sv3.ToString("C"), sv3.ToString("C", null),
                             "Format specifier 'C' failure (9).");
-            Assert.AreEqual(sv4.ToString("C", null), sv4.ToString("C"),
+            Assert.AreEqual(sv4.ToString("C"), sv4.ToString("C", null),
                             "Format specifier 'C' failure (10).");
-            Assert.AreEqual(sv5.ToString("C", null), sv5.ToString("C"),
+            Assert.AreEqual(sv5.ToString("C"), sv5.ToString("C", null),
                             "Format specifier 'C' failure (11).");
             #endregion
             #region Format Specifier: "c"
             // The "c" specifier gives us the same output as "C", but
             // prefixed with the letter "v".
-            Assert.AreEqual(sv0.ToString("c", null), "v1.0",
+            Assert.AreEqual("v1.0", sv0.ToString("c", null),
                             "Format specifier 'c' failure (0).");
-            Assert.AreEqual(sv1.ToString("c", null), "v1.1.1",
+            Assert.AreEqual("v1.1.1", sv1.ToString("c", null),
                             "Format specifier 'c' failure (1).");
-            Assert.AreEqual(sv2.ToString("c", null), "v1.2-rc.1",
+            Assert.AreEqual("v1.2-rc.1", sv2.ToString("c", null),
                             "Format specifier 'c' failure (2).");
-            Assert.AreEqual(sv3.ToString("c", null), "v1.2.1-rc.1",
+            Assert.AreEqual("v1.2.1-rc.1", sv3.ToString("c", null),
                             "Format specifier 'c' failure (3).");
-            Assert.AreEqual(sv4.ToString("c", null), "v1.3-rc.1",
+            Assert.AreEqual("v1.3-rc.1", sv4.ToString("c", null),
                             "Format specifier 'c' failure (4).");
-            Assert.AreEqual(sv5.ToString("c", null), "v1.3.1-rc.1",
+            Assert.AreEqual("v1.3.1-rc.1", sv5.ToString("c", null),
                             "Format specifier 'c' failure (5).");
-            // We need to test the single-argument [ToString] method, too.
-            Assert.AreEqual(sv0.ToString("c", null), sv0.ToString("c"),
+
+            Assert.AreEqual(sv0.ToString("c"), sv0.ToString("c", null),
                             "Format specifier 'c' failure (6).");
-            Assert.AreEqual(sv1.ToString("c", null), sv1.ToString("c"),
+            Assert.AreEqual(sv1.ToString("c"), sv1.ToString("c", null),
                             "Format specifier 'c' failure (7).");
-            Assert.AreEqual(sv2.ToString("c", null), sv2.ToString("c"),
+            Assert.AreEqual(sv2.ToString("c"), sv2.ToString("c", null),
                             "Format specifier 'c' failure (8).");
-            Assert.AreEqual(sv3.ToString("c", null), sv3.ToString("c"),
+            Assert.AreEqual(sv3.ToString("c"), sv3.ToString("c", null),
                             "Format specifier 'c' failure (9).");
-            Assert.AreEqual(sv4.ToString("c", null), sv4.ToString("c"),
+            Assert.AreEqual(sv4.ToString("c"), sv4.ToString("c", null),
                             "Format specifier 'c' failure (10).");
-            Assert.AreEqual(sv5.ToString("c", null), sv5.ToString("c"),
+            Assert.AreEqual(sv5.ToString("c"), sv5.ToString("c", null),
                             "Format specifier 'c' failure (11).");
             #endregion
 
@@ -415,9 +415,9 @@ namespace McSherry.SemanticVersioning
             {
                 var sv = new SemanticVersion(1, 6);
 
-                Assert.AreEqual(sv.Major, 1, "Incorrect initialisation (0).");
-                Assert.AreEqual(sv.Minor, 6, "Incorrect initialisation (1).");
-                Assert.AreEqual(sv.Patch, 0, "Incorrect initialisation (2).");
+                Assert.AreEqual(1, sv.Major, "Incorrect initialisation (0).");
+                Assert.AreEqual(6, sv.Minor, "Incorrect initialisation (1).");
+                Assert.AreEqual(0, sv.Patch, "Incorrect initialisation (2).");
 
                 Assert.IsTrue(sv.Identifiers.SequenceEqual(Empty<string>()),
                               "Incorrect initialisation (3).");
@@ -428,10 +428,10 @@ namespace McSherry.SemanticVersioning
             #region (int, int, int) 5-9
             {
                 var sv = new SemanticVersion(1, 2, 8);
-
-                Assert.AreEqual(sv.Major, 1, "Incorrect initialisation (5).");
-                Assert.AreEqual(sv.Minor, 2, "Incorrect initialisation (6).");
-                Assert.AreEqual(sv.Patch, 8, "Incorrect initialisation (7).");
+                
+                Assert.AreEqual(1, sv.Major, "Incorrect initialisation (5).");
+                Assert.AreEqual(2, sv.Minor, "Incorrect initialisation (6).");
+                Assert.AreEqual(8, sv.Patch, "Incorrect initialisation (7).");
 
                 Assert.IsTrue(sv.Identifiers.SequenceEqual(Empty<string>()),
                               "Incorrect initialisation (8).");
@@ -442,10 +442,10 @@ namespace McSherry.SemanticVersioning
             #region (int, int, int, IEnumerable<string> 10-14
             {
                 var sv = new SemanticVersion(2, 5, 6, new[] { "rc" });
-
-                Assert.AreEqual(sv.Major, 2, "Incorrect initialisation (10).");
-                Assert.AreEqual(sv.Minor, 5, "Incorrect initialisation (11).");
-                Assert.AreEqual(sv.Patch, 6, "Incorrect initialisation (12).");
+                
+                Assert.AreEqual(2, sv.Major, "Incorrect initialisation (10).");
+                Assert.AreEqual(5, sv.Minor, "Incorrect initialisation (11).");
+                Assert.AreEqual(6, sv.Patch, "Incorrect initialisation (12).");
 
                 Assert.IsTrue(sv.Identifiers.SequenceEqual(new[] { "rc" }),
                               "Incorrect initialisation (13).");
@@ -457,10 +457,10 @@ namespace McSherry.SemanticVersioning
             {
                 var sv = new SemanticVersion(5, 1, 2, new[] { "rc" }, 
                                                       new[] { "2015" });
-
-                Assert.AreEqual(sv.Major, 5, "Incorrect initialisation (15).");
-                Assert.AreEqual(sv.Minor, 1, "Incorrect initialisation (16).");
-                Assert.AreEqual(sv.Patch, 2, "Incorrect initialisation (17).");
+                
+                Assert.AreEqual(5, sv.Major, "Incorrect initialisation (15).");
+                Assert.AreEqual(1, sv.Minor, "Incorrect initialisation (16).");
+                Assert.AreEqual(2, sv.Patch, "Incorrect initialisation (17).");
 
                 Assert.IsTrue(sv.Identifiers.SequenceEqual(new[] { "rc" }),
                               "Incorrect initialisation (18).");
@@ -540,29 +540,29 @@ namespace McSherry.SemanticVersioning
 
             #region CompareTo
             // Test the [CompareTo] method.
-            Assert.AreEqual(cmp[1].CompareTo<SemanticVersion>(cmp[0]),
-                            Ordering.Greater,
+            Assert.AreEqual(Ordering.Greater,
+                            cmp[1].CompareTo<SemanticVersion>(cmp[0]),
                             "Comparison failed (0).");
-            Assert.AreEqual(cmp[1].CompareTo<SemanticVersion>(cmp[2]),
-                            Ordering.Lesser,
+            Assert.AreEqual(Ordering.Lesser,
+                            cmp[1].CompareTo<SemanticVersion>(cmp[2]),
                             "Comparison failed (1).");
-            Assert.AreEqual(cmp[2].CompareTo<SemanticVersion>(cmp[3]),
-                            Ordering.Lesser,
+            Assert.AreEqual(Ordering.Lesser,
+                            cmp[2].CompareTo<SemanticVersion>(cmp[3]),
                             "Comparison failed (2).");
-            Assert.AreEqual(cmp[3].CompareTo<SemanticVersion>(cmp[4]),
-                            Ordering.Lesser,
+            Assert.AreEqual(Ordering.Lesser,
+                            cmp[3].CompareTo<SemanticVersion>(cmp[4]),
                             "Comparison failed (3).");
-            Assert.AreEqual(cmp[4].CompareTo<SemanticVersion>(cmp[5]),
-                            Ordering.Lesser,
+            Assert.AreEqual(Ordering.Lesser,
+                            cmp[4].CompareTo<SemanticVersion>(cmp[5]),
                             "Comparison failed (4).");
-            Assert.AreEqual(cmp[5].CompareTo<SemanticVersion>(cmp[6]),
-                            Ordering.Lesser,
+            Assert.AreEqual(Ordering.Lesser,
+                            cmp[5].CompareTo<SemanticVersion>(cmp[6]),
                             "Comparison failed (5).");
-            Assert.AreEqual(cmp[6].CompareTo<SemanticVersion>(cmp[7]),
-                            Ordering.Lesser,
+            Assert.AreEqual(Ordering.Lesser,
+                            cmp[6].CompareTo<SemanticVersion>(cmp[7]),
                             "Comparison failed (6).");
-            Assert.AreEqual(cmp[7].CompareTo<SemanticVersion>(cmp[8]),
-                            Ordering.Lesser,
+            Assert.AreEqual(Ordering.Lesser,
+                            cmp[7].CompareTo<SemanticVersion>(cmp[8]),
                             "Comparison failed (7).");
 
             // These tests are mentioned by the MSDN docs, so we're going to
@@ -657,11 +657,11 @@ namespace McSherry.SemanticVersioning
             var sv4 = new SemanticVersion(1, 6, 0, new[] { "rc", "1" });
             var sv5 = new SemanticVersion(1, 6, 0, Empty<string>(),
                                                    new[] { "d116bf47" });
-
-            Assert.AreEqual(sv0, sv1, "Equality check failed (0).");
-            Assert.AreEqual(sv0, sv2, "Equality check failed (1).");
-            Assert.AreEqual(sv1, sv2, "Equality check failed (2).");
-            Assert.AreNotEqual(sv0, sv3, "Equality check failed (3).");
+            
+            Assert.IsTrue(sv0 == sv1, "Equality check failed (0).");
+            Assert.IsTrue(sv0 == sv2, "Equality check failed (1).");
+            Assert.IsTrue(sv1 == sv2, "Equality check failed (2).");
+            Assert.IsFalse(sv0 == sv3, "Equality check failed (3).");
 
             // Now we test the equality operators.
             //
