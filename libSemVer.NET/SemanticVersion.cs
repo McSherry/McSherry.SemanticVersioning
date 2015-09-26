@@ -52,7 +52,7 @@ namespace McSherry.SemanticVersioning
     /// </remarks>
     [Serializable]
     [CLSCompliant(true)]
-    public sealed class SemanticVersion
+    public sealed partial class SemanticVersion
         : IEquatable<SemanticVersion>, IComparable<SemanticVersion>,
           IFormattable
     {
