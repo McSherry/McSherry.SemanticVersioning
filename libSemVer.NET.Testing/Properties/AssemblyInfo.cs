@@ -21,21 +21,17 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using CLSCompliantAttribute = System.CLSCompliantAttribute;
-
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("libsemver-cs")]
+[assembly: AssemblyTitle("libSemVer.NET.Testing")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("libsemver-cs")]
+[assembly: AssemblyProduct("libSemVer.NET.Testing")]
 [assembly: AssemblyCopyright("Copyright 2015 © Liam McSherry")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: InternalsVisibleTo("libsemver-cs.Testing")]
-[assembly: CLSCompliant(true)]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -43,7 +39,7 @@ using CLSCompliantAttribute = System.CLSCompliantAttribute;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("8c0fd5fe-7c51-45c7-a6b6-7d73fa74588f")]
+[assembly: Guid("1094d088-aac1-457a-b515-652b09bc11bd")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -55,5 +51,5 @@ using CLSCompliantAttribute = System.CLSCompliantAttribute;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyFileVersion("0.1.0.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

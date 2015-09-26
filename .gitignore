@@ -1,5 +1,3 @@
 *.suo
-libsemver-cs/obj/
-libsemver-cs.Testing/obj/
-libsemver-cs/bin/
-libsemver-cs.Testing/bin/
+*/obj/
+*/bin/
