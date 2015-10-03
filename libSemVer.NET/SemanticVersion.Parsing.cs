@@ -19,6 +19,7 @@
 // SOFTWARE.
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -241,7 +242,7 @@ namespace McSherry.SemanticVersioning
                 if (!Enum.IsDefined(typeof(ParseResultType), error))
                 {
                     throw new ArgumentException(
-                        message:    $"The parse result code 0x{error:X2} is " +
+                        message:    $"The parse result code {(int)error:X8} is " +
                                      "not recognised.",
                         paramName:  nameof(error));
                 }
@@ -335,7 +336,7 @@ namespace McSherry.SemanticVersioning
                         // is thrown (which should be never) won't accidentally
                         // be caught by user code catching [ArgumentException].
                         throw new NotSupportedException(
-                            $"Unrecognised result code 0x{Type:X2} provided.");
+                            $"Unrecognised result code {(int)Type:X8} provided.");
                     }
                 }
             }
@@ -398,7 +399,7 @@ namespace McSherry.SemanticVersioning
                     default:
                     {
                         throw new NotSupportedException(
-                            $"Unrecognised result code 0x{Type:X2} provided.");
+                            $"Unrecognised result code {(int)Type:X8} provided.");
                     };
                 }
             }
@@ -411,6 +412,118 @@ namespace McSherry.SemanticVersioning
         /// </summary>
         internal static class Parser
         {
+            /// <summary>
+            /// <para>
+            /// Represents the states of the <see cref="SemanticVersion"/>
+            /// parser.
+            /// </para>
+            /// </summary>
+            private enum State
+            {
+                Major,
+                Minor,
+                Patch,
+                Identifiers,
+                Metadata
+            }
+
+            /// <summary>
+            /// <para>
+            /// The character used to start the sequence of pre-release
+            /// identifiers (a hyphen).
+            /// </para>
+            /// </summary>
+            private const char IdentifierStart = '-';
+            /// <summary>
+            /// <para>
+            /// The character used to start the sequence of build metadata
+            /// items (a plus sign).
+            /// </para>
+            /// </summary>
+            private const char MetadataStart = '+';
+            /// <summary>
+            /// <para>
+            /// The character used to separate various version
+            /// compoents (a period).
+            /// </para>
+            /// </summary>
+            private const char ComponentSeparator = '.';
+
+            private static IDictionary<string, SemanticVersion> _memDict;
+
+            /// <summary>
+            /// <para>
+            /// Attempts to normalise the version string provided as input
+            /// to the parser.
+            /// </para>
+            /// </summary>
+            /// <param name="input">
+            /// The version string to normalise.
+            /// </param>
+            /// <returns>
+            /// A <see cref="ParseResult"/> indicating whether normalisation
+            /// was successful or, if it wasn't successful, why it failed.
+            /// </returns>
+            internal static ParseResultType Normalise(ref string input, 
+                                                      ParseMode mode)
+            {
+                // Normalisation should make our attempt at caching the result
+                // of the parser (and so speeding up programs that use a lot of
+                // parsed semantic versions) more effective.
+                //
+                // Once normalised, strings like ["v1.2.0"] and ["1.2.0"] would
+                // appear identical, and leading and trailing whitespace is not
+                // preserved.
+                //
+                // Normalisation is required for this because we're going to be
+                // feeding the string representation into an [IDictionary<>] to
+                // make a map of string representations to class instances.
+
+                // We can't normalise a string with no content, so if it's
+                // null, empty, or whitespace, indicate that it is null.
+                if (String.IsNullOrWhiteSpace(input))
+                    return ParseResultType.NullString;
+
+                // Removing whitespace is the first step of normalisation. Other
+                // [Parse] methods (such as on [Int32]) do it, so to maintain the
+                // Principle of Least Astonishment we're doing it too.
+                input = input.Trim();
+
+                // Next, we're going to remove a prefixing "v" or "V" if it is
+                // present and the flags we've been passed ([mode]) allow us to
+                // do so.
+                //
+                // We should be safe to use the indexer because we've already
+                // verified that the string is not entirely whitespace, so 
+                // trimming should give us at least a single character.
+                if (!Helper.IsNumber(input[0]))
+                {
+                    // If the first character isn't a number and we haven't
+                    // been passed the [AllowPrefix] flag, there's no point in
+                    // checking what character it is because it's definitely
+                    // invalid.
+                    //
+                    // However, if we have been passed the [AllowPrefix] flag
+                    // and the character is neither "v" nor "V", we have to
+                    // return the same result because it's invalid.
+                    if (!mode.HasFlag(ParseMode.AllowPrefix))
+                        return ParseResultType.PreTrioInvalidChar;
+                    else if (input[0] != 'v' && input[0] != 'V')
+                        return ParseResultType.PreTrioInvalidChar;
+
+                    // If we end up here, we know that we've been passed the
+                    // [AllowPrefix] flag and that the first character is a
+                    // "v" or "V". We don't want to pass the first character
+                    // to the parser (because it isn't meaningful), so we need
+                    // to substring the string.
+                    input = input.Substring(startIndex: 1);
+                }
+
+                // If we haven't returned yet, it means everything should be
+                // good and we can indicate success to the caller.
+                return ParseResultType.Success;
+            }
+
             /// <summary>
             /// <para>
             /// Implements <see cref="SemanticVersion"/> parsing.
@@ -426,9 +539,476 @@ namespace McSherry.SemanticVersioning
             /// A <see cref="ParseResult"/> describing whether the
             /// parse succeeded.
             /// </returns>
+            private static ParseResult _parseVersion(string input, 
+                                                     ParseMode mode)
+            {
+                // This could all probably be accomplished with a single
+                // (probably ugly) regular expression, but we probably
+                // wouldn't be able to provide as-specific error messages
+                // if we did that.
+                //
+                // I'll take slower parsing for better error reporting
+                // any day of the week.
+
+                // The major version is the first thing we're expecting,
+                // so the [Major] state seems like a good pick for initial
+                // state.
+                var state = State.Major;
+                var sb = new StringBuilder();
+
+                // We're converting to a list of nullable characters to
+                // make handling the end of the string easier.
+                //
+                // Instead of having some duplicate code outside of the
+                // loop, we can now detect null as appropriate.
+                var chars = new List<char?>(input.Select(c => (char?)c));
+                chars.Add(null);
+
+                // Negative values will cause an exception if we pass them
+                // to the [SemanticVersion] constructor.
+                int major = -1, minor = -1, patch = -1;
+                // Null values will too, as well as causing an NRE if we try
+                // to use them before we've given them a proper value.
+                ICollection<string> identifiers = new List<string>(),
+                                    metadata = new List<string>();
+
+                foreach (char? c in chars)
+                {
+                    switch (state)
+                    {
+                        // [Major], [Minor], and [Patch] state handling is mostly
+                        // the same. If you're looking at [Minor]/[Patch] and
+                        // are wondering why some bits are sparsely-commented,
+                        // look at the [Major] state to see comments.
+                        //
+                        // Similarly, [Identifiers] has more comments than
+                        // [Metadata].
+
+                        #region Major
+                        case State.Major:
+                        {
+                            // No value means we've hit the end of the
+                            // string. This isn't allowed in the major
+                            // version, so we raise an error.
+                            if (!c.HasValue)
+                            {
+                                return new ParseResult(
+                                    error: ParseResultType.TrioItemMissing);
+                            }
+                            // If it has a value, we want to check if it's
+                            // a number before we add it to the builder.
+                            else if (Helper.IsNumber(c.Value))
+                            {
+                                // We're leaving leading-zero checks until
+                                // we hit the end of the major version as
+                                // doing it that way simplifies the check.
+                                sb.Append(c.Value);
+                            }
+                            // If it's not a number, it might be a period,
+                            // which would indicate that we're now moving
+                            // on to the minor version.
+                            else if (c.Value == ComponentSeparator)
+                            {
+                                // If there's nothing in the [StringBuilder],
+                                // it means we didn't have a major version, so
+                                // we need to report a missing component.
+                                if (sb.Length == 0)
+                                    return new ParseResult(
+                                        error: ParseResultType.TrioItemMissing);
+
+                                // Major versions can't have leading zeroes, so
+                                // if the major version is more than a single
+                                // digit long and its first digit is a leading
+                                // zero, we need to raise an error, too.
+                                if (sb.Length > 1 && sb[0] == '0')
+                                    return new ParseResult(
+                                        ParseResultType.TrioItemLeadingZero);
+
+                                // Next step, we need to convert the numeric
+                                // major version component string to an integer
+                                // so we can have it in our [SemanticVersion]
+                                // class. We know that the string is a valid
+                                // number (i.e. composed of characters 0-9),
+                                // so the only reason this call should fail is
+                                // if the number is too long and causes an
+                                // overflow.
+                                if (!Int32.TryParse(sb.ToString(), out major))
+                                    return new ParseResult(
+                                        ParseResultType.TrioItemOverflow);
+
+                                // If we're here, we've got our major version
+                                // parsed and now we need to handle the minor
+                                // version.
+                                state = State.Minor;
+                                // Remember to clear the [StringBuilder] so
+                                // the next iteration doesn't get any of our
+                                // leftover state.
+                                sb.Clear();
+                            }
+                            // These characters have special significance in
+                            // that they are used to indicate the start of
+                            // identifiers or metadata after the major, minor,
+                            // and patch versions.
+                            //
+                            // If we hit one in the [Major] version state, it
+                            // means that both the minor and patch version
+                            // components are missing.
+                            else if (c == IdentifierStart || c == MetadataStart)
+                            {
+                                return new ParseResult(
+                                    error: ParseResultType.TrioItemMissing);
+                            }
+                            // If it's none of the above, it's the character
+                            // is invalid so we have to raise an error.
+                            else
+                            {
+                                return new ParseResult(
+                                    error: ParseResultType.TrioInvalidChar);
+                            }
+                        }
+                        break;
+                        #endregion
+                        #region Minor
+                        case State.Minor:
+                        {
+                            if (!c.HasValue ||
+                                c.Value == ComponentSeparator ||
+                                c.Value == IdentifierStart    ||
+                                c.Value == MetadataStart)
+                            {
+                                if (sb.Length == 0)
+                                    return new ParseResult(
+                                        error: ParseResultType.TrioItemMissing);
+
+                                if (sb.Length > 1 && sb[0] == '0')
+                                    return new ParseResult(
+                                        ParseResultType.TrioItemLeadingZero);
+
+                                if (!Int32.TryParse(sb.ToString(), out minor))
+                                    return new ParseResult(
+                                        ParseResultType.TrioItemOverflow);
+
+                                if (!c.HasValue)
+                                {
+                                    // If the [OptionalPatch] flag is present, 
+                                    // then we're going to allow the version 
+                                    // string to end in the [Minor] state.
+                                    if (mode.HasFlag(ParseMode.OptionalPatch))
+                                    {
+                                        return new ParseResult(
+                                            new SemanticVersion(
+                                                major: major,
+                                                minor: minor
+                                            ));
+                                    }
+
+                                    // If it isn't, then this is an invalid 
+                                    // version and we want to return an error.
+                                    return new ParseResult(
+                                        error: ParseResultType.TrioItemMissing);
+                                }
+                                else if (c.Value == ComponentSeparator)
+                                    state = State.Patch;
+                                // Here's the bit where [Minor] differs from
+                                // [Major] in how it's handled. The [ParseMode]
+                                // flag has a flag, [OptionalPatch], that allows
+                                // the caller to omit the patch version.
+                                //
+                                // If the character is a hyphen or plus sign, we
+                                // are going to test for that flag.
+                                else if (c.Value == MetadataStart ||
+                                         c.Value == IdentifierStart)
+                                {
+                                    // If the flag isn't present, it means that
+                                    // the version string is trying to omit the
+                                    // patch version without enabling the ability
+                                    // to do so, which is an error.
+                                    if (!mode.HasFlag(ParseMode.OptionalPatch))
+                                        return new ParseResult(
+                                            ParseResultType.TrioItemMissing);
+                                    
+                                    // We've been passed the correct flag and, if
+                                    // we're here, there is no patch version
+                                    // present, so we want to default it to zero.
+                                    patch = 0;
+
+                                    // If the flag is set, then we need to make
+                                    // a decision on the state to transition to
+                                    // based on the character we're on.
+                                    //
+                                    // Hyphen for identifiers, plus for metadata.
+                                    if (c.Value == IdentifierStart)
+                                        state = State.Identifiers;
+                                    else
+                                        state = State.Metadata;
+                                }
+
+                                sb.Clear();
+                            }
+                            else if (Helper.IsNumber(c.Value))
+                            {
+                                sb.Append(c.Value);
+                            }
+                            else
+                            {
+                                return new ParseResult(
+                                    error: ParseResultType.TrioInvalidChar);
+                            }
+                        }
+                        break;
+                        #endregion
+                        #region Patch
+                        case State.Patch:
+                        {
+                            // The [Patch] state differs slightly from [Major] and
+                            // [Minor] because it is acceptable for the end of the
+                            // string to occur in the [Patch] state.
+                            //
+                            // We're going to share the end-of-string code with
+                            // the identifier-start/metadata-start code so we
+                            // don't repeat ourselves more than we already have.
+                            if (!c.HasValue ||
+                                c == IdentifierStart || c == MetadataStart)
+                            {
+                                // All the "try to turn this into an actual
+                                // number" code from the other states.
+                                if (sb.Length == 0)
+                                    return new ParseResult(
+                                        error: ParseResultType.TrioItemMissing);
+
+                                if (sb.Length > 1 && sb[0] == '0')
+                                    return new ParseResult(
+                                        ParseResultType.TrioItemLeadingZero);
+
+                                if (!Int32.TryParse(sb.ToString(), out patch))
+                                    return new ParseResult(
+                                        ParseResultType.TrioItemOverflow);
+
+                                // If we hit a hyphen, we need to transition to
+                                // the identifier-parsing state.
+                                if (c == IdentifierStart)
+                                    state = State.Identifiers;
+                                // Similarly, if we hit a plus we need to move
+                                // into the metadata-parsing state.
+                                else if (c == MetadataStart)
+                                    state = State.Metadata;
+                                // If it isn't either, then it's the end of the
+                                // string and we want to indicate success by
+                                // returning the parsed [SemanticVersion].
+                                else
+                                    return new ParseResult(new SemanticVersion(
+                                        major: major,
+                                        minor: minor,
+                                        patch: patch
+                                        ));
+
+                                // If we're transitioning into a new state, we
+                                // want the [StringBuilder] to be clear so it
+                                // doesn't end up with any of our data.
+                                sb.Clear();
+                            }
+                            else if (Helper.IsNumber(c.Value))
+                            {
+                                sb.Append(c);
+                            }
+                            else
+                            {
+                                return new ParseResult(
+                                    error: ParseResultType.TrioInvalidChar);
+                            }
+                        }
+                        break;
+                        #endregion
+                        #region Identifiers
+                        case State.Identifiers:
+                        {
+                            // When we get here, the hyphen will have already
+                            // been consumed by the previous state's handler, so
+                            // we can launch straight in to parsing identifiers.
+
+                            // What we do when we hit the end of the string or a
+                            // component separator (period) is much the same.
+                            if (!c.HasValue || c.Value == ComponentSeparator ||
+                                c == MetadataStart)
+                            {
+                                // First, we check to see whether we actually
+                                // picked up any content that could be an
+                                // identifier.
+                                //
+                                // If we didn't, it means an identifier is missing
+                                // where one is expected, and that's an error.
+                                if (sb.Length == 0)
+                                {
+                                    return new ParseResult(
+                                        error: ParseResultType.IdentifierMissing);
+                                }
+
+                                // If there is content, then we want to check to
+                                // make sure that it's a valid identifier.
+                                //
+                                // If it isn't, that's also an error so we need
+                                // to report it.
+                                if (!Helper.IsValidIdentifier(sb.ToString()))
+                                {
+                                    return new ParseResult(
+                                        error: ParseResultType.IdentifierInvalid);
+                                }
+
+                                // And finally, if it passes the above checks, we
+                                // can add it to our list of identifiers and clear
+                                // the string builder for the next iteration.
+                                identifiers.Add(sb.ToString());
+                                sb.Clear();
+
+                                // Now we check to see whether this is the end of
+                                // the string. If it is, we want to return the
+                                // created [SemanticVersion].
+                                if (!c.HasValue)
+                                {
+                                    return new ParseResult(new SemanticVersion(
+                                        major:          major,
+                                        minor:          minor,
+                                        patch:          patch,
+                                        identifiers:    identifiers
+                                        ));
+                                }
+                                // If it isn't the end of the string, it might be
+                                // the start of the metadata. If it is, we want to
+                                // transition to the metadata-parsing state.
+                                else if (c == MetadataStart)
+                                {
+                                    state = State.Metadata;
+                                }
+                            }
+                            // If it isn't any of the characters we've previously
+                            // checked for, we add it to the [StringBuilder]. We
+                            // don't care about whether it's valid, because that
+                            // will be checked in future.
+                            else
+                            {
+                                sb.Append(c);
+                            }
+                        }
+                        break;
+                        #endregion
+                        #region Metadata
+                        case State.Metadata:
+                        {
+                            // The [Metadata] state is much the same as the
+                            // [Identifiers] state, except for the validation
+                            // method called and it not being able to switch
+                            // to other states (metadata is always last).
+                            //
+                            // Like with [Identifiers] and hyphens, we don't
+                            // need to handle a leading plus sign because it
+                            // will have been consumed by the previous state.
+
+                            if (!c.HasValue || c == ComponentSeparator)
+                            {
+                                if (sb.Length == 0)
+                                {
+                                    return new ParseResult(
+                                        error: ParseResultType.MetadataMissing);
+                                }
+
+                                if (!Helper.IsValidMetadata(sb.ToString()))
+                                {
+                                    return new ParseResult(
+                                        error: ParseResultType.MetadataInvalid);
+                                }
+
+                                metadata.Add(sb.ToString());
+                                sb.Clear();
+
+                                if (!c.HasValue)
+                                {
+                                    return new ParseResult(new SemanticVersion(
+                                        major:          major,
+                                        minor:          minor,
+                                        patch:          patch,
+                                        identifiers:    identifiers,
+                                        metadata:       metadata
+                                        ));
+                                }
+                            }
+                            else
+                            {
+                                sb.Append(c);
+                            }
+                        }
+                        break;
+                        #endregion
+                    }
+                }
+
+                // We should never be able to enter this state, because we should
+                // never break out of the switch statement.
+                //
+                // If we do hit this state, we want to immediately throw an
+                // exception because something must have gone horribly, horribly
+                // wrong and we're probably not recoverable.
+                throw new InvalidOperationException(
+                    "Invalid state entered: SemanticVersion parser error."
+                    );
+            }
+
+            static Parser()
+            {
+                // The easiest way to represent a [SemanticVersion] is with a
+                // string (e.g. "1.1.0-alpha.7"). Each time a string is used,
+                // however, it must be parsed before it can be used, and this
+                // is an expensive operation.
+                //
+                // To avoid having to parse each time a string is used, we're
+                // going to build a cache of strings and versions and check it
+                // each time we enter the parse method.
+                //
+                // We're using a [ConcurrentDictionary] because the cache is
+                // static and may be used across threads.
+                _memDict = new ConcurrentDictionary<string, SemanticVersion>();
+            }
+
+            /// <summary>
+            /// <para>
+            /// Implements <see cref="SemanticVersion"/> parsing and
+            /// input preprocessing.
+            /// </para>
+            /// </summary>
+            /// <param name="input">
+            /// The string representing the semantic version.
+            /// </param>
+            /// <param name="mode">
+            /// Modes augmenting how parsing is performed.
+            /// </param>
+            /// <returns>
+            /// A <see cref="ParseResult"/> describing whether the
+            /// parse succeeded.
+            /// </returns>
             public static ParseResult Parse(string input, ParseMode mode)
             {
-                throw new NotImplementedException();
+                // First thing we do is normalise the string. This gives us
+                // the string in a format we can understand properly.
+                var normaliseResult = Parser.Normalise(ref input, mode);
+
+                // If normalisation was not successful, then we pass on the
+                // error code it returned to the caller.
+                if (normaliseResult != ParseResultType.Success)
+                    return new ParseResult(normaliseResult);
+
+                SemanticVersion cacheResult;
+                // Now that we've normalised the string, we're going to see
+                // if it's in the cache. This should save us some expensive
+                // parse operations.
+                if (_memDict.TryGetValue(input, out cacheResult))
+                {
+                    // If we were successful, we just return the retrieved
+                    // [SemanticVersion] instead of proceeding.
+                    return new ParseResult(cacheResult);
+                }
+
+                // Now that we've done any required preprocessing, we hand off
+                // to the actual parsing routine and return what it gives us.
+                return _parseVersion(input, mode);
             }
         }
 

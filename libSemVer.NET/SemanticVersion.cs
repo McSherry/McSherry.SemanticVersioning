@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -26,6 +25,18 @@ using System.Text;
 
 namespace McSherry.SemanticVersioning
 {
+
+    /*
+        This class is split into multiple files.
+
+        SemanticVersion.cs:
+            Implements the main bits of functionality. Construction,
+            equating, comparing, formatting, etc.
+
+        SemanticVersion.Parsing.cs:
+            Implements parsing a semantic version from a string.
+    */
+
     /// <summary>
     /// <para>
     /// Represents an immutable Semantic Version. This class cannot be inherited.
@@ -64,24 +75,6 @@ namespace McSherry.SemanticVersioning
                              IFmt_PrefixDefault = "g",
                              IFmt_Concise       = "C",
                              IFmt_PrefixConcise = "c";
-
-        private static IDictionary<string, SemanticVersion> _memDict;
-
-        static SemanticVersion()
-        {
-            // The easiest way to represent a [SemanticVersion] is with a
-            // string (e.g. "1.1.0-alpha.7"). Each time a string is used,
-            // however, it must be parsed before it can be used, and this
-            // is an expensive operation.
-            //
-            // To avoid having to parse each time a string is used, we're
-            // going to build a cache of strings and versions and check it
-            // each time we enter the parse method.
-            //
-            // We're using a [ConcurrentDictionary] because the cache is
-            // static and may be used across threads.
-            _memDict = new ConcurrentDictionary<string, SemanticVersion>();
-        }
 
         /// <summary>
         /// <para>
