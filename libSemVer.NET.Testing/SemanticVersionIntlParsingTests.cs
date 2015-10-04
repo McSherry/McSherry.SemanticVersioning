@@ -648,36 +648,46 @@ namespace McSherry.SemanticVersioning
             {
                 // These ones are testing "Strict" specifically, but
                 // should apply to all modes.
-
+                
+                // NullString
                 null,                   // 0
                 String.Empty,           // 1
                 " \t ",                 // 2
-
+                
+                // PreTrioInvalidChar
                 "ẅ1.0.0",               // 3
 
+                // TrioInvalidChar
                 "1ñ.0.0",               // 4
                 "1.û0.0",               // 5
                 "1.0.ç0",               // 6
 
+                // TrioItemLeadingZero
                 "01.0.0",               // 7
                 "1.00.0",               // 8
                 "1.0.00",               // 9
 
+                // TrioItemMissing
                 "1.0-rc",               // 10
                 "1-rc",                 // 11
                 "1..0",                 // 12
 
+                // TrioItemOverflow
                 "1.2147483649.0",       // 13
 
+                // IdentifierMissing
                 "1.0.0-",               // 14
                 "1.0.0-rc.",            // 15
 
+                // IdentifierInvalid
                 "1.0.0-öffentlich",     // 16
                 "1.0.0-00.2",           // 17
 
+                // MetadataMissing
                 "1.0.0+",               // 18
                 "1.0.0+a972bae.",       // 19
 
+                // MetadataInvalid
                 "1.0.0+schlüssel.534a", // 20
 
 
@@ -687,6 +697,8 @@ namespace McSherry.SemanticVersioning
                 // This specifically makes sure that it won't count
                 // a patch omitted but with the period separator
                 // present valid.
+
+                // TrioItemMissing
                 "1.0.",                 // 21
                 "1.0.-rc",              // 22
                 "1.0.+a972bae",         // 23

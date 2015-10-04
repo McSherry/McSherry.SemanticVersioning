@@ -224,6 +224,49 @@ namespace McSherry.SemanticVersioning
             return l?.EquivalentTo(r) == true || l == r || (l < r);
         }
 
+        /// <summary>
+        /// <para>
+        /// Converts a version string to a <see cref="SemanticVersion"/>,
+        /// with all <see cref="ParseMode"/> modifiers active.
+        /// </para>
+        /// </summary>
+        /// <param name="version">
+        /// The version string to convert to a <see cref="SemanticVersion"/>.
+        /// </param>
+        public static explicit operator SemanticVersion(string version)
+        {
+            try
+            {
+                // 0x7FFFFFFF = all bits set, and all bits set means that
+                //              every flag is active. We make every flag
+                //              active because there's no way for a user
+                //              to specify flags with a cast.
+                //
+                //              Note: 0x7FFFFFFF is correct because the
+                //                    underlying type of [ParseMode] is
+                //                    [Int32], which uses the MSb for its
+                //                    sign bit.
+                return SemanticVersion.Parse(version, (ParseMode)0x7FFFFFFF);
+            }
+            // We only want to catch the exceptions that indicate an error
+            // with the user's input. [InvalidOperationException], for example,
+            // is used internally to indicate an unrecoverable invalid state
+            // error, and we don't want to catch that.
+            catch (Exception ex) when (ex is ArgumentNullException  ||
+                                       ex is ArgumentException      ||
+                                       ex is FormatException        ||
+                                       ex is OverflowException)
+            {
+                // This is a cast, so we want to throw an [InvalidCastException]
+                // and have the actual exception as this exception's inner
+                // exception.
+                throw new InvalidCastException(
+                    message:        "Cannot convert specified string to a " +
+                                    "Semantic Version.",
+                    innerException: ex
+                    );
+            }
+        }
 
         private readonly int _major, _minor, _patch;
         private readonly List<string> _prIds, _metadata;

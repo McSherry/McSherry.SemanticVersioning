@@ -35,7 +35,7 @@ namespace McSherry.SemanticVersioning
     /// </summary>
     [Flags]
     [CLSCompliant(true)]
-    public enum ParseMode
+    public enum ParseMode : int
     {
         /// <summary>
         /// <para>
