@@ -1198,19 +1198,16 @@ namespace McSherry.SemanticVersioning
                         // version by a hyphen character.
                         sb.Append('-');
 
-                        // Each identifier is separated from the others by
-                        // a period.
-                        this.Identifiers.Aggregate(
-                            seed: sb,
-                            func: (bdr, id) => bdr.Append($"{id}."));
-
-                        // The way we concatenated the identifiers above, 
-                        // we'll be left with a trailing period. We want to
-                        // get rid of this.
-                        sb.Remove(
-                            startIndex: sb.Length - 1,
-                            length: 1
-                            );
+                        // Identifiers are separated from each other by
+                        // periods.
+                        //
+                        // We concatenate them in this way to avoid an
+                        // extra step at the end. If we concatenated using
+                        // the format string [$"{id}."], we'd need to get
+                        // rid of an extra period at the end.
+                        this.Identifiers.Skip(1).Aggregate(
+                            seed: sb.Append(this.Identifiers.First()),
+                            func: (bdr, id) => bdr.Append($".{id}"));
                     }
 
                     // Like with the pre-release identifiers, we want to make sure
@@ -1221,17 +1218,16 @@ namespace McSherry.SemanticVersioning
                         // -release identifiers by a plus character.
                         sb.Append('+');
 
-                        // Like pre-release identifiers, each metadata item is 
-                        // separated from other metadata items with a period.
-                        this.Metadata.Aggregate(
-                            seed: sb,
-                            func: (bdr, md) => bdr.Append($"{md}."));
-
-                        // Like before, we're left with a trailing period.
-                        sb.Remove(
-                            startIndex: sb.Length - 1,
-                            length: 1
-                            );
+                        // Identifiers are separated from each other by
+                        // periods.
+                        //
+                        // We concatenate them in this way to avoid an
+                        // extra step at the end. If we concatenated using
+                        // the format string [$"{id}."], we'd need to get
+                        // rid of an extra period at the end.
+                        this.Metadata.Skip(1).Aggregate(
+                            seed: sb.Append(this.Metadata.First()),
+                            func: (bdr, md) => bdr.Append($".{md}"));
                     }
                 }
                 break;
@@ -1269,24 +1265,15 @@ namespace McSherry.SemanticVersioning
                         sb.Append("-");
 
                         // Identifiers are separated from each other by
-                        // a period.
-                        this.Identifiers.Aggregate(
-                            seed: sb,
-                            func: (bdr, id) => bdr.Append($"{id}."));
-
-                        // TODO: Test this
+                        // periods.
                         //
-                        //this.Identifiers.Skip(1).Aggregate(
-                        //    seed: sb.Append(this.Identifiers.First()),
-                        //    func: (bdr, id) => bdr.Append($".{id}"));
-
-                        // The above method of concatenating the
-                        // identifiers will leave a trailing period that
-                        // we need to remove.
-                        sb.Remove(
-                            startIndex: sb.Length - 1,
-                            length:     1
-                            );
+                        // We concatenate them in this way to avoid an
+                        // extra step at the end. If we concatenated using
+                        // the format string [$"{id}."], we'd need to get
+                        // rid of an extra period at the end.
+                        this.Identifiers.Skip(1).Aggregate(
+                            seed: sb.Append(this.Identifiers.First()),
+                            func: (bdr, id) => bdr.Append($".{id}"));
                     }
                 }
                 break;
