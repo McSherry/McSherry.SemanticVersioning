@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+    <metadata>
+        <id>libSemVer.NET</id>
+        <version>1.0.0-rc1</version>
+        <title>libSemVer.NET</title>
+        <authors>Liam McSherry</authors>
+        <licenseUrl>https://github.com/McSherry/libSemVer.NET/blob/master/LICENCE.txt</licenseUrl>
+        <projectUrl>https://github.com/McSherry/libSemVer.NET</projectUrl>
+        <requireLicenseAcceptance>true</requireLicenseAcceptance>
+        <description>libSemVer.NET is an easy-to-use plug-and-play library for working with Semantic Versions.</description>
+        <summary />
+        <copyright>Copyright (c) 2015 Liam McSherry</copyright>
+        <language>en-GB</language>
+        <tags>library semantic version versions versioning</tags>
+        <frameworkAssemblies>
+            <frameworkAssembly assemblyName="System" targetFramework="" />
+            <frameworkAssembly assemblyName="System.Numerics" targetFramework="" />
+        </frameworkAssemblies>
+    </metadata>
+    <files>
+        <file src="LICENCE.txt" target="content\LICENCE.txt" />
+        <file src="README.md" target="content\README.md" />
+        <file src="libSemVer.NET\bin\Release\libSemVer.NET.dll" target="lib\libSemVer.NET.dll" />
+    </files>
+</package>
