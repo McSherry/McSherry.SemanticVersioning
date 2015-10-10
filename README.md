@@ -65,3 +65,5 @@ and the [web-based documentation][4].
 The project is licensed under the [MIT licence][5].
 
 Copyright (c) 2015 Liam McSherry.
+
+[5]: ./LICENCE.txt
