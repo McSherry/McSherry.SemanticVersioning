@@ -1138,7 +1138,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool TryParse(string version, out SemanticVersion semver)
         {
-            return SemanticVersion.TryParse(version, out semver);
+            return SemanticVersion.TryParse(version, ParseMode.Strict, out semver);
         }
     }
 }
