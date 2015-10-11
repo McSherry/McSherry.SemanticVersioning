@@ -460,6 +460,9 @@ namespace McSherry.SemanticVersioning
             /// <param name="input">
             /// The version string to normalise.
             /// </param>
+            /// <param name="mode">
+            /// Modes augmenting how parsing is performed.
+            /// </param>
             /// <returns>
             /// A <see cref="ParseResult"/> indicating whether normalisation
             /// was successful or, if it wasn't successful, why it failed.

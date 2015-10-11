@@ -55,8 +55,8 @@ namespace McSherry.SemanticVersioning
         /// <summary>
         /// <para>
         /// A way to concisely format a semantic version. Omits metadata
-        /// and only includes the <see cref="Patch"/> version if it is
-        /// non-zero.
+        /// and only includes the <see cref="SemanticVersion.Patch"/> version 
+        /// if it is non-zero.
         /// </para>
         /// </summary>
         public static string Concise            => "C";
@@ -348,7 +348,9 @@ namespace McSherry.SemanticVersioning
         /// <remarks>
         /// <para>
         /// For information on the acceptable format specifiers, see the
-        /// Remarks section for <see cref="ToString(string, IFormatProvider)"/>.
+        /// Remarks section of the 
+        /// <see cref="IFormattable.ToString(string, IFormatProvider)"/>
+        /// implementation for <see cref="SemanticVersion"/>.
         /// </para>
         /// </remarks>
         public string ToString(string format)
