@@ -1,6 +1,6 @@
 # Semantic Versioning for .NET
 
-`libSemVer.NET` is a library, targeting .NET Framework 4.5.2 and written in
+`libSemVer.NET` is a library, targeting .NET Framework 4.5 and written in
 C#, that handles [Semantic Versions][1]. `libSemVer.NET` takes care of parsing,
 comparing, and formatting semantic versions.
 
@@ -34,9 +34,7 @@ while (true)
     
     SemanticVersion userVersion;
     if (!SemanticVersion.TryParse(versionStr, out userVersion))
-    {
-        Console.WriteLine("Uh oh! That's not a valid version!\n");
-    }
+        Console.WriteLine("Uh oh! That's not a valid version!");
     else if (userVersion > comparand)
         Console.WriteLine($"Higher precedence than {comparand}!");
     else if (userVersion < comparand)
@@ -48,22 +46,20 @@ while (true)
 }
 ```
 
-[2]: https://nuget.org
+[2]: https://www.nuget.org/packages/McSherry.SemanticVersioning/
 [3]: http://docs.nuget.org/consume/package-manager-console
 
 
 ## Contributing
 
 Contributions are welcome, especially to documentation (both code comments
-and the [web-based documentation][4].
+and the [web-based documentation][4]).
 
-[4]: http://libsemvernet.readthedocs.org/en/latest/
+[4]: http://libsemvernet.readthedocs.org/
 
 
 ## Licence Information
 
-The project is licensed under the [MIT licence][5].
+The project is licensed under the MIT licence.
 
 Copyright (c) 2015 Liam McSherry.
-
-[5]: ./LICENCE.txt
