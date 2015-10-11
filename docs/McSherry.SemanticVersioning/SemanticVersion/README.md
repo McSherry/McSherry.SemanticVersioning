@@ -1,11 +1,12 @@
 # `SemanticVersion` class
 
-    [Serializable]  
-    [CLSCompliant(true)]  
-    public sealed class SemanticVersion : IEquatable<SemanticVersion>,  
-                                          IComparable<SemanticVersion>,  
-                                          IFormattable
-
+```c#
+[Serializable]  
+[CLSCompliant(true)]  
+public sealed class SemanticVersion : IEquatable<SemanticVersion>,  
+                                      IComparable<SemanticVersion>,  
+                                      IFormattable
+```
 
 **Namespace:** [McSherry.SemanticVersioning][1]  
 **Minimum Version:** 1.0.0
@@ -26,7 +27,7 @@ inherited.
 - **[SemanticVersion(Int32, Int32, Int32)][4]**  
   Creates a new [SemanticVersion][7] using the provided version components.
   
-- **[SemanticVersion(Int32, Int32, Int32, IEnumerable(string))][5]**
+- **[SemanticVersion(Int32, Int32, Int32, IEnumerable(string))][5]**  
   Creates a new [SemanticVersion][7] using the provided version components
   and pre-release identifiers.
   

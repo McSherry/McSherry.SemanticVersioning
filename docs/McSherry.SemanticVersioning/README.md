@@ -8,7 +8,7 @@ contians everything relevant to working with semantic versions.
 
 - **[SemanticVersion][1]**  
   Represents an immutable SemanticVersion. This class cannot be inherited.
-- **[SemanticVersionFormat][2]** _static_  
+- **[SemanticVersionFormat][2]**  
   Lists the format identifiers accepted by the [SemanticVersion][1] class's
   implementation of `IFormattable`.
   
