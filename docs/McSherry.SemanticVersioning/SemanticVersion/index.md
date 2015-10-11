@@ -7,7 +7,7 @@
                                           IFormattable
 
 
-**Namespace:** [McSherry.SemanticVersioning][1]
+**Namespace:** [McSherry.SemanticVersioning][1]  
 **Minimum Version:** 1.0.0
 
 Represents an immutable [Semantic Version][2]. This class cannot be
@@ -47,13 +47,13 @@ inherited.
 
 - **[Major][9]**  
   The semantic version's major version component.
-- **[Minor][10]**
+- **[Minor][10]**  
   The semantic version's minor version component.
-- **[Patch][11]**
+- **[Patch][11]**  
   The semantic version's patch version component.
-- **[Identifiers][12]**
+- **[Identifiers][12]**  
   The pre-release identifier components of the semantic version.
-- **[Metadata][13]**
+- **[Metadata][13]**  
   The build metadata components of the semantic version.
   
 [9]:  ./Major.md
