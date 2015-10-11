@@ -53,13 +53,13 @@ while (true)
 ## Contributing
 
 Contributions are welcome, especially to documentation (both code comments
-and the [web-based documentation][4]).
+and the [markdown documentation][4]).
 
-[4]: http://libsemvernet.readthedocs.org/
+[4]: ./docs
 
 
 ## Licence Information
 
 The project is licensed under the MIT licence.
 
-Copyright (c) 2015 Liam McSherry.
+Copyright &copy; 2015 Liam McSherry.

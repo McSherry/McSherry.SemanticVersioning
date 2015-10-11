@@ -13,7 +13,7 @@
 Represents an immutable [Semantic Version][2]. This class cannot be
 inherited.
 
-[1]: /McSherry.SemanticVersioning/
+[1]: /docs/McSherry.SemanticVersioning/
 [2]: http://semver.org
 
 
@@ -39,8 +39,8 @@ inherited.
 [5]: ./ctor(Int32,Int32,Int32,IEnumerable(string)).md
 [6]: ./ctor(Int32,Int32,Int32,IEnumerable(string),IEnumerable(string)).md
 
-[7]: /McSherry.SemanticVersion/SemanticVersion/
-[8]: /McSherry.SemanticVersion/SemanticVersion/Patch.md
+[7]: /docs/docs/McSherry.SemanticVersion/SemanticVersion/
+[8]: /docs/docs/McSherry.SemanticVersion/SemanticVersion/Patch.md
 
 
 ## Properties
@@ -152,7 +152,7 @@ inherited.
 [32]: ./op_LessThanOrEqual(SemanticVersion,SemanticVersion).md
 [33]: ./op_Explicit(String_to_SemanticVersion).md
 
-[34]: /McSherry.SemanticVersioning/ParseMode.md
+[34]: /docs/McSherry.SemanticVersioning/ParseMode.md
 
 
 ## Remarks

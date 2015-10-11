@@ -23,7 +23,7 @@ Install-Package McSherry.SemanticVersioning
 Once installed, just import the `McSherry.SemanticVersioning` namespace and
 you're all set. Here's a small example to get you started:
 
-```
+```c#
 // The version we'll be comparing against.
 var comparand = (SemanticVersion)"1.7.0";
 
@@ -53,13 +53,11 @@ while (true)
 ## Contributing
 
 Contributions are welcome, especially to documentation (both code comments
-and the [web-based documentation][4]).
-
-[4]: http://libsemvernet.readthedocs.org/
+and the markdown documentation).
 
 
 ## Licence Information
 
-The project is licensed under the MIT licence.
+The project is licensed under the [MIT licence](../LICENCE.txt).
 
-Copyright (c) 2015 Liam McSherry.
+Copyright &copy; 2015 Liam McSherry.
