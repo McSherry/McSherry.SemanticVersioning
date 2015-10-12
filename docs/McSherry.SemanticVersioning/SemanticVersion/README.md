@@ -87,7 +87,10 @@ inherited.
   Returns a string that represents the current [SemanticVersion][7].
 - **[ToString(String)][21]**  
   Formats the value of the current [SemanticVersion][7] as specified.
-- **[IFormattable.ToString(String, IFormatProvider)][22]**  
+  
+### Explicit Interface Implementations
+
+- **[`IFormattable` ToString(String, IFormatProvider)][22]**  
   Formats the value of the current [SemanticVersion][7] as specified.
 
 [14]: ./CompareTo(SemanticVersion).md

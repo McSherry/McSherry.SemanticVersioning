@@ -9,7 +9,7 @@ public int Minor { get; }
 
 [1]: ../
 
-**Type:** `System.In32`  
+**Type:** `System.Int32`  
 The semantic version's minor version.
 
 
