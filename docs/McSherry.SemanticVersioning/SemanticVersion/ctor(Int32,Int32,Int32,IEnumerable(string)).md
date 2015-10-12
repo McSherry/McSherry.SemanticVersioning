@@ -41,7 +41,9 @@ components and pre-release identifiers.
   Thrown when any of _`major`_, _`minor`_, and _`patch`_
   is negative.
 - **`System.ArgumentNullException`**  
-  Thrown when _`identifiers`_ or any of its items are null.
+  Thrown when any of the items in _`identifiers`_ or
+  _`metadata`_ are null, or if the collections themselves
+  are null.
 - **`System.ArgumentException`**  
   Thrown when any of the items in _`identifiers`_ are not
   valid pre-release identifiers.

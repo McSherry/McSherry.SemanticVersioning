@@ -1,8 +1,8 @@
 # `SemanticVersion` class
 
 ```c#
-[Serializable]  
-[CLSCompliant(true)]  
+[Serializable]
+[CLSCompliant(true)]
 public sealed class SemanticVersion : IEquatable<SemanticVersion>,  
                                       IComparable<SemanticVersion>,  
                                       IFormattable
