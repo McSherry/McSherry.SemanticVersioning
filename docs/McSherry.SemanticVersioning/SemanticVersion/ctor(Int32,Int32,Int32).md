@@ -8,7 +8,7 @@ public SemanticVersion(
 )
 ```
 
-**Namespace:** [McSherry.SemanticVersioning][1]
+**Namespace:** [McSherry.SemanticVersioning][1]  
 **Minimum Version:** 1.0.0
 
 Creates a new [SemanticVersion][2] using the provided
@@ -22,10 +22,13 @@ version components.
 ### Parameters
 
 - **`major`**  
+  **Type:** `System.Int32`  
   The semantic version's major version.
 - **`minor`**  
+  **Type:** `System.Int32`  
   The semantic version's minor version.
 - **`patch`**  
+  **Type:** `System.Int32`  
   The semantic version's patch version.
   
   
