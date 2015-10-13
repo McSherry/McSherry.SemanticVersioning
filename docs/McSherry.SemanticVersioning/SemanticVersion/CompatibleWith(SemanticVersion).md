@@ -26,6 +26,8 @@ backwards-compatible with the current version.
   
 ### Return Value
 
+**Type:** `System.Boolean`
+
 **True** if _`semver`_ is backwards-compatible with the current
 version. **False** if otherwise.
 

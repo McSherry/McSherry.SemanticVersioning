@@ -174,7 +174,7 @@ namespace McSherry.SemanticVersioning
 
             static Formatter()
             {
-                // REMEMBER:    When updating the formatters, add a constant to
+                // REMEMBER:    When updating the formatters, add a property to
                 //              [SemVerFormat] and information in the doc comments
                 //              for [ToString(string, IFormatProvider] on the
                 //              [SemanticVersion] class.

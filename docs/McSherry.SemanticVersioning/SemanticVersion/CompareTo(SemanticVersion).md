@@ -25,6 +25,8 @@ determine relative precedence.
 
 ### Return Value
 
+**Type:** `System.Int32`
+
 - **Less than zero**  
   The current [SemanticVersion][2] has lesser precedence than
   _`semver`_.

@@ -74,11 +74,6 @@ namespace McSherry.SemanticVersioning
                           CompareTo_Equal   =  0,
                           CompareTo_Lesser  = -1;
 
-        private const string IFmt_Default       = "G",
-                             IFmt_PrefixDefault = "g",
-                             IFmt_Concise       = "C",
-                             IFmt_PrefixConcise = "c";
-
         /// <summary>
         /// <para>
         /// Determines whether the two specified <see cref="SemanticVersion"/>s
