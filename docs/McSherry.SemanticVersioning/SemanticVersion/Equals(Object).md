@@ -1,7 +1,7 @@
 # `SemanticVersion.Equals(Object)` method
 
 ```c#
-public bool Equals(
+public override bool Equals(
     object obj
 )
 ```
