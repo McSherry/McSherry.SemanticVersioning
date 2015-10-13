@@ -20,7 +20,7 @@ backwards-compatible with the current version.
 ### Parameters
 
 - **`semver`**  
-  **Type:** `McSherry.SemanticVersioning.SemanticVersion`  
+  **Type:** [`McSherry.SemanticVersioning.SemanticVersion`][2]  
   The [SemanticVersion][2] to test for backwards compatibility.
   
   
@@ -28,8 +28,8 @@ backwards-compatible with the current version.
 
 **Type:** `System.Boolean`
 
-**True** if _`semver`_ is backwards-compatible with the current
-version. **False** if otherwise.
+True if _`semver`_ is backwards-compatible with the current
+version. False if otherwise.
 
 
 ## Remarks

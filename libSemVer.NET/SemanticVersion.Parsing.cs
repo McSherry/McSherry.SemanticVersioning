@@ -449,6 +449,8 @@ namespace McSherry.SemanticVersioning
             /// </summary>
             private const char ComponentSeparator = '.';
 
+            // TODO: Change this to WeakReference<SemanticVersion> so we don't
+            //       hinder garbage collection?
             private static IDictionary<string, SemanticVersion> _memDict;
 
             /// <summary>

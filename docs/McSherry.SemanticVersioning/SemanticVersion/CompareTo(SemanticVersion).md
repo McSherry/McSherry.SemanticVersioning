@@ -7,7 +7,8 @@ public int CompareTo(
 ```
 
 **Namespace:** [McSherry.SemanticVersioning][1]  
-**Minimum version:** 1.0.0
+**Minimum version:** 1.0.0  
+**Implements:** `System.IComparable<SemanticVersion>.CompareTo`
 
 [1]: ../
 
@@ -17,7 +18,7 @@ determine relative precedence.
 ### Parameters
 
 - **`semver`**  
-  **Type:** `McSherry.SemanticVersioning.SemanticVersion`  
+  **Type:** [`McSherry.SemanticVersioning.SemanticVersion`][2]  
   The [SemanticVersion][2] to compare to the current version.
   
 [2]: ./
