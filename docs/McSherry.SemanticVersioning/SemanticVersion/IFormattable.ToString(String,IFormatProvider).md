@@ -75,6 +75,6 @@ The list of recognised format specifiers is given in the below.
   
 - **`G`**  
   **Description:** The default format, as given by the Semantic
-  Versioning 2.0.0 specification.
-  **Example:** `1.7.0-alpha.2+20150925.f8f2cb1a`, `1.2.5`,
+  Versioning 2.0.0 specification.  
+  **Examples:** `1.7.0-alpha.2+20150925.f8f2cb1a`, `1.2.5`,
   `2.0.1-rc.1`
