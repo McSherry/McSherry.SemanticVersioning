@@ -1085,6 +1085,11 @@ namespace McSherry.SemanticVersioning
         /// Thrown when an attempt to convert the major, minor, or patch version
         /// into an <see cref="int"/> resulted in an overflow.
         /// </exception>
+        /// <remarks>
+        /// This method is equivalent to calling 
+        /// <see cref="Parse(string, ParseMode)"/> and passing the value
+        /// <see cref="ParseMode.Strict"/>.
+        /// </remarks>
         public static SemanticVersion Parse(string version)
         {
             return SemanticVersion.Parse(version, ParseMode.Strict);
