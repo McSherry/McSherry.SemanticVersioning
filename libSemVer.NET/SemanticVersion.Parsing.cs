@@ -1146,6 +1146,11 @@ namespace McSherry.SemanticVersioning
         /// <returns>
         /// True if parsing succeeded, false if otherwise.
         /// </returns>
+        /// <remarks>
+        /// This method is equivalent to calling
+        /// <see cref="TryParse(string, ParseMode, out SemanticVersion)"/> and
+        /// passing the value <see cref="ParseMode.Strict"/>.
+        /// </remarks>
         public static bool TryParse(string version, out SemanticVersion semver)
         {
             return SemanticVersion.TryParse(version, ParseMode.Strict, out semver);
