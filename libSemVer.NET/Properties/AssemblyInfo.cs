@@ -27,33 +27,25 @@ using CLSCompliantAttribute = System.CLSCompliantAttribute;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Semantic Versioning for .NET")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Semantic Versioning for .NET")]
 [assembly: AssemblyCopyright("Copyright 2015 © Liam McSherry")]
-[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: InternalsVisibleTo("libSemVer.NET.Testing")]
 [assembly: CLSCompliant(true)]
 
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("8c0fd5fe-7c51-45c7-a6b6-7d73fa74588f")]
-
-// Version information for an assembly consists of the following four values:
+// We're using Semantic Versioning for the library, but this doesn't translate
+// exactly to .NET versioning. To get around this, we're going to specify two
+// version attributes:
 //
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
+//  [AssemblyInformationalVersion]: We're using this for the "actual" (semantic)
+//                                  version number.
 //
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
+//               [AssemblyVersion]: This will track the "actual" version number's 
+//                                  major and minor versions. This should allow any 
+//                                  patched versions to be swapped out without 
+//                                  needing a recompile (e.g. you built against 
+//                                  v1.0.0, but you should be able to use v1.0.1 or
+//                                  v1.0.2 without needing to recompile).
+//
 [assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyFileVersion("0.1.0.0")]
+[assembly: AssemblyInformationalVersion("1.0.0-rc.1")]
