@@ -231,6 +231,12 @@ namespace McSherry.SemanticVersioning
         /// <param name="version">
         /// The version string to convert to a <see cref="SemanticVersion"/>.
         /// </param>
+        /// <exception cref="InvalidCastException">
+        /// Thrown when <paramref name="version"/> is invalid and cannot be
+        /// cast to a <see cref="SemanticVersion"/>. This wraps the exceptions
+        /// thrown by <see cref="Parse(string)"/> and
+        /// <see cref="Parse(string, ParseMode)"/>.
+        /// </exception>
         public static explicit operator SemanticVersion(string version)
         {
             try
