@@ -47,5 +47,5 @@ using CLSCompliantAttribute = System.CLSCompliantAttribute;
 //                                  v1.0.0, but you should be able to use v1.0.1 or
 //                                  v1.0.2 without needing to recompile).
 //
-[assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0-rc.1")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyInformationalVersion("1.0.0")]
