@@ -50,6 +50,12 @@ namespace McSherry.SemanticVersioning
         /// with a letter "v".
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// For details on how this option formats a semantic version,
+        /// see <see cref="Default"/>.
+        /// </para>
+        /// </remarks>
         public static string PrefixedDefault    => "g";
 
         /// <summary>
@@ -66,6 +72,12 @@ namespace McSherry.SemanticVersioning
         /// letter "v".
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// For details on how this option formats a semantic version, see
+        /// <see cref="Concise"/>.
+        /// </para>
+        /// </remarks>
         public static string PrefixedConcise    => "c";
     }
 
