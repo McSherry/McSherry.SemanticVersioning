@@ -589,6 +589,10 @@ namespace McSherry.SemanticVersioning
             // If [semver] is null, we can't be equivalent to it.
             if (object.ReferenceEquals(semver, null))
                 return false;
+            // If [semver] is a reference to ourself, we're definitely
+            // going to be equivalent to it.
+            else if (object.ReferenceEquals(semver, this))
+                return true;
 
             return this.Major == semver.Major                           &&
                    this.Minor == semver.Minor                           &&
@@ -746,9 +750,7 @@ namespace McSherry.SemanticVersioning
         /// </remarks>
         public override bool Equals(object obj)
         {
-            var sv = obj as SemanticVersion;
-
-            return !ReferenceEquals(sv, null) && this.Equals(semver: sv);
+            return this.Equals(obj as SemanticVersion);
         }
         /// <summary>
         /// <para>
@@ -819,6 +821,11 @@ namespace McSherry.SemanticVersioning
             // so if we're passed [null] it can't be equal.
             if (object.ReferenceEquals(semver, null))
                 return false;
+            // If we've been passed a reference to ourself, then we're obviously
+            // going to be equal and there's no sense in performing further
+            // checks.
+            else if (object.ReferenceEquals(semver, this))
+                return true;
 
             return this.Major == semver.Major                           &&
                    this.Minor == semver.Minor                           &&
@@ -873,6 +880,10 @@ namespace McSherry.SemanticVersioning
             // be the lowest precedence because it has no value.
             if (object.ReferenceEquals(semver, null))
                 return CompareTo_Greater;
+            // When we're comparing to ourself, then we have to
+            // be equal in precedence.
+            else if (object.ReferenceEquals(semver, this))
+                return CompareTo_Equal;
 
             #region Three-part Comparison
             // First thing to do is compare the major versions. If one
