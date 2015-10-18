@@ -20,6 +20,8 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using static System.Linq.Enumerable;
@@ -478,6 +480,46 @@ namespace McSherry.SemanticVersioning
                               "Incorrect initialisation (19).");
             }
             #endregion
+        }        
+        
+        /// <summary>
+        /// <para>
+        /// Tests that the binary serialisation and deserialisation of 
+        /// instances of the <see cref="SemanticVersion"/> class works
+        /// as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void BinarySerialisation()
+        {
+            var serialiser = new BinaryFormatter();
+            var stream = new MemoryStream();
+
+            // We want to make sure everything is serialised properly,
+            // so we're going to need a version with all the bells and
+            // whistles.
+            var sv = SemanticVersion.Parse("1.5.6-rc.1+2015.10.18");
+
+            // Serialise the version, then seek the stream back to the
+            // start so we can deserialise it.
+            serialiser.Serialize(stream, sv);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            // Time to cross your fingers.
+            var deser_sv = serialiser.Deserialize(stream) as SemanticVersion;
+
+            Assert.IsNotNull(deser_sv, "Did not deserialise correctly.");
+
+            Assert.AreEqual(sv.Major, deser_sv.Major,
+                            "Major versions did not match.");
+            Assert.AreEqual(sv.Minor, deser_sv.Minor,
+                            "Minor versions did not match.");
+            Assert.AreEqual(sv.Patch, deser_sv.Patch,
+                            "Patch versions did not match.");
+            Assert.IsTrue(sv.Identifiers.SequenceEqual(deser_sv.Identifiers),
+                          "Pre-release identifiers did not match.");
+            Assert.IsTrue(sv.Metadata.SequenceEqual(deser_sv.Metadata),
+                          "Build metadata items did not match.");
         }
 
         /// <summary>
