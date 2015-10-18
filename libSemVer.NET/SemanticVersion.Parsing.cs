@@ -1011,9 +1011,18 @@ namespace McSherry.SemanticVersioning
                     return new ParseResult(cacheResult);
                 }
 
-                // Now that we've done any required preprocessing, we hand off
-                // to the actual parsing routine and return what it gives us.
-                return _parseVersion(input, mode);
+                // The version string isn't in our cache, so we're going to
+                // need to attempt to parse it.
+                var result = _parseVersion(input, mode);
+
+                // If parsing was successful, we want to add the created
+                // version to the dictionary along with the string that it
+                // was created from.
+                if (result.Type == ParseResultType.Success)
+                    _memDict.Add(input, result.Version);
+
+                // We can now return the result to our caller.
+                return result;
             }
         }
 
