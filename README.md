@@ -1,4 +1,6 @@
-# Semantic Versioning for .NET
+# Semantic Versioning for .NET ![Build Status][5]
+
+[5]: https://ci.appveyor.com/api/projects/status/2cwcupcpk6ja90i4?branch=master
 
 `libSemVer.NET` is a library, targeting .NET Framework 4.5 and written in
 C#, that handles [Semantic Versions][1]. `libSemVer.NET` takes care of parsing,
