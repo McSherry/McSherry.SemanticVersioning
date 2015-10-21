@@ -43,7 +43,14 @@ namespace McSherry.SemanticVersioning
         /// specification compliance.
         /// </para>
         /// </summary>
-        Strict          = 0x0000,
+        Strict          = 0x00000000,
+        /// <summary>
+        /// <para>
+        /// The opposite of <see cref="Strict"/>, with all parser flags
+        /// set.
+        /// </para>
+        /// </summary>
+        Lenient         = AllowPrefix | OptionalPatch,
 
         /// <summary>
         /// <para>

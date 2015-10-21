@@ -23,6 +23,9 @@ may be configured to use.
   The default parser behaviour, with no set flags. This forces
   specification compliance.
   
+- **`Lenient`**  
+  The opposite of `Strict`, with all parser flags set.
+  
 - **`AllowPrefix`**  
   The parser will accept a version prefixed with `v` or `V`.
   

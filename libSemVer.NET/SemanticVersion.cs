@@ -241,16 +241,7 @@ namespace McSherry.SemanticVersioning
         {
             try
             {
-                // 0x7FFFFFFF = all bits set, and all bits set means that
-                //              every flag is active. We make every flag
-                //              active because there's no way for a user
-                //              to specify flags with a cast.
-                //
-                //              Note: 0x7FFFFFFF is correct because the
-                //                    underlying type of [ParseMode] is
-                //                    [Int32], which uses the MSb for its
-                //                    sign bit.
-                return SemanticVersion.Parse(version, (ParseMode)0x7FFFFFFF);
+                return SemanticVersion.Parse(version, ParseMode.Lenient);
             }
             // We only want to catch the exceptions that indicate an error
             // with the user's input. [InvalidOperationException], for example,
