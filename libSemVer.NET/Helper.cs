@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -123,6 +125,31 @@ namespace McSherry.SemanticVersioning
         public static bool IsNumber(char c)
         {
             return c >= '0' && c <= '9';
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns a read-only <see cref="IReadOnlyDictionary{TKey, TValue}"/>
+        /// wrapper of the specified <see cref="IDictionary{TKey, TValue}"/>.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="K">
+        /// The type of the dictionary's keys.
+        /// </typeparam>
+        /// <typeparam name="V">
+        /// The type of the dictionary's values.
+        /// </typeparam>
+        /// <param name="dictionary">
+        /// The <see cref="IDictionary{TKey, TValue}"/> to wrap.
+        /// </param>
+        /// <returns>
+        /// A read-only wrapper of <paramref name="dictionary"/>.
+        /// </returns>
+        public static IReadOnlyDictionary<K, V> AsReadOnly<K, V>(
+            this IDictionary<K, V> dictionary
+            )
+        {
+            return new ReadOnlyDictionary<K, V>(dictionary);
         }
     }
 }
