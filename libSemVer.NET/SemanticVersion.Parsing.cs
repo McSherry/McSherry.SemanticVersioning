@@ -194,8 +194,8 @@ namespace McSherry.SemanticVersioning
                     return passthrough;
 
                 throw new InvalidOperationException(
-                    "Attempt to use a [ParseResult] that was default-" +
-                    "constructed.");
+                    "Attempt to use a [SemanticVersion.ParseResult] that " +
+                    "was default-constructed.");
             }
 
             /// <summary>
@@ -250,7 +250,7 @@ namespace McSherry.SemanticVersioning
                 if (error == ParseResultType.Success)
                 {
                     throw new ArgumentException(
-                        message:    "A failure-state ParseResult cannot be " +
+                        message:    "A failure-state SV.ParseResult cannot be " +
                                     "created with the [Success] status.",
                         paramName:  nameof(error));
                 }
