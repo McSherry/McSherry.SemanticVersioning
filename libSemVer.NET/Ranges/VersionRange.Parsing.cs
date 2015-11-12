@@ -195,6 +195,33 @@ namespace McSherry.SemanticVersioning.Ranges
 
             /// <summary>
             /// <para>
+            /// The version range string is null, empty, or contains
+            /// only whitespace characters.
+            /// </para>
+            /// </summary>
+            NullString,
+            /// <summary>
+            /// <para>
+            /// There are one or more invalid characters in the
+            /// version range string.
+            /// </para>
+            /// </summary>
+            InvalidCharacter,
+
+            /// <summary>
+            /// <para>
+            /// One or more comparator sets contain no comparators.
+            /// </para>
+            /// </summary>
+            EmptySet,
+            /// <summary>
+            /// <para>
+            /// An operator is present with no attached version.
+            /// </para>
+            /// </summary>
+            OrphanedOperator,
+            /// <summary>
+            /// <para>
             /// The version range string contains an invalid
             /// semantic version string.
             /// </para>
@@ -417,6 +444,123 @@ namespace McSherry.SemanticVersioning.Ranges
             /// </para>
             /// </summary>
             public ResultSet ComparatorSets => VerifyResult(_results);
+            /// <summary>
+            /// <para>
+            /// The exception that is stored in the parse result to
+            /// provide additional error information.
+            /// </para>
+            /// </summary>
+            private Exception InnerException => VerifyResult(_innerEx);
+
+            /// <summary>
+            /// <para>
+            /// Retrieves a human-friendly error message describing the
+            /// error represented by the current <see cref="ParseResult"/>.
+            /// </para>
+            /// </summary>
+            /// <returns>
+            /// A string representing the error represented by the
+            /// current <see cref="ParseResult"/>.
+            /// </returns>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when <see cref="ParseResult.Type"/> has the
+            /// value <see cref="ParseResultType.Success"/>.
+            /// </exception>
+            public string GetErrorMessage()
+            {
+                if (this.Type == Success)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot retrieve error message: operation was " +
+                        "successful."
+                        );
+                }
+
+                switch (this.Type)
+                {
+                    case NullString:
+                    return "The version range string cannot be null, empty, or " +
+                           "composed entirely of whitespace characters.";
+
+                    case InvalidCharacter:
+                    return "The version range string contains one or more " +
+                           "invalid characters.";
+
+                    case EmptySet:
+                    return "A version range string cannot contain a set with " +
+                           "no comparators.";
+
+                    case OrphanedOperator:
+                    return "The version range string contains an operator " +
+                           "with no associated version (check whitespace).";
+
+                    case InvalidVersion:
+                    return "The version range string contains one or more " +
+                           "invalid semantic version strings.";
+
+                    default:
+                    {
+                        throw new NotSupportedException(
+                            $"Unrecognised result code {(int)Type:X8} provided."
+                            );
+                    }
+                }
+            }
+            /// <summary>
+            /// <para>
+            /// Creates an <see cref="Exception"/> instance appropriate
+            /// for the status represented by the current instance.
+            /// </para>
+            /// </summary>
+            /// <returns>
+            /// An <see cref="Exception"/> instance appropriate for the
+            /// status represented by the current instance.
+            /// </returns>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when <see cref="ParseResult.Type"/> has the
+            /// value <see cref="ParseResultType.Success"/>.
+            /// </exception>
+            public Exception CreateException()
+            {
+                if (this.Type == Success)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot retrieve exception: operation was successful."
+                        );
+                }
+
+                var msg = this.GetErrorMessage();
+
+                switch (this.Type)
+                {
+                    // [ArgumentNullException] for an empty version range string.
+                    case NullString:
+                    return new ArgumentNullException(message: msg,
+                                                     innerException: _innerEx);
+
+                    // [ArgumentException] for anything that means the version
+                    // range string is invalid, but which is unrelated an invalid
+                    // version string being present.
+                    case InvalidCharacter:
+                    case EmptySet:
+                    case OrphanedOperator:
+                    return new ArgumentException(message: msg,
+                                                 innerException: _innerEx);
+
+                    // [FormatException] for anything related to the parsing of a
+                    // semantic version string failing.
+                    case InvalidVersion:
+                    return new FormatException(message: msg,
+                                               innerException: _innerEx);
+
+                    default:
+                    {
+                        throw new NotSupportedException(
+                            $"Unrecognised result code {(int)Type:X8} provided."
+                            );
+                    }
+                }
+            }
         }
 
         /// <summary>
