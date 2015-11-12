@@ -79,7 +79,7 @@ namespace McSherry.SemanticVersioning.Ranges
         /// grouping identified by the parser.
         /// </para>
         /// </summary>
-        private struct Comparator
+        private struct ComparatorToken
         {
             private readonly Operator _op;
             private readonly SemanticVersion _sv;
@@ -120,7 +120,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
             /// <summary>
             /// <para>
-            /// Creates a new <see cref="Comparator"/> instance with
+            /// Creates a new <see cref="ComparatorToken"/> instance with
             /// the specified operator and semantic version.
             /// </para>
             /// </summary>
@@ -137,7 +137,7 @@ namespace McSherry.SemanticVersioning.Ranges
             /// Thrown when <paramref name="op"/> is not a recognised
             /// <see cref="VersionRange.Operator"/>.
             /// </exception>
-            public Comparator(Operator op, SemanticVersion semver)
+            public ComparatorToken(Operator op, SemanticVersion semver)
             {
                 if (semver == null)
                 {
