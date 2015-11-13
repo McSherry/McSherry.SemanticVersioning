@@ -25,6 +25,8 @@ using System.Threading.Tasks;
 
 using static McSherry.SemanticVersioning.Ranges.VersionRange.ParseResultType;
 
+using DD = System.Diagnostics.DebuggerDisplayAttribute;
+
 namespace McSherry.SemanticVersioning.Ranges
 {
     using ResultSet = IEnumerable<IEnumerable<VersionRange.ComparatorToken>>;
@@ -235,10 +237,12 @@ namespace McSherry.SemanticVersioning.Ranges
         /// parser.
         /// </para>
         /// </summary>
+        [DD("Type={Type}")]
         internal struct ParseResult
         {
-            // Certain codes are required to be provided with an exception. This
-            // hashset will contain those specific codes so we can check for them.
+            // Certain codes are required to be provided with an exception. 
+            // This hashset will contain those specific codes so we can 
+            // check for them.
             private static readonly HashSet<ParseResultType> _exCodes;
 
             static ParseResult()
@@ -388,7 +392,6 @@ namespace McSherry.SemanticVersioning.Ranges
             /// </exception>
             public ParseResult(ParseResultType error, 
                                Lazy<Exception> innerException)
-                : this(error)
             {
                 if (error == Success)
                 {
@@ -536,8 +539,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 {
                     // [ArgumentNullException] for an empty version range string.
                     case NullString:
-                    return new ArgumentNullException(message: msg,
-                                                     innerException: _innerEx);
+                    return new ArgumentNullException(msg, this.InnerException);
 
                     // [ArgumentException] for anything that means the version
                     // range string is invalid, but which is unrelated an invalid
@@ -545,14 +547,12 @@ namespace McSherry.SemanticVersioning.Ranges
                     case InvalidCharacter:
                     case EmptySet:
                     case OrphanedOperator:
-                    return new ArgumentException(message: msg,
-                                                 innerException: _innerEx);
+                    return new ArgumentException(msg, this.InnerException);
 
                     // [FormatException] for anything related to the parsing of a
                     // semantic version string failing.
                     case InvalidVersion:
-                    return new FormatException(message: msg,
-                                               innerException: _innerEx);
+                    return new FormatException(msg, this.InnerException);
 
                     default:
                     {
@@ -602,6 +602,13 @@ namespace McSherry.SemanticVersioning.Ranges
                 /// </para>
                 /// </summary>
                 FoundEquals,
+                /// <summary>
+                /// <para>
+                /// Entered when a vertical bar (<see cref="VerticalBar"/> is
+                /// encountered while in the <see cref="Start"/> state.
+                /// </para>
+                /// </summary>
+                FoundVBar,
 
                 /// <summary>
                 /// <para>
@@ -633,7 +640,8 @@ namespace McSherry.SemanticVersioning.Ranges
             // names.
             private const char  LeftChevron     = '<',
                                 RightChevron    = '>',
-                                EqualSign       = '=';
+                                EqualSign       = '=',
+                                VerticalBar     = '|';
 
             /// <summary>
             /// <para>
@@ -651,7 +659,6 @@ namespace McSherry.SemanticVersioning.Ranges
             {
                 if (String.IsNullOrWhiteSpace(rangeString))
                     return new ParseResult(NullString);
-                
 
                 // This is where we push each comparator set once we've collected
                 // each comparator in it.
@@ -664,8 +671,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 // end of the string to make it easy to detect the last character
                 // in the string.
                 var chars = rangeString.Select(c => new Nullable<char>(c))
-                                       .Concat(new Nullable<char>[] { null })
-                                       .ToList();
+                                       .Concat(new Nullable<char>[] { null });
 
                 var state = State.Start;
                 var bdr = new StringBuilder();
@@ -674,10 +680,8 @@ namespace McSherry.SemanticVersioning.Ranges
                 // checks for a correct operator throw.
                 Operator op = (Operator)(-1);
 
-                for (int i = 0; i < chars.Count; i++)
+                foreach (var c in chars)
                 {
-                    var c = chars[i];
-
                     switch (state)
                     {
                         #region Start
@@ -703,25 +707,26 @@ namespace McSherry.SemanticVersioning.Ranges
                             else switch (c.Value)
                             {
                                 case LeftChevron:   state = State.FoundChevL;
-                                    break;
+                                    continue;
 
                                 case RightChevron:  state = State.FoundChevR;
-                                    break;
+                                    continue;
 
                                 case EqualSign:     state = State.FoundEquals;
-                                    break;
+                                    continue;
 
-                                /*
-                                    If we don't recognise the character (and so
-                                    haven't given it a special meaning), we're
-                                    going to treat it as the start of a version
-                                    string.
-                                */
-                                default: state = State.VersionCollect;
-                                    break;
+                                case VerticalBar:   state = State.FoundVBar;
+                                    continue;
                             };
-                        }
-                        break;
+
+                            // If we don't recognise the character, we're going
+                            // to end up here. To prevent the character being
+                            // lost, we're going to jump straight to the
+                            // collection case rather than go through another
+                            // iteration.
+                            state = State.VersionCollect;
+                            goto case State.VersionCollect;
+                        };
                         #endregion
 
                         #region FoundChevL
@@ -814,10 +819,44 @@ namespace McSherry.SemanticVersioning.Ranges
                         {
                             op = Operator.Equal;
                             state = State.VersionCollect;
+                            goto case State.VersionCollect;
+                        };
+                        #endregion
+                        #region FoundVBar
+                        // An operator-identifying state, but different from the
+                        // others because the double vertical bar operator (||)
+                        // is used to separate comparator sets, rather than being
+                        // an operator that is applied to a version.
+                        case State.FoundVBar:
+                        {
+                            // If the current character is another vertical bar,
+                            // then we've got the end of the current comparator
+                            // set.
+                            if (c == VerticalBar)
+                            {
+                                // Before we do anything, we need to make sure
+                                // that our comparator set has contents. An
+                                // empty comparator set is an error.
+                                if (!cmpSet.Any())
+                                    return new ParseResult(EmptySet);
+
+                                // We have to add the current comparator set to
+                                // our set of sets, then create a new list and
+                                // make [cmpSet] a reference to the new list.
+                                setOfSets.Add(cmpSet.AsReadOnly());
+                                cmpSet = new List<ComparatorToken>();
+
+                                // Now we need to go back to our starting state
+                                // so we can parse the next comparator set.
+                                state = State.Start;
+                            }
+                            // If the character is anything else, then we've
+                            // hit an invalid character and need to return.
+                            else return new ParseResult(InvalidCharacter);
                         }
                         break;
                         #endregion
-
+                         
                         #region VersionCollect
                         // This is the state we enter when we're about to try
                         // to parse a version string.
@@ -853,6 +892,13 @@ namespace McSherry.SemanticVersioning.Ranges
                         // collected characters into a [SemanticVersion].
                         case State.VersionFinalise:
                         {
+                            // If we get here and there's nothing in the
+                            // [StringBuilder], it means we encountered an
+                            // operator on its own without an immediately
+                            // adjacent version.
+                            if (bdr.Length == 0)
+                                return new ParseResult(OrphanedOperator);
+
                             // If the operator is still using the invalid value,
                             // then default it to the equality operator.
                             if (op == (Operator)(-1))
@@ -925,8 +971,7 @@ namespace McSherry.SemanticVersioning.Ranges
                             // modification down the line.
                             setOfSets.Add(cmpSet.AsReadOnly());
 
-                            i = chars.Count;
-                            continue;
+                            goto terminate;
                         };
                         #endregion
                         #region Default
@@ -941,6 +986,21 @@ namespace McSherry.SemanticVersioning.Ranges
                         };
                         #endregion
                     }
+
+                    continue;
+
+                // Yes, using labels and gotos is usually bad practice, but
+                // it seems like the best solution here.
+                //
+                // IMO, there's too much state for the loop to be placed in
+                // its own method, and adding a 'keepLooping' flag just
+                // clutters the scope.
+                //
+                // Plus, doing this lets us use a 'foreach' loop instead of
+                // a 'for' loop because we don't need to fiddle the counter
+                // variable to force a loop exit within a switch.
+                terminate:
+                    break;
                 }
 
                 // Okay, we've parsed our version range string, and we've ended
