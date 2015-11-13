@@ -256,7 +256,7 @@ namespace McSherry.SemanticVersioning.Ranges
             // Property backing fields.
             private readonly ParseResultType _type;
             private readonly ResultSet _results;
-            private readonly Exception _innerEx;
+            private readonly Lazy<Exception> _innerEx;
 
             /// <summary>
             /// <para>
@@ -386,7 +386,8 @@ namespace McSherry.SemanticVersioning.Ranges
             /// Thrown when <paramref name="error"/> is invalid
             /// or unrecognised.
             /// </exception>
-            public ParseResult(ParseResultType error, Exception innerException)
+            public ParseResult(ParseResultType error, 
+                               Lazy<Exception> innerException)
                 : this(error)
             {
                 if (error == Success)
@@ -450,7 +451,7 @@ namespace McSherry.SemanticVersioning.Ranges
             /// provide additional error information.
             /// </para>
             /// </summary>
-            private Exception InnerException => VerifyResult(_innerEx);
+            private Exception InnerException => VerifyResult(_innerEx.Value);
 
             /// <summary>
             /// <para>
@@ -570,7 +571,405 @@ namespace McSherry.SemanticVersioning.Ranges
         /// </summary>
         internal static class Parser
         {
+            private enum State
+            {
+                /// <summary>
+                /// <para>
+                /// The starting state, and the state used between
+                /// parsing comparators.
+                /// </para>
+                /// </summary>
+                Start,
 
+                /// <summary>
+                /// <para>
+                /// Entered when a left chevron (<see cref="LeftChevron"/>)
+                /// is encountered while in the <see cref="Start"/> state.
+                /// </para>
+                /// </summary>
+                FoundChevL,
+                /// <summary>
+                /// <para>
+                /// Entered when a right chevron (<see cref="RightChevron"/>)
+                /// is encountered while in the <see cref="Start"/> state.
+                /// </para>
+                /// </summary>
+                FoundChevR,
+                /// <summary>
+                /// <para>
+                /// Entered when an equals sign (<see cref="EqualSign"/>) is
+                /// encountered while in the <see cref="Start"/> state.
+                /// </para>
+                /// </summary>
+                FoundEquals,
+
+                /// <summary>
+                /// <para>
+                /// Entered to start version string parsing and collect
+                /// the characters that make up a version string.
+                /// </para>
+                /// </summary>
+                VersionCollect,
+                /// <summary>
+                /// <para>
+                /// Entered to finalise version parsing and attempt to
+                /// turn all collected characters into a
+                /// <see cref="SemanticVersion"/>.
+                /// </para>
+                /// </summary>
+                VersionFinalise,
+
+                /// <summary>
+                /// <para>
+                /// Entered when the end of the version range string
+                /// is encountered.
+                /// </para>
+                /// </summary>
+                EndOfString,
+            }
+
+            // Rather than directly typing the literals in the parser,
+            // we're going to use a set of constants with appropriate
+            // names.
+            private const char  LeftChevron     = '<',
+                                RightChevron    = '>',
+                                EqualSign       = '=';
+
+            /// <summary>
+            /// <para>
+            /// Parses a set of comparator sets from a version range string.
+            /// </para>
+            /// </summary>
+            /// <param name="rangeString">
+            /// The string representing one or more comparator sets.
+            /// </param>
+            /// <returns>
+            /// An <see cref="ParseResult"/> indicating whether parsing
+            /// was successful and containing the result if it was.
+            /// </returns>
+            private static ParseResult _parseString(string rangeString)
+            {
+                if (String.IsNullOrWhiteSpace(rangeString))
+                    return new ParseResult(NullString);
+                
+
+                // This is where we push each comparator set once we've collected
+                // each comparator in it.
+                var setOfSets = new List<IEnumerable<ComparatorToken>>();
+                // And this is the list we use to build each comparator set before
+                // we push it into [setOfSets].
+                var cmpSet = new List<ComparatorToken>();
+
+                // We're using [Nullable<char>]s so we can put a null value at the
+                // end of the string to make it easy to detect the last character
+                // in the string.
+                var chars = rangeString.Select(c => new Nullable<char>(c))
+                                       .Concat(new Nullable<char>[] { null })
+                                       .ToList();
+
+                var state = State.Start;
+                var bdr = new StringBuilder();
+                // We need to store the operator while we're parsing the
+                // semantic version. We give it the value [-1] to make any
+                // checks for a correct operator throw.
+                Operator op = (Operator)(-1);
+
+                for (int i = 0; i < chars.Count; i++)
+                {
+                    var c = chars[i];
+
+                    switch (state)
+                    {
+                        #region Start
+                        // The [Start] state is used when we have not yet reached
+                        // the start of a new comparator or comparator set, either
+                        // because we've just started parsing the string, or
+                        // because we've just finished parsing one of them.
+                        case State.Start:
+                        {
+                            // No value means the end of our string. We use the
+                            // 'goto case' construct so we can skip straight there
+                            // without another iteration.
+                            if (!c.HasValue)
+                                goto case State.EndOfString;
+                            // If we hit whitespace, just continue because we
+                            // don't really care about it other than when we need
+                            // to find the end of a comparator.
+                            else if (Char.IsWhiteSpace(c.Value))
+                                continue;
+                            // If the character isn't any of the above cases,
+                            // we're going to see whether it matches any of the
+                            // operators we recognise.
+                            else switch (c.Value)
+                            {
+                                case LeftChevron:   state = State.FoundChevL;
+                                    break;
+
+                                case RightChevron:  state = State.FoundChevR;
+                                    break;
+
+                                case EqualSign:     state = State.FoundEquals;
+                                    break;
+
+                                /*
+                                    If we don't recognise the character (and so
+                                    haven't given it a special meaning), we're
+                                    going to treat it as the start of a version
+                                    string.
+                                */
+                                default: state = State.VersionCollect;
+                                    break;
+                            };
+                        }
+                        break;
+                        #endregion
+
+                        #region FoundChevL
+                        // This state is entered when we find a left chevron in
+                        // the string.
+                        case State.FoundChevL:
+                        {
+                            // We're expecting the next character to have a value,
+                            // since an operator without an adjacent version is of
+                            // no use.
+                            //
+                            // If the character is whitespace, it isn't associated
+                            // with a version so, like we would with no value, we
+                            // have to report an orphaned operator.
+                            if (!c.HasValue || Char.IsWhiteSpace(c.Value))
+                                return new ParseResult(OrphanedOperator);
+
+                            // If the character has a value, then we need to check
+                            // that value. The left chevron on its own is an
+                            // operator, but there are two-character operators
+                            // that include the left chevron as their first
+                            // character.
+                            switch (c.Value)
+                            {
+                                // An equals sign means that we're on the operator
+                                // "less than or equal to," so we need to set the
+                                // current operator to that and move on to parsing
+                                // a version string.
+                                case EqualSign:
+                                {
+                                    op = Operator.LessThanOrEqual;
+                                    state = State.VersionCollect;
+                                }
+                                break;
+
+                                // If the character isn't any of the recognised
+                                // characters, then it might be part of a version
+                                // string.
+                                //
+                                // We need to add it to the [StringBuilder], set
+                                // the operator to the "less than" operator, and
+                                // switch into the version-parsing state.
+                                default:
+                                {
+                                    op = Operator.LessThan;
+                                    bdr.Append(c);
+                                    state = State.VersionCollect;
+                                }
+                                break;
+                            }
+                        }
+                        break;
+                        #endregion
+                        #region FoundChevR
+                        // The code here is much the same as in the [FoundChevL]
+                        // state, so only code that significantly differs will be
+                        // commented. For comments that are mostly applicable in
+                        // this state, refer to the [FoundChevL] state.
+                        case State.FoundChevR:
+                        {
+                            if (!c.HasValue || Char.IsWhiteSpace(c.Value))
+                                return new ParseResult(OrphanedOperator);
+
+                            switch (c.Value)
+                            {
+                                case EqualSign:
+                                {
+                                    op = Operator.GreaterThanOrEqual;
+                                    state = State.VersionCollect;
+                                }
+                                break;
+
+                                default:
+                                {
+                                    op = Operator.GreaterThan;
+                                    bdr.Append(c);
+                                    state = State.VersionCollect;
+                                }
+                                break;
+                            }
+                        }
+                        break;
+                        #endregion
+                        #region FoundEquals
+                        // Another operator-identifying state, like [FoundChevL],
+                        // although at the time of writing the equals sign op is
+                        // not the first character of any multi-character
+                        // operators.
+                        case State.FoundEquals:
+                        {
+                            op = Operator.Equal;
+                            state = State.VersionCollect;
+                        }
+                        break;
+                        #endregion
+
+                        #region VersionCollect
+                        // This is the state we enter when we're about to try
+                        // to parse a version string.
+                        case State.VersionCollect:
+                        {
+                            // If we hit a character with no value, or if we hit
+                            // a whitespace character, it means we've hit the end
+                            // of both the version range string and the current
+                            // version string.
+                            //
+                            // As we're at the end of the version range string,
+                            // we want to attempt to turn the collected characters
+                            // into a [SemanticVersion] instance, so we switch to
+                            // the [VersionFinalise] state.
+                            //
+                            // We use 'goto case' so that we don't advance to the
+                            // next character, as this might not yet be the end of
+                            // the string.
+                            if (!c.HasValue || Char.IsWhiteSpace(c.Value))
+                                goto case State.VersionFinalise;
+                            // If it's not a character indicating the end of the
+                            // version range string, then we just add it to the
+                            // [StringBuilder] and carry on.
+                            else
+                            {
+                                bdr.Append(c);
+                            }
+                        }
+                        break;
+                        #endregion
+                        #region VersionFinalise
+                        // This is the state we enter when we want to turn any
+                        // collected characters into a [SemanticVersion].
+                        case State.VersionFinalise:
+                        {
+                            // If the operator is still using the invalid value,
+                            // then default it to the equality operator.
+                            if (op == (Operator)(-1))
+                                op = Operator.Equal;
+
+                            // Attempt to parse the version string we have in
+                            // our [StringBuilder]. We pass the [AllowPrefix]
+                            // option because 'node-semver' allows versions to
+                            // be prefixed with 'v'.
+                            var verParse = SemanticVersion.Parser.Parse(
+                                input:  bdr.ToString(),
+                                mode:   ParseMode.AllowPrefix);
+
+                            // If parsing was not successful, then we need to
+                            // return a [ParseResult] indicating as much with
+                            // the appropriate inner exception.
+                            if (verParse.Type != SemanticVersion.ParseResultType
+                                                    .Success)
+                            {
+                                return new ParseResult(
+                                    InvalidVersion,
+                                    new Lazy<Exception>(verParse.CreateException)
+                                    );
+                            }
+
+                            // If parsing was successful, then we need to add the
+                            // version we just parsed to our comparator set with
+                            // the operator it's included with.
+                            cmpSet.Add(new ComparatorToken(op, verParse.Version));
+
+                            // If the current character has no value, then this is
+                            // the end of the string. There are no more characters
+                            // to iterate over, so we can swap directly to the
+                            // termination state without going through another
+                            // iteration.
+                            if (!c.HasValue)
+                                goto case State.EndOfString;
+
+                            // If it does have a value, then we're not at the end
+                            // of our version range string and we need to prepare
+                            // for future iterations.
+                            //
+                            // To do this, we first clear all the state we set.
+                            bdr.Clear();
+                            op = (Operator)(-1);
+
+                            // We then make it so the next state we enter is the
+                            // [Start] state.
+                            state = State.Start;
+                        }
+                        break;
+                        #endregion
+
+                        #region EndOfString
+                        // This case handles the end of the string so that other
+                        // states don't need to duplicate the code. It also ends
+                        // the loop.
+                        case State.EndOfString:
+                        {
+                            // If we hit the end of our string and there are
+                            // no items in our comparator set, then it means
+                            // we have an empty set, which we're choosing to
+                            // disallow.
+                            if (cmpSet.Count == 0)
+                                return new ParseResult(EmptySet);
+
+                            // If it does have items, then we can move on to
+                            // pushing those items into our set of sets. We
+                            // call [AsReadOnly] to prevent a casting and
+                            // modification down the line.
+                            setOfSets.Add(cmpSet.AsReadOnly());
+
+                            i = chars.Count;
+                            continue;
+                        };
+                        #endregion
+                        #region Default
+                        default:
+                        {
+                            // If we end up here, something Very Bad(TM) is
+                            // happening and we probably can't recover.
+                            throw new InvalidOperationException(
+                                message:    "Version range parser in invalid " +
+                                            "state."
+                                );
+                        };
+                        #endregion
+                    }
+                }
+
+                // Okay, we've parsed our version range string, and we've ended
+                // up here so there've been no errors, so all we have left to do
+                // is return what we produced.
+                //
+                // We return a read-only wrapper to prevent any users of the class
+                // from modifying the data once we've returned it.
+                return new ParseResult(setOfSets.AsReadOnly());
+            }
+
+            /// <summary>
+            /// Implements <see cref="VersionRange"/> parsing.
+            /// </summary>
+            /// <param name="rangeString">
+            /// The string representing the version range to be parsed.
+            /// </param>
+            /// <returns>
+            /// A <see cref="ParseResult"/> indicating whether parsing
+            /// was successful and, if it was, containing a 
+            /// <see cref="VersionRange"/> equivalent to the value of
+            /// <paramref name="rangeString"/>.
+            /// </returns>
+            public static ParseResult Parse(string rangeString)
+            {
+                // Nothing here yet, but we might want to have some intermediary
+                // code in future. Who knows.
+                return _parseString(rangeString);
+            }
         }
     }
 }
