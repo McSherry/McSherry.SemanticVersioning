@@ -19,10 +19,7 @@
 // SOFTWARE.
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace McSherry.SemanticVersioning.Ranges
 {
@@ -44,19 +41,23 @@ namespace McSherry.SemanticVersioning.Ranges
 
     /// <summary>
     /// <para>
-    /// Represents a range of <see cref="SemanticVersion"/> values.
+    /// Represents a range of acceptable versions. This class cannot
+    /// be inherited.
     /// </para>
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// A version range specifies a set of semantic versions that are
+    /// acceptable, and is used to check that a given semantic version
+    /// fits within this set.
+    /// </para>
     /// <para>
     /// Version ranges use the <c>node-semver</c> syntax for ranges.
     /// Specifically, ranges are based on the specification as it was
     /// written for the v5.0.0 release of <c>node-semver</c>.
     /// </para>
     /// <para>
-    /// Presently, only the "basic" ranges syntax is supported. That is,
-    /// any features under the "Advanced Range Syntax" heading are not
-    /// supported.
+    /// Presently, only the basic range syntax is supported.
     /// </para>
     /// </remarks>
     [Serializable]
