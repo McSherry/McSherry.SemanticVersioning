@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ranges\RangeIntlParsingTests.cs" />
+    <Compile Include="Ranges\RangeTests.cs" />
     <Compile Include="SemanticVersionIntlParsingTests.cs" />
     <Compile Include="SemanticVersionParsingTests.cs" />
     <Compile Include="SemanticVersionTests.cs" />

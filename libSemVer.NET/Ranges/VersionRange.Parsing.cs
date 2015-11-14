@@ -1058,7 +1058,9 @@ namespace McSherry.SemanticVersioning.Ranges
         /// </exception>
         public static VersionRange Parse(string range)
         {
-            throw new NotImplementedException();
+            // This constructor does all the same stuff as this method would
+            // do, so we might as well just call it instead of reimplementing.
+            return new VersionRange(range);
         }
         /// <summary>
         /// <para>
@@ -1077,7 +1079,27 @@ namespace McSherry.SemanticVersioning.Ranges
         /// </returns>
         public static bool TryParse(string range, out VersionRange result)
         {
-            throw new NotImplementedException();
+            var parseResult = Parser.Parse(range);
+
+            // If the parsing wasn't successful, set [result] to null and
+            // return false to indicate failure.
+            if (parseResult.Type != Success)
+            {
+                result = null;
+                return false;
+            }
+
+            // If parsing was successful, then exchange all of the comparator
+            // tokens we were given for [IComparator] instances that we can
+            // pass to a constructor.
+            var comparators = parseResult.ComparatorSets.Select(
+                tokenSet => tokenSet.Select(
+                    token => Comparator.Create(token)
+                    )
+                );
+
+            result = new VersionRange(comparators);
+            return true;
         }
     }
 }
