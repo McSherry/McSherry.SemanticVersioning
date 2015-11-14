@@ -1031,5 +1031,53 @@ namespace McSherry.SemanticVersioning.Ranges
                 return _parseString(rangeString);
             }
         }
+
+        /// <summary>
+        /// <para>
+        /// Parses a version range from a string.
+        /// </para>
+        /// </summary>
+        /// <param name="range">
+        /// The string representing the version range.
+        /// </param>
+        /// <returns>
+        /// A <see cref="VersionRange"/> equivalent to the
+        /// value of <paramref name="range"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="range"/> is null, empty,
+        /// or contains only whitespace characters.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="range"/> is invalid for any
+        /// reason unrelated to an invalid semantic version string.
+        /// </exception>
+        /// <exception cref="FormatException">
+        /// Thrown when <paramref name="range"/> contains an invalid
+        /// semantic version string.
+        /// </exception>
+        public static VersionRange Parse(string range)
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
+        /// <para>
+        /// Attempts to parse a version range from a string.
+        /// </para>
+        /// </summary>
+        /// <param name="range">
+        /// The string representing the version range.
+        /// </param>
+        /// <param name="result">
+        /// The <see cref="VersionRange"/> that, on success, is
+        /// given a value equivalent to <paramref name="range"/>.
+        /// </param>
+        /// <returns>
+        /// True on success, false on failure.
+        /// </returns>
+        public static bool TryParse(string range, out VersionRange result)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
