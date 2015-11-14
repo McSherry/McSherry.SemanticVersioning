@@ -190,10 +190,6 @@ namespace McSherry.SemanticVersioning.Ranges
                         comparator.Patch != arg.Patch)
                         return false;
                 }
-                else if (arg.Identifiers.Any())
-                {
-
-                }
 
                 return arg > comparator;
             }
