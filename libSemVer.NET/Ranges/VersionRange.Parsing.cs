@@ -367,7 +367,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 _type = error;
                 _results = null;
-                _innerEx = null;
+                _innerEx = new Lazy<Exception>(() => null);
                 _successfulCreation = true;
             }
             /// <summary>

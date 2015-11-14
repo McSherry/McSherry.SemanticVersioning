@@ -42,12 +42,12 @@ namespace McSherry.SemanticVersioning.Ranges
 
         /// <summary>
         /// <para>
-        /// Tests the parser's identification of the basic version range
-        /// operators.
+        /// Tests the parser's identification of basic constructs, such as
+        /// the basic operators and semantic version strings.
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
-        public void BasicOperatorIdentification()
+        public void BasicIdentification()
         {
             // Convenience function to extract the first comparator token
             // from the set we get returned by the parse method.
@@ -229,6 +229,126 @@ namespace McSherry.SemanticVersioning.Ranges
             Assert.AreEqual(ParseResultType.InvalidVersion,
                             Parser.Parse("1.0.0-früh").Type,
                             "Did not produce expected result code (13).");
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests that <see cref="ParseResult"/>s correctly recognise
+        /// the codes that must not be passed with inner exceptions.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void ParseResult_NoExceptionCodes()
+        {
+            var noex_errors = new[]
+            {
+                ParseResultType.EmptySet,
+                ParseResultType.InvalidCharacter,
+                ParseResultType.NullString,
+                ParseResultType.OrphanedOperator
+            };
+
+            // Make sure they don't throw with the code-only ctor.
+            for (int i = 0; i < noex_errors.Length; i++)
+            {
+                try
+                {
+                    new ParseResult(noex_errors[i]);
+                }
+                catch (Exception)
+                {
+                    Assert.Fail($"Incorrectly threw on code-only ({i}).");
+                }
+            }
+
+            // Make sure they do throw with the code+exception ctor.
+            var ex = new Lazy<Exception>(() => new Exception());
+            for (int i = 0; i < noex_errors.Length; i++)
+            {
+                new Action(() => new ParseResult(noex_errors[i], ex))
+                    .AssertThrowsExact<ArgumentException>(
+                        $"Incorrectly threw on code+exception ({i}).");
+            }
+        }
+        /// <summary>
+        /// <para>
+        /// Tests that <see cref="ParseResult"/>s correctly recognise
+        /// the codes that must be passed with inner exceptions.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void ParseResult_OnlyExceptionCodes()
+        {
+            var exonly_errors = new[]
+            {
+                ParseResultType.InvalidVersion
+            };
+
+            for (int i = 0; i < exonly_errors.Length; i++)
+            {
+                new Action(() => new ParseResult(exonly_errors[i]))
+                    .AssertThrowsExact<ArgumentException>(
+                        $"Failed to throw when expected ({i})."
+                        );
+            }
+        }
+        /// <summary>
+        /// <para>
+        /// General tests related to <see cref="ParseResult"/>s
+        /// not covered by the other tests.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void ParseResult_General()
+        {
+            // Make sure that passing in the [Success] status always fails.
+            var ex = new Lazy<Exception>(() => new Exception());
+            new Action(() => new ParseResult(ParseResultType.Success))
+                .AssertThrowsExact<ArgumentException>(
+                    "Did not throw when passed [Success] code (0).");
+            new Action(() => new ParseResult(ParseResultType.Success, ex))
+                .AssertThrowsExact<ArgumentException>(
+                    "Did not throw when passed [Success] code (1).");
+
+            // Make sure that an invalid status fails.
+            new Action(() => new ParseResult((ParseResultType)(-1)))
+                .AssertThrowsExact<ArgumentException>(
+                    "Did not throw on invalid status code (0).");
+            new Action(() => new ParseResult((ParseResultType)(-1), ex))
+                    .AssertThrowsExact<ArgumentException>(
+                        "Did not throw on invalid status code (1).");
+
+            // Make sure that a null exception provider fails.
+            new Action(
+                () => new ParseResult(ParseResultType.InvalidVersion, null))
+                .AssertThrows<ArgumentNullException>(
+                    "Did not throw on null exception provider.");
+
+            // Tests that accessing the properties of a default-constructed
+            // [ParseResult] fails with an exception.
+            var defPr = new ParseResult();
+            new Action(() => defPr.Type.GetHashCode())
+                .AssertThrows<InvalidOperationException>(
+                    "Did not throw on invalid access (0).");
+            new Action(() => defPr.ComparatorSets.GetHashCode())
+                .AssertThrows<InvalidOperationException>(
+                    "Did not throw on invalid access (1).");
+            new Action(() => defPr.GetErrorMessage())
+                .AssertThrows<InvalidOperationException>(
+                    "Did not throw on invalid access (2).");
+            new Action(() => defPr.CreateException())
+                .AssertThrows<InvalidOperationException>(
+                    "Did not throw on invalid access (3).");
+
+            // Makes sure that attempting to create an exception/retrieve an
+            // error message with a success-state [ParseResult] fails.
+            var sucPr = new ParseResult(new ComparatorToken[0][]);
+            new Action(() => sucPr.GetErrorMessage())
+                .AssertThrows<InvalidOperationException>(
+                    "Did not throw on invalid [GetErrorMessage] call.");
+            new Action(() => sucPr.CreateException())
+                .AssertThrows<InvalidOperationException>(
+                    "Did not throw on invalid [CreateException] call.");
         }
     }
 }
