@@ -85,5 +85,69 @@ namespace McSherry.SemanticVersioning.Ranges
             
             Assert.IsFalse(vr3.SatisfiedBy(sv2), "Incorrect acceptance (6).");
         }
+
+        /// <summary>
+        /// <para>
+        /// Tests version range comparison using a single comparator set with
+        /// multiple comparators in it.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void MultipleComparators()
+        {
+            // This test is taken from the README of the 'node-semver'
+            // repository, because what better source than the horse's
+            // mouth?
+            //
+            // We only have a single test because we have another test
+            // for the individual comparators, we just want to make sure
+            // that multiple comparators are treated as expected.
+            VersionRange vr0 = new VersionRange(">=1.2.7 <1.3.0")
+                        ;
+
+            SemanticVersion sv0 = new SemanticVersion(1, 2, 7), // These three are
+                            sv1 = new SemanticVersion(1, 2, 8), // matches.
+                            sv2 = new SemanticVersion(1, 2, 99),
+                            sv3 = new SemanticVersion(1, 2, 6), // And these are
+                            sv4 = new SemanticVersion(1, 3, 0), // mismatches.
+                            sv5 = new SemanticVersion(1, 1, 0)
+                            ;
+
+            Assert.IsTrue(vr0.SatisfiedBy(sv0), "Incorrect rejection (0).");
+            Assert.IsTrue(vr0.SatisfiedBy(sv1), "Incorrect rejection (1).");
+            Assert.IsTrue(vr0.SatisfiedBy(sv2), "Incorrect rejection (2).");
+
+            Assert.IsFalse(vr0.SatisfiedBy(sv3), "Incorrect acceptance (0).");
+            Assert.IsFalse(vr0.SatisfiedBy(sv4), "Incorrect acceptance (1).");
+            Assert.IsFalse(vr0.SatisfiedBy(sv5), "Incorrect acceptance (2).");
+        }
+        /// <summary>
+        /// <para>
+        /// Tests version range comparison using multiple comparator sets.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void MultipleComparatorSets()
+        {
+            // Like in the [MultipleComparators] test, this test is straight
+            // from the 'node-semver' README, and there's only a single test
+            // because individual comparators and multiple comparators are
+            // already tested.
+            VersionRange vr0 = new VersionRange("1.2.7 || >=1.2.9 <2.0.0");
+
+            SemanticVersion sv0 = new SemanticVersion(1, 2, 7), // These match.
+                            sv1 = new SemanticVersion(1, 2, 9),
+                            sv2 = new SemanticVersion(1, 4, 6),
+                            sv3 = new SemanticVersion(1, 2, 8), // These don't.
+                            sv4 = new SemanticVersion(2, 0, 0)
+                                ;
+
+            Assert.IsTrue(vr0.SatisfiedBy(sv0), "Incorrect rejection (0).");
+            Assert.IsTrue(vr0.SatisfiedBy(sv1), "Incorrect rejection (1).");
+            Assert.IsTrue(vr0.SatisfiedBy(sv2), "Incorrect rejection (2).");
+
+            Assert.IsFalse(vr0.SatisfiedBy(sv3), "Incorrect acceptance (0).");
+            Assert.IsFalse(vr0.SatisfiedBy(sv4), "Incorrect acceptance (1).");
+        }
     }
 }
