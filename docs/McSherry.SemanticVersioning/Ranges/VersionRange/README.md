@@ -58,7 +58,7 @@ Version ranges use the [`node-semver`][8] syntax for ranges.
 Specifically, ranges are based on the specification as it was
 written for the [`v5.0.0`][9] release of `node-semver`.
 
-Presently, only the basic range syntax is support.
+Presently, only the basic range syntax is supported.
 
 [8]: https://github.com/npm/node-semver
 [9]: https://github.com/npm/node-semver/blob/v5.0.0/README.md#ranges
