@@ -94,9 +94,10 @@ namespace McSherry.SemanticVersioning.Ranges
                 );
         }
 
-        // The comparators that make up the version range. For ease of
-        // use, each [IComparator] represents a set rather than an
-        // individual comparator here.
+        // The comparators that make up the version range. Each [IComparator]
+        // is an individual comparator, so we need two [IEnumerable<T>] wraps:
+        // one for comparator sets, and one to contain the multiple comparator
+        // sets that make up the version range.
         private readonly IEnumerable<IEnumerable<IComparator>> _comparators;
         // A cache of versions that match and that don't match so that
         // many repeated comparisons might be sped up a bit.
