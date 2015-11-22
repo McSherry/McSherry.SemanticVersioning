@@ -6,7 +6,7 @@ public bool SatisfiedBy(
     )
 ```
 
-**Namespace:** [McSherry.SemanticVersioning.Ranges][1]  
+**Namespace:** [`McSherry.SemanticVersioning.Ranges`][1]  
 **Minimum version:** 1.1.0
 
 [1]: ../

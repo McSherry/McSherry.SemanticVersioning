@@ -6,7 +6,7 @@
 public sealed class VersionRange
 ```
 
-**Namespace:** [McSherry.SemanticVersioning.Ranges][1]  
+**Namespace:** [`McSherry.SemanticVersioning.Ranges`][1]  
 **Minimum Version:** 1.1.0
 
 Represents a range of acceptable versions. This class cannot be
