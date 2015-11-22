@@ -11,7 +11,10 @@
         <description>libSemVer.NET is an easy-to-use plug-and-play library for working with Semantic Versions.</description>
         <summary>Plug-and-play Semantic Versioning for .NET.</summary>
         <language>en-GB</language>
-        <tags>library semantic version versions versioning</tags>
+        <tags>
+            library semantic version versions versioning
+            lib libs sem ver semver
+        </tags>
         <frameworkAssemblies>
             <frameworkAssembly assemblyName="System" targetFramework="" />
         </frameworkAssemblies>
