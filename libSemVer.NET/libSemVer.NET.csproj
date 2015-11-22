@@ -48,6 +48,9 @@
   <ItemGroup>
     <Compile Include="Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Ranges\VersionRange.Comparison.cs" />
+    <Compile Include="Ranges\VersionRange.cs" />
+    <Compile Include="Ranges\VersionRange.Parsing.cs" />
     <Compile Include="SemanticVersion.cs" />
     <Compile Include="SemanticVersion.Formatting.cs" />
     <Compile Include="SemanticVersion.Parsing.cs" />
