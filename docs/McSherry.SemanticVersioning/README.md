@@ -23,3 +23,12 @@ contains everything relevant to working with semantic versions.
   configured to use.
   
 [3]: ./ParseMode.md
+
+
+## Namespaces
+
+- **[Ranges][4]**  
+  Provides version range functionality intended to make complex comparisons
+  against semantic versions easier to work with.
+  
+[4]: ./Ranges
