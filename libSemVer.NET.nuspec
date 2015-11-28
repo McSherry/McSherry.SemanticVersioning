@@ -1,20 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>McSherry.SemanticVersioning</id>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
         <title>libSemVer.NET</title>
         <authors>Liam McSherry</authors>
-        <licenseUrl>https://github.com/McSherry/libSemVer.NET/blob/master/LICENCE.txt</licenseUrl>
+        <licenseUrl>https://github.com/McSherry/libSemVer.NET/blob/v1.1.0/LICENCE.txt</licenseUrl>
         <projectUrl>https://github.com/McSherry/libSemVer.NET</projectUrl>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
         <description>libSemVer.NET is an easy-to-use plug-and-play library for working with Semantic Versions.</description>
         <summary>Plug-and-play Semantic Versioning for .NET.</summary>
+        <releaseNotes>Release v1.1.0 is a minor release, and brings the following changes:
+
+
+- SemanticVersion parsing memoized, now up to 20x faster (b9429a6).
+
+Memoization of the results of parsing is enabled so that parsing the same string again will avoid going through the parser and will instead pull the result from a cache of previously-parsed instances.
+
+
+- Support for Version Ranges (#1) introduced.
+
+The library now supports using version ranges for complex comparisons against versions.
+
+
+- The ParseMode.Lenient value is defined.
+
+This value is the opposite of ParseMode.Strict, and makes it nicer for code that wants to enable all parsing flags without having specific knowledge of each flag.
+
+
+The release is available now from GitHub and NuGet.</releaseNotes>
         <language>en-GB</language>
-        <tags>
-            library semantic version versions versioning
-            lib libs sem ver semver
-        </tags>
+        <tags>library semantic version versions versioning lib libs sem ver semver</tags>
         <frameworkAssemblies>
             <frameworkAssembly assemblyName="System" targetFramework="" />
         </frameworkAssemblies>
@@ -23,5 +39,6 @@
         <file src="LICENCE.txt" target="content\LICENCE.txt" />
         <file src="README.md" target="content\README.md" />
         <file src="libSemVer.NET\bin\Release\libSemVer.NET.dll" target="lib\libSemVer.NET.dll" />
+        <file src="libSemVer.NET\bin\Release\libSemVer.NET.XML" target="lib\libSemVer.NET.XML" />
     </files>
 </package>
