@@ -261,5 +261,24 @@ namespace McSherry.SemanticVersioning.Ranges
         {
             return semvers.All(this.SatisfiedBy);
         }
+        /// <summary>
+        /// <para>
+        /// Determines whether the current version range is satisfied
+        /// by all specified <see cref="SemanticVersion"/> instances.
+        /// </para>
+        /// </summary>
+        /// <param name="semvers">
+        /// The <see cref="SemanticVersion"/> instances to check
+        /// against the current version range.
+        /// </param>
+        /// <returns>
+        /// True if all <see cref="SemanticVersion"/> instances in
+        /// <paramref name="semvers"/> satisfy the current version
+        /// range, false if otherwise.
+        /// </returns>
+        public bool SatisfiedBy(IEnumerable<SemanticVersion> semvers)
+        {
+            return semvers.All(this.SatisfiedBy);
+        }
     }
 }
