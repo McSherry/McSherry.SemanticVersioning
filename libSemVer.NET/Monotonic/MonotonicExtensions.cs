@@ -51,6 +51,13 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// True if <paramref name="version"/> is a valid monotonic version,
         /// false if otherwise.
         /// </returns>
+        /// <remarks>
+        /// <para>
+        /// A <see cref="SemanticVersion"/> is considered a valid monotonic
+        /// version if it: has no <see cref="SemanticVersion.Patch"/> component;
+        /// and has no <see cref="SemanticVersion.Identifiers"/>.
+        /// </para>
+        /// </remarks>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="version"/> is null.
         /// </exception>
