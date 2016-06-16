@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 using System;
+using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -172,6 +173,46 @@ namespace McSherry.SemanticVersioning
                                             T comparand)
         {
             int comparison = comparable.CompareTo(comparand);
+
+            if (comparison < 0)
+                return Ordering.Lesser;
+            else if (comparison > 0)
+                return Ordering.Greater;
+            else
+                return Ordering.Equal;
+        }
+        /// <summary>
+        /// <para>
+        /// Compares the provided <typeparamref name="T"/> using the
+        /// specified <see cref="IComparer{T}"/> and returns an
+        /// <see cref="Ordering"/> indicating their relation.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the objects to be compared.
+        /// </typeparam>
+        /// <param name="comparer">
+        /// The comparer to use when comparing <paramref name="x"/>
+        /// and <paramref name="y"/>.
+        /// </param>
+        /// <param name="x">
+        /// An object to compare to <paramref name="y"/> using
+        /// <paramref name="comparer"/>.
+        /// </param>
+        /// <param name="y">
+        /// An object to compare to <paramref name="x"/> using
+        /// <paramref name="comparer"/>.
+        /// </param>
+        /// <returns>
+        /// An <see cref="Ordering"/> indicating the relation of
+        /// <paramref name="x"/> and <paramref name="y"/> when compared
+        /// with <paramref name="comparer"/>.
+        /// </returns>
+        public static Ordering UseToCompare<T>(
+            this IComparer<T> comparer, T x, T y
+            )
+        {
+            int comparison = comparer.Compare(x, y);
 
             if (comparison < 0)
                 return Ordering.Lesser;
