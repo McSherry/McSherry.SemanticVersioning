@@ -67,10 +67,13 @@
     <Compile Include="TestingExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libSemVer.NET\libSemVer.NET.csproj">
+    <ProjectReference Include="..\libSemVer.NET\McSherry.SemanticVersioning.csproj">
       <Project>{8c0fd5fe-7c51-45c7-a6b6-7d73fa74588f}</Project>
-      <Name>libSemVer.NET</Name>
+      <Name>McSherry.SemanticVersioning</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Monotonic\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

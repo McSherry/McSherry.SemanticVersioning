@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libSemVer.NET", "libSemVer.NET\libSemVer.NET.csproj", "{8C0FD5FE-7C51-45C7-A6B6-7D73FA74588F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McSherry.SemanticVersioning", "libSemVer.NET\McSherry.SemanticVersioning.csproj", "{8C0FD5FE-7C51-45C7-A6B6-7D73FA74588F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libSemVer.NET.Testing", "libSemVer.NET.Testing\libSemVer.NET.Testing.csproj", "{1094D088-AAC1-457A-B515-652B09BC11BD}"
 EndProject

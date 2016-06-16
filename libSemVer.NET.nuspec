@@ -3,32 +3,14 @@
     <metadata>
         <id>McSherry.SemanticVersioning</id>
         <version>1.1.0</version>
-        <title>libSemVer.NET</title>
+        <title>McSherry.SemanticVersioning</title>
         <authors>Liam McSherry</authors>
-        <licenseUrl>https://github.com/McSherry/libSemVer.NET/blob/v1.1.0/LICENCE.txt</licenseUrl>
-        <projectUrl>https://github.com/McSherry/libSemVer.NET</projectUrl>
+        <licenseUrl>https://github.com/McSherry/McSherry.SemanticVersioning/blob/v1.1.0/LICENCE.txt</licenseUrl>
+        <projectUrl>https://github.com/McSherry/McSherry.SemanticVersioning</projectUrl>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
-        <description>libSemVer.NET is an easy-to-use plug-and-play library for working with Semantic Versions.</description>
+        <description>McSherry.SemanticVersioning is an easy-to-use plug-and-play library for working with Semantic Versions.</description>
         <summary>Plug-and-play Semantic Versioning for .NET.</summary>
-        <releaseNotes>Release v1.1.0 is a minor release, and brings the following changes:
-
-
-- SemanticVersion parsing memoized, now up to 20x faster (b9429a6).
-
-Memoization of the results of parsing is enabled so that parsing the same string again will avoid going through the parser and will instead pull the result from a cache of previously-parsed instances.
-
-
-- Support for Version Ranges (#1) introduced.
-
-The library now supports using version ranges for complex comparisons against versions.
-
-
-- The ParseMode.Lenient value is defined.
-
-This value is the opposite of ParseMode.Strict, and makes it nicer for code that wants to enable all parsing flags without having specific knowledge of each flag.
-
-
-The release is available now from GitHub and NuGet.</releaseNotes>
+        <releaseNotes></releaseNotes>
         <language>en-GB</language>
         <tags>library semantic version versions versioning lib libs sem ver semver</tags>
         <frameworkAssemblies>
@@ -36,9 +18,9 @@ The release is available now from GitHub and NuGet.</releaseNotes>
         </frameworkAssemblies>
     </metadata>
     <files>
-        <file src="LICENCE.txt" target="content\LICENCE.txt" />
-        <file src="README.md" target="content\README.md" />
-        <file src="libSemVer.NET\bin\Release\libSemVer.NET.dll" target="lib\libSemVer.NET.dll" />
-        <file src="libSemVer.NET\bin\Release\libSemVer.NET.XML" target="lib\libSemVer.NET.XML" />
+        <file src="LICENCE.txt" target="content\McSherry.SemanticVersioning/LICENCE.txt" />
+        <file src="README.md" target="content\McSherry.SemanticVersioning/README.md" />
+        <file src="libSemVer.NET\bin\Release\McSherry.SemanticVersioning.dll" target="lib\McSherry.SemanticVersioning.dll" />
+        <file src="libSemVer.NET\bin\Release\McSherry.SemanticVersioning.XML" target="lib\McSherry.SemanticVersioning.XML" />
     </files>
 </package>
