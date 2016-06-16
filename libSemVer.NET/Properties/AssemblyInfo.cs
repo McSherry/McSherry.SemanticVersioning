@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-16 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ using CLSCompliantAttribute = System.CLSCompliantAttribute;
 // associated with an assembly.
 [assembly: AssemblyTitle("Semantic Versioning for .NET")]
 [assembly: AssemblyProduct("Semantic Versioning for .NET")]
-[assembly: AssemblyCopyright("Copyright 2015 © Liam McSherry")]
+[assembly: AssemblyCopyright("Copyright 2015-16 © Liam McSherry")]
 [assembly: AssemblyCulture("")]
 [assembly: InternalsVisibleTo("libSemVer.NET.Testing")]
 [assembly: CLSCompliant(true)]
