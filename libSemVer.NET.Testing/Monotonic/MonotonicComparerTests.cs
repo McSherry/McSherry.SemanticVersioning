@@ -154,14 +154,26 @@ namespace McSherry.SemanticVersioning.Monotonic
             // the latter's compatibility component gives it overall greater
             // precedence.
 
-            var m0 = new SemanticVersion(2, 5, 0, new[] { "abc", "def", "ghi" });
-            var m1 = new SemanticVersion(2, 5, 0, new[] { "abc", "def", "jkl" });
+            var m0 = new SemanticVersion(
+                2, 5, 0, Enumerable.Empty<string>(), new[] { "abc", "def", "ghi" }
+                );
+            var m1 = new SemanticVersion(
+                2, 5, 0, Enumerable.Empty<string>(), new[] { "abc", "def", "jkl" }
+                );
 
-            var m2 = new SemanticVersion(1, 7, 0, new[] { "abc", "73" });
-            var m3 = new SemanticVersion(1, 7, 0, new[] { "abc", "2195" });
+            var m2 = new SemanticVersion(
+                1, 7, 0, Enumerable.Empty<string>(), new[] { "abc", "73" }
+                );
+            var m3 = new SemanticVersion(
+                1, 7, 0, Enumerable.Empty<string>(), new[] { "abc", "2195" }
+                );
 
-            var m4 = new SemanticVersion(1, 5, 0, new[] { "xyz" });
-            var m5 = new SemanticVersion(2, 5, 0, new[] { "abc" });
+            var m4 = new SemanticVersion(
+                1, 5, 0, Enumerable.Empty<string>(), new[] { "xyz" }
+                );
+            var m5 = new SemanticVersion(
+                2, 5, 0, Enumerable.Empty<string>(), new[] { "abc" }
+                );
 
 
             Assert.AreEqual(Ordering.Lesser, cmp(m0, m1));
