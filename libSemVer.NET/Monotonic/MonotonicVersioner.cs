@@ -158,6 +158,10 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// A collection of version numbers providing the version
         /// history to use for this instance.
         /// </param>
+        /// <remarks>
+        /// <paramref name="chronology"/> is not required to be
+        /// in order.
+        /// </remarks>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="chronology"/> or an item thereof is null.
         /// </exception>
