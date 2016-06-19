@@ -105,6 +105,102 @@ namespace McSherry.SemanticVersioning.Monotonic
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// <para>
+        /// Creates a new <see cref="MonotonicVersioner"/> instance.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="Compatibility"/> number sequence produced
+        /// by an instance which was created using this constructor
+        /// starts at one. If a zero-based sequence is required, use
+        /// <see cref="MonotonicVersioner(bool)"/>.
+        /// </remarks>
+        public MonotonicVersioner()
+            : this(startAtOne: true)
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
+        /// <para>
+        /// Creates a new <see cref="MonotonicVersioner"/> instance.
+        /// Refer to remarks for differences from 
+        /// <see cref="MonotonicVersioner()"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="startAtOne">
+        /// If true, the produced <see cref="Compatibility"/> number
+        /// sequence starts at one. If false, zero.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// The Monotonic Versioning Manifesto 1.2 does not specify
+        /// whether the <see cref="Compatibility"/> component of versions 
+        /// are to start at one or zero. It is assumed that either is valid 
+        /// as neither is specifically recommended nor prohibited.
+        /// </para>
+        /// <para>
+        /// If the <see cref="Compatibility"/> components are to start at
+        /// one, <see cref="MonotonicVersioner()"/> may be used.
+        /// </para>
+        /// </remarks>
+        public MonotonicVersioner(bool startAtOne)
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
+        /// <para>
+        /// Creates a new <see cref="MonotonicVersioner"/> with the
+        /// specified version number history.
+        /// </para>
+        /// </summary>
+        /// <param name="chronology">
+        /// A collection of version numbers providing the version
+        /// history to use for this instance.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="chronology"/> or an item thereof is null.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="chronology"/> contains a version which is
+        /// not a valid monotonic version.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <para>
+        /// <paramref name="chronology"/> provides an incomplete
+        /// version history. The chronology may:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///     <description>
+        ///     Not provide a contiguous sequence of <see cref="Compatibility"/>
+        ///     numbers;
+        ///     </description>
+        ///     </item>
+        ///     <item>
+        ///     <description>
+        ///     Not provide a contiguous sequence of <see cref="Release"/>
+        ///     numbers;
+        ///     </description>
+        ///     </item>
+        ///     <item>
+        ///     <description>
+        ///     Not contain a <see cref="Compatibility"/> starting at either
+        ///     zero or one; or
+        ///     </description>
+        ///     </item>
+        ///     <item>
+        ///     <description>
+        ///     Be empty.
+        ///     </description>
+        ///     </item>
+        /// </list>
+        /// </exception>
+        public MonotonicVersioner(IEnumerable<SemanticVersion> chronology)
+            : this()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// <para>
@@ -342,7 +438,8 @@ namespace McSherry.SemanticVersioning.Monotonic
 
         /// <summary>
         /// <para>
-        /// The latest compatibility number.
+        /// The highest compatibility number. This component indicates which
+        /// releases are compatible with each other.
         /// </para>
         /// </summary>
         public int Compatibility
@@ -354,7 +451,8 @@ namespace McSherry.SemanticVersioning.Monotonic
         }
         /// <summary>
         /// <para>
-        /// The current release number.
+        /// The current release number. This component indicates when a release
+        /// was made relative to other releases.
         /// </para>
         /// </summary>
         public int Release
