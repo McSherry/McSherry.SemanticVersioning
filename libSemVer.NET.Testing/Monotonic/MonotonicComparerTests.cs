@@ -74,20 +74,18 @@ namespace McSherry.SemanticVersioning.Monotonic
         [TestMethod, TestCategory(Category)]
         public void General_DifferentCompatibilities()
         {
-            // Each of these should be higher precedence than the last.
             var m0 = new SemanticVersion(1, 0);
             var m1 = new SemanticVersion(2, 1);
             var m2 = new SemanticVersion(1, 2);
 
+            // Greater compatibility component takes precedence.
             Assert.AreEqual(Ordering.Lesser, cmp(m0, m1));
-            Assert.AreEqual(Ordering.Lesser, cmp(m1, m2));
-
-            Assert.AreEqual(Ordering.Lesser, cmp(m0, m2));
-
-
-            Assert.AreEqual(Ordering.Greater, cmp(m2, m1));
+            Assert.AreEqual(Ordering.Greater, cmp(m1, m2));
             Assert.AreEqual(Ordering.Greater, cmp(m1, m0));
+            Assert.AreEqual(Ordering.Lesser, cmp(m2, m1));
 
+            // Compatibility the same, greater release takes precedence
+            Assert.AreEqual(Ordering.Lesser, cmp(m0, m2));
             Assert.AreEqual(Ordering.Greater, cmp(m2, m0));
         }
         /// <summary>
