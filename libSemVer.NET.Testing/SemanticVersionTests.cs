@@ -38,6 +38,22 @@ namespace McSherry.SemanticVersioning
     {
         private const string Category = "Semantic Version Base";
 
+        public static IEnumerable<string> InvalidMetadata
+            => new string[]
+            {
+                "",                         // 0
+                null,                       // 1
+                " ",                        // 2
+                "infix space",              // 3
+                " leading space",           // 4
+                "trailing space ",          // 5
+                " leading and trailing ",   // 6
+                "Tür",                      // 7
+                "jalapeño",                 // 8
+                "çava",                     // 9
+                "?",                        // 10
+            };
+
         /// <summary>
         /// <para>
         /// Tests that validation of build metadata items is working
@@ -77,28 +93,15 @@ namespace McSherry.SemanticVersioning
                     $"Unexpected rejection: item {i} (\"{validItems[i]}\")."
                     );
             }
-
-            var invItems = new string[]
-            {
-                "",                         // 0
-                null,                       // 1
-                " ",                        // 2
-                "infix space",              // 3
-                " leading space",           // 4
-                "trailing space ",          // 5
-                " leading and trailing ",   // 6
-                "Tür",                      // 7
-                "jalapeño",                 // 8
-                "çava",                     // 9
-                "?",                        // 10
-            };
-            // Iterate through all the items we expect to be invalid.
-            for (int i = 0; i < invItems.Length; i++)
+            
+            // Iterate through all invalid metadata items and check that
+            // they are not considered valid.
+            foreach (var item in InvalidMetadata)
             {
                 Assert.IsFalse(
-                    Helper.IsValidIdentifier(invItems[i]),
-                    $"Unexpected acceptance: item {i} (\"{invItems[i]}\")."
-                    );
+                    Helper.IsValidMetadata(item),
+                   $@"Unexpected acceptance: item ""{item}"""
+                   );
             }
         }
         /// <summary>
