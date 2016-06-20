@@ -63,7 +63,16 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </exception>
         public static bool IsMonotonic(this SemanticVersion version)
         {
-            throw new NotImplementedException();
+            if (version == null)
+            {
+                throw new ArgumentNullException(
+                    message:    "The specified version cannot be null.",
+                    paramName:  nameof(version)
+                    );
+            }
+
+            return version.Patch == 0 &&
+                   version.Identifiers.Count == 0;
         }
     }
 }

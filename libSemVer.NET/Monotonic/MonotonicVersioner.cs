@@ -80,33 +80,6 @@ namespace McSherry.SemanticVersioning.Monotonic
     {
         /// <summary>
         /// <para>
-        /// Sorts a collection of <see cref="SemanticVersion"/>s using 
-        /// monotonic versioning sorting rules.
-        /// </para>
-        /// </summary>
-        /// <param name="versions">
-        /// The versions to be sorted.
-        /// </param>
-        /// <returns>
-        /// A sorted collection of <see cref="SemanticVersion"/>s, with the
-        /// highest-precedence version first in the collection.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="versions"/> or an item therein is null.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// One of more of the items within <paramref name="versions"/> is
-        /// not a valid monotonic version.
-        /// </exception>
-        public static IEnumerable<SemanticVersion> Sort(
-            IEnumerable<SemanticVersion> versions
-            )
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <para>
         /// Creates a new <see cref="MonotonicVersioner"/> instance.
         /// </para>
         /// </summary>
