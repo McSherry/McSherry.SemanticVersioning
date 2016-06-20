@@ -123,9 +123,8 @@ namespace McSherry.SemanticVersioning.Monotonic
         }
         /// <summary>
         /// <para>
-        /// Creates a new <see cref="MonotonicVersioner"/> instance.
-        /// Refer to remarks for differences from 
-        /// <see cref="MonotonicVersioner()"/>.
+        /// Creates a new <see cref="MonotonicVersioner"/> instance
+        /// with the specified initial compatibility line.
         /// </para>
         /// </summary>
         /// <param name="startAtOne">
@@ -145,6 +144,46 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </para>
         /// </remarks>
         public MonotonicVersioner(bool startAtOne)
+            : this(startAtOne, Enumerable.Empty<string>())
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
+        /// <para>
+        /// Creates a new <see cref="MonotonicVersioner"/> instance with
+        /// the specified initial compatibility line and metadata.
+        /// </para>
+        /// </summary>
+        /// <param name="startAtOne">
+        /// If true, the produced <see cref="Compatibility"/> number
+        /// sequence starts at one. If false, zero.
+        /// </param>
+        /// <param name="metadata">
+        /// Any metadata items to be included as part of the
+        /// initial version number.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// The Monotonic Versioning Manifesto 1.2 does not specify
+        /// whether the <see cref="Compatibility"/> component of versions 
+        /// are to start at one or zero. It is assumed that either is valid 
+        /// as neither is specifically recommended nor prohibited.
+        /// </para>
+        /// <para>
+        /// If the <see cref="Compatibility"/> components are to start at
+        /// one, <see cref="MonotonicVersioner()"/> may be used.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="metadata"/> or an item thereof is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// One or more of the items in <paramref name="metadata"/> is not
+        /// a valid metadata item.
+        /// </exception>
+        public MonotonicVersioner(
+            bool startAtOne, IEnumerable<string> metadata
+            )
         {
             throw new NotImplementedException();
         }
@@ -320,11 +359,11 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// <paramref name="line"/> is negative.
         /// </para>
         /// <para>
-        /// <paramref name="line"/> is not a current line of compatibility.
-        /// </para>
-        /// <para>
         /// <paramref name="change"/> is not a recognised type of change.
         /// </para>
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="line"/> is not a current line of compatibility.
         /// </exception>
         public SemanticVersion Next(int line, MonotonicChange change)
         {
@@ -367,9 +406,6 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// <paramref name="line"/> is negative.
         /// </para>
         /// <para>
-        /// <paramref name="line"/> is not a current line of compatibility.
-        /// </para>
-        /// <para>
         /// <paramref name="change"/> is not a recognised type of change.
         /// </para>
         /// </exception>
@@ -377,8 +413,13 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// <paramref name="metadata"/> or an item therein is null.
         /// </exception>
         /// <exception cref="ArgumentException">
+        /// <para>
         /// One or more items within <paramref name="metadata"/> is not a
         /// valid metadata string.
+        /// </para>
+        /// <para>
+        /// <paramref name="line"/> is not a current line of compatibility.
+        /// </para>
         /// </exception>
         public SemanticVersion Next(
             int line,
