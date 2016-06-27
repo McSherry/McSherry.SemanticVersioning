@@ -183,6 +183,42 @@ namespace McSherry.SemanticVersioning.Monotonic
             Assert.AreEqual(Ordering.Lesser, cmp(m4, m5));
             Assert.AreEqual(Ordering.Greater, cmp(m5, m4));
         }
+        /// <summary>
+        /// <para>
+        /// Tests that capital letters in metadata are sorted before
+        /// lowercase letters.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void General_Casing()
+        {
+            // Lexical sort is what we're told. Since the valid characters
+            // are a restricted subset of ASCII, and since we have nothing
+            // else to go on, we're going to assume that we should sort
+            // capital letters before lowercase letters (since the ASCII
+            // encodings for capital letters have smaller values than those
+            // for lowercase letters).
+            //
+            // Since we have to give later-sorted elements precedence, this
+            // means that lowercased metadata items should take precedence.
+            //
+            // Where metadata items have the same case, alphabetic sorting
+            // should still apply.
+            var v0 = (SemanticVersion)"1.0+ABC";
+            var v1 = (SemanticVersion)"1.0+abc";
+            var v2 = (SemanticVersion)"1.0+DEF";
+            var v3 = (SemanticVersion)"1.0+def";
+
+            Assert.AreEqual(Ordering.Lesser, cmp(v0, v1));
+            Assert.AreEqual(Ordering.Lesser, cmp(v2, v1));
+            Assert.AreEqual(Ordering.Lesser, cmp(v0, v2));
+            Assert.AreEqual(Ordering.Lesser, cmp(v2, v3));
+
+            Assert.AreEqual(Ordering.Greater, cmp(v1, v0));
+            Assert.AreEqual(Ordering.Greater, cmp(v1, v2));
+            Assert.AreEqual(Ordering.Greater, cmp(v2, v0));
+            Assert.AreEqual(Ordering.Greater, cmp(v3, v2));
+        }
 
         /// <summary>
         /// <para>
