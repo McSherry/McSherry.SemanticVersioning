@@ -397,6 +397,19 @@ namespace McSherry.SemanticVersioning.Monotonic
             Assert.AreEqual(
                 new SemanticVersion(2, 2), mv.Next(MonotonicChange.Breaking)
                 );
+
+            // A change is applied to the latest version.
+            Assert.AreEqual(
+                new SemanticVersion(2, 3), mv.Next(MonotonicChange.Compatible)
+                );
+
+            // A change is applied to the latest version.
+            // This call makes the latest version "1.4".
+            mv.Next(1, MonotonicChange.Compatible);
+            // So this call should result in 1.5.
+            Assert.AreEqual(
+                new SemanticVersion(1, 5), mv.Next(MonotonicChange.Compatible)
+                );
         }
         /// <summary>
         /// <para>
@@ -411,27 +424,30 @@ namespace McSherry.SemanticVersioning.Monotonic
             var mv = new MonotonicVersioner();
 
             // Compatible change
-            var sv0 = new SemanticVersion(
-                major:       1,
-                minor:       1,
-                patch:       0,
-                identifiers: new string[0],
-                metadata:    new[] { "abc", "123" }
-                );
+            var sv0 = (SemanticVersion)"1.1+abc.123";
             Assert.AreEqual(
                 sv0, mv.Next(MonotonicChange.Compatible, new[] { "abc", "123" })
                 );
 
             // Breaking change
-            var sv1 = new SemanticVersion(
-                major:       2,
-                minor:       2,
-                patch:       0,
-                identifiers: new string[0],
-                metadata:    new[] { "abc", "123" }
-                );
+            var sv1 = (SemanticVersion)"2.2+abc.123";
             Assert.AreEqual(
                 sv1, mv.Next(MonotonicChange.Breaking, new[] { "abc", "123" })
+                );
+
+            // Change applies to latest version.
+            var sv2 = (SemanticVersion)"2.3+def.456";
+            Assert.AreEqual(
+                sv2, mv.Next(MonotonicChange.Compatible, new[] { "def", "456" })
+                );
+
+            // Change applies to latest version.
+            // This call causes the latest version to be in the 1.x line.
+            mv.Next(1, MonotonicChange.Compatible);
+            // Thus, this call should return another version in the 1.x line.
+            var sv3 = (SemanticVersion)"1.5+ghi.789";
+            Assert.AreEqual(
+                sv3, mv.Next(MonotonicChange.Compatible, new[] { "ghi", "789" })
                 );
         }
         /// <summary>
