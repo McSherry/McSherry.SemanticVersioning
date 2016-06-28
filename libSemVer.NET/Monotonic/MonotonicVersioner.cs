@@ -20,8 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace McSherry.SemanticVersioning.Monotonic
 {
@@ -78,6 +76,80 @@ namespace McSherry.SemanticVersioning.Monotonic
     [CLSCompliant(true)]
     public sealed partial class MonotonicVersioner
     {
+        // Checks that a collection of metadata is valid and throws if it isn't.
+        private static void _verifyMetadataColl(IEnumerable<string> metadata)
+        {
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(
+                    message: "The specified metadata items cannot be null.",
+                    paramName: nameof(metadata)
+                    );
+            }
+
+            if (metadata.Contains(null))
+            {
+                throw new ArgumentNullException(
+                    message: "The specified collection of metadata items " +
+                                "cannot contain a null item.",
+                    paramName: nameof(metadata)
+                    );
+            }
+
+            if (!metadata.All(Helper.IsValidMetadata))
+            {
+                throw new ArgumentException(
+                    message: "One or more of the specified metadata items " +
+                                "is not a valid metadata item.",
+                    paramName: nameof(metadata)
+                    );
+            }
+        }
+
+        // Checks that a sequence is an ordered sequence of contiguous integers.
+        private static bool _isOrderedCtgsIntSeq(IEnumerable<int> seq)
+        {
+            var last = seq.First();
+            seq = seq.Skip(1);
+
+            foreach (var n in seq)
+            {
+                if (last + 1 != n)
+                    return false;
+
+                last = n;
+            }
+
+            return true;
+        }
+
+        // The last version that this instance created.
+        private SemanticVersion _latest;
+        // A map of compatibility lines to the latest versions
+        // within those lines.
+        private readonly IDictionary<int, SemanticVersion> _latestVers;
+        // An explicit FIFO collection (like a [Queue<T>]) would make the
+        // most sense, but unfortunately [ReadOnlyCollection<T>] will only
+        // accept an [IList<T>].
+        private readonly List<SemanticVersion> _chronology;
+
+        // Adds a [SemanticVersion] to this instance. No error checking is
+        // performed.
+        private SemanticVersion _add(SemanticVersion sv)
+        {
+            _latest = sv;
+            _latestVers[sv.Major] = sv;
+            _chronology.Add(sv);
+
+            return sv;
+        }
+        // Creates all the various read-only copies used by the instance.
+        private void _createReadOnlies()
+        {
+            this.LatestVersions = _latestVers.AsReadOnly();
+            this.Chronology = _chronology.AsReadOnly();
+        }
+
         /// <summary>
         /// <para>
         /// Creates a new <see cref="MonotonicVersioner"/> instance.
@@ -92,7 +164,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         public MonotonicVersioner()
             : this(startAtOne: true)
         {
-            throw new NotImplementedException();
+
         }
         /// <summary>
         /// <para>
@@ -119,7 +191,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         public MonotonicVersioner(bool startAtOne)
             : this(startAtOne, Enumerable.Empty<string>())
         {
-            throw new NotImplementedException();
+
         }
         /// <summary>
         /// <para>
@@ -158,7 +230,25 @@ namespace McSherry.SemanticVersioning.Monotonic
             bool startAtOne, IEnumerable<string> metadata
             )
         {
-            throw new NotImplementedException();
+            _verifyMetadataColl(metadata);
+
+            _latest = new SemanticVersion(
+                major:          startAtOne ? 1 : 0,
+                minor:          0,
+                patch:          0,
+                identifiers:    Enumerable.Empty<string>(),
+                metadata:       metadata
+                );
+
+            _latestVers = new Dictionary<int, SemanticVersion>
+            {
+                { _latest.Major, _latest }
+            };
+            
+            _chronology = new List<SemanticVersion>() { _latest };
+
+
+            _createReadOnlies();
         }
         /// <summary>
         /// <para>
@@ -213,9 +303,88 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </list>
         /// </exception>
         public MonotonicVersioner(IEnumerable<SemanticVersion> chronology)
-            : this()
         {
-            throw new NotImplementedException();
+            if (chronology == null)
+            {
+                throw new ArgumentNullException(
+                    message:    "The specified chronology cannot be null.",
+                    paramName:  nameof(chronology)
+                    );
+            }
+
+            if (chronology.Contains(null))
+            {
+                throw new ArgumentNullException(
+                    message:    "The specified chronology cannot contain a " +
+                                "null version.",
+                    paramName:  nameof(chronology)
+                    );
+            }
+
+            if (!chronology.All(MonotonicExtensions.IsMonotonic))
+            {
+                throw new ArgumentOutOfRangeException(
+                    message:    "The specified chronology contains a version " +
+                                "that is not a valid monotonic version.",
+                    paramName:  nameof(chronology)
+                    );
+            }
+
+            if (!chronology.Any())
+            {
+                throw new ArgumentException(
+                    message:    "The specified chronology is empty.",
+                    paramName:  nameof(chronology)
+                    );
+            }
+
+            // Order the versions we've provided by release number.
+            var orderedChron = chronology.OrderBy(v => v.Minor);
+
+            // Is the set of lines of compatibility without gaps?
+            var linesOfCompat = orderedChron.Select(v => v.Major).Distinct();
+            if (!_isOrderedCtgsIntSeq(linesOfCompat))
+            {
+                throw new ArgumentException(
+                    message:    "The specified chronology does not provide " +
+                                "a contiguous set of lines of compatibility.",
+                    paramName:  nameof(chronology)
+                    );
+            }
+
+            // Is the set of release numbers ordered without any gaps.
+            if (!_isOrderedCtgsIntSeq(orderedChron.Select(v => v.Minor)))
+            {
+                throw new ArgumentException(
+                    message:    "The specified chronology does not provide " +
+                                "a contiguous sequence of release numbers.",
+                    paramName:  nameof(chronology)
+                    );
+            }
+
+            // Is the first line of compatibility a value other than 0 or 1?
+            if (orderedChron.First().Major >= 2)
+            {
+                throw new ArgumentException(
+                    message:    "The set of lines of compatibility in the " +
+                                "specified chronology does not start at " +
+                                $"one or zero ({chronology.First().Major}).",
+                    paramName:  nameof(chronology)
+                    );
+            }
+
+            _latest = orderedChron.Last();
+
+            _latestVers = new Dictionary<int, SemanticVersion>();
+            foreach (var line in linesOfCompat)
+            {
+                _latestVers[line] = orderedChron.Where(v => v.Major == line)
+                                                .Last();
+            }
+
+            _chronology = new List<SemanticVersion>(orderedChron);
+
+            _createReadOnlies();
         }
 
         /// <summary>
@@ -250,7 +419,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </exception>
         public SemanticVersion Next(MonotonicChange change)
         {
-            throw new NotImplementedException();
+            return this.Next(change, Enumerable.Empty<string>());
         }
         /// <summary>
         /// <para>
@@ -296,7 +465,7 @@ namespace McSherry.SemanticVersioning.Monotonic
             MonotonicChange change, IEnumerable<string> metadata
             )
         {
-            throw new NotImplementedException();
+            return this.Next(this.Latest.Major, change, metadata);
         }
         /// <summary>
         /// <para>
@@ -340,7 +509,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </exception>
         public SemanticVersion Next(int line, MonotonicChange change)
         {
-            throw new NotImplementedException();
+            return this.Next(line, change, Enumerable.Empty<string>());
         }
         /// <summary>
         /// <para>
@@ -400,7 +569,60 @@ namespace McSherry.SemanticVersioning.Monotonic
             IEnumerable<string> metadata
             )
         {
-            throw new NotImplementedException();
+            if (line < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    message:    "The specified line of compatibility cannot " +
+                                "be negative.",
+                    paramName:  nameof(line)
+                    );
+            }
+
+            if (!Enum.IsDefined(typeof(MonotonicChange), change))
+            {
+                throw new ArgumentOutOfRangeException(
+                    message:    "The specified change was unrecognised " +
+                                "or invalid.",
+                    paramName:  nameof(change)
+                    );
+            }
+
+            _verifyMetadataColl(metadata);
+
+            if (!_latestVers.Keys.Contains(line))
+            {
+                throw new ArgumentException(
+                    message:    "The specified line of compatibility is not " +
+                                "recognised for this versioner.",
+                    paramName:  nameof(line)
+                    );
+            }
+
+            // If it's a breaking change, we are free to ignore the change
+            // because a breaking change will produce a new line of compatibility.
+            if (change == MonotonicChange.Breaking)
+            {
+                return _add(new SemanticVersion(
+                    major:       _latestVers.Keys.Max() + 1,
+                    minor:       _latest.Minor + 1,
+                    patch:       0,
+                    identifiers: Enumerable.Empty<string>(),
+                    metadata:    metadata
+                    ));
+            }
+            // Otherwise, we use the line of compatibility specified.
+            else if (change == MonotonicChange.Compatible)
+            {
+                return _add(new SemanticVersion(
+                    major:       line,
+                    minor:       _latest.Minor + 1,
+                    patch:       0,
+                    identifiers: Enumerable.Empty<string>(),
+                    metadata:    metadata
+                    ));
+            }
+
+            throw new Exception("Invalid [MonotonicVersioner.Next] state.");
         }
 
         /// <summary>
@@ -416,7 +638,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </returns>
         public MonotonicVersioner Clone()
         {
-            throw new NotImplementedException();
+            return new MonotonicVersioner(this.Chronology);
         }
 
 
@@ -433,13 +655,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// line of compatibility.
         /// </para>
         /// </remarks>
-        public SemanticVersion Latest
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public SemanticVersion Latest => _latest;
         /// <summary>
         /// <para>
         /// The latest versions in each line of compatibility, where the
@@ -448,10 +664,8 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </summary>
         public IReadOnlyDictionary<int, SemanticVersion> LatestVersions
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get;
+            private set;
         }
 
         /// <summary>
@@ -460,26 +674,14 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// releases are compatible with each other.
         /// </para>
         /// </summary>
-        public int Compatibility
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public int Compatibility => this.LatestVersions.Keys.Max();
         /// <summary>
         /// <para>
         /// The current release number. This component indicates when a release
         /// was made relative to other releases.
         /// </para>
         /// </summary>
-        public int Release
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public int Release => _latest.Minor;
 
         /// <summary>
         /// <para>
@@ -495,10 +697,8 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// </remarks>
         public IEnumerable<SemanticVersion> Chronology
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get;
+            private set;
         }
     }
 }
