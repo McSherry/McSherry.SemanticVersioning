@@ -314,7 +314,8 @@ namespace McSherry.SemanticVersioning.Monotonic
 
 
             // Metadata item is invalid
-            foreach (var item in SemanticVersionTests.InvalidMetadata)
+            foreach (var item in SemanticVersionTests.InvalidMetadata
+                                                     .Where(m => m != null))
             {
                 new Action(() => new MonotonicVersioner(true, new[] { item }))
                     .AssertThrowsExact<ArgumentException>(item);
@@ -565,7 +566,8 @@ namespace McSherry.SemanticVersioning.Monotonic
 
 
             // Metadata item is invalid
-            foreach (var item in SemanticVersionTests.InvalidMetadata)
+            foreach (var item in SemanticVersionTests.InvalidMetadata
+                                                     .Where(m => m != null))
             {
                 var iarr = new[] { item };
                 new Action(() => mv.Next(MonotonicChange.Compatible, iarr))
@@ -609,7 +611,8 @@ namespace McSherry.SemanticVersioning.Monotonic
                 .AssertThrowsExact<ArgumentException>();
 
             // Metadata item is invalid
-            foreach (var item in SemanticVersionTests.InvalidMetadata)
+            foreach (var item in SemanticVersionTests.InvalidMetadata
+                                                     .Where(m => m != null))
             {
                 var iarr = new[] { item };
                 new Action(() => mv.Next(1, MonotonicChange.Compatible, iarr))
