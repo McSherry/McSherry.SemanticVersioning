@@ -29,6 +29,7 @@ namespace McSherry.SemanticVersioning.Monotonic
     /// software package.
     /// </para>
     /// </summary>
+    [CLSCompliant(true)]
     public enum MonotonicChange
     {
         /// <summary>
