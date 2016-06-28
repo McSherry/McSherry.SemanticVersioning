@@ -687,7 +687,7 @@ namespace McSherry.SemanticVersioning.Monotonic
             // But if we advance one, it shouldn't affect the other.
             var mv1_lat = mv1.Latest;
             mv0.Next(MonotonicChange.Compatible);
-            Assert.AreEqual(new SemanticVersion(3, 7), mv0.Latest);
+            Assert.AreEqual(new SemanticVersion(1, 7), mv0.Latest);
             Assert.AreEqual(mv1_lat, mv1.Latest);
             Assert.AreNotEqual(mv0.Latest, mv1.Latest);
 
