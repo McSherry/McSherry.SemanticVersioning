@@ -437,7 +437,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// <returns>
         /// <para>
         /// The next version number produced when the specified change
-        /// is made to the latest version.
+        /// is made to the latest version, with the specified metadata.
         /// </para>
         /// <para>
         /// If <paramref name="change"/> is equal to
@@ -515,7 +515,8 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// <summary>
         /// <para>
         /// Returns the next version number when a specified change is
-        /// made to a given line of compatibility.
+        /// made to a given line of compatibility with the specified
+        /// metadata.
         /// </para>
         /// </summary>
         /// <param name="line">
