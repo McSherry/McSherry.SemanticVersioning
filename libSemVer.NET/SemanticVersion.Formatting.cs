@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-16 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -79,6 +79,21 @@ namespace McSherry.SemanticVersioning
         /// </para>
         /// </remarks>
         public static string PrefixedConcise    => "c";
+
+        /// <summary>
+        /// <para>
+        /// The format used for monotonic version strings. Aliases
+        /// <see cref="Concise"/>.
+        /// </para>
+        /// </summary>
+        public static string Monotonic          => Concise;
+        /// <summary>
+        /// <para>
+        /// The format used for monotonic version strings, prefixed
+        /// with a letter "v". Aliases <see cref="PrefixedConcise"/>.
+        /// </para>
+        /// </summary>
+        public static string PrefixedMonotonic  => PrefixedConcise;
     }
 
     // Documentation/attributes/interfaces/etc are in the main

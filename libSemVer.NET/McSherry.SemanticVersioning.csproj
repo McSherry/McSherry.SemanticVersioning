@@ -47,6 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper.cs" />
+    <Compile Include="Monotonic\MonotonicComparer.cs" />
+    <Compile Include="Monotonic\MonotonicExtensions.cs" />
+    <Compile Include="Monotonic\MonotonicVersioner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ranges\VersionRange.Comparison.cs" />
     <Compile Include="Ranges\VersionRange.cs" />
