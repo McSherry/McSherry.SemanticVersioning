@@ -12,7 +12,10 @@
         <summary>Plug-and-play Semantic Versioning for .NET.</summary>
         <releaseNotes></releaseNotes>
         <language>en-GB</language>
-        <tags>library semantic version versions versioning lib libs sem ver semver</tags>
+        <tags>
+            library semantic version versions versioning lib libs sem ver semver 2.0 2.0.0
+            monotonic version versioning mover 1.2 support
+        </tags>
         <frameworkAssemblies>
             <frameworkAssembly assemblyName="System" targetFramework="" />
         </frameworkAssemblies>
@@ -20,7 +23,7 @@
     <files>
         <file src="LICENCE.txt" target="content\McSherry.SemanticVersioning/LICENCE.txt" />
         <file src="README.md" target="content\McSherry.SemanticVersioning/README.md" />
-        <file src="libSemVer.NET\bin\Release\McSherry.SemanticVersioning.dll" target="lib\McSherry.SemanticVersioning.dll" />
-        <file src="libSemVer.NET\bin\Release\McSherry.SemanticVersioning.XML" target="lib\McSherry.SemanticVersioning.XML" />
+        <file src="McSherry.SemanticVersioning\bin\Release\McSherry.SemanticVersioning.dll" target="lib\McSherry.SemanticVersioning.dll" />
+        <file src="McSherry.SemanticVersioning\bin\Release\McSherry.SemanticVersioning.XML" target="lib\McSherry.SemanticVersioning.XML" />
     </files>
 </package>

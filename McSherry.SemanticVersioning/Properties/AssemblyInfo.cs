@@ -30,7 +30,7 @@ using CLSCompliantAttribute = System.CLSCompliantAttribute;
 [assembly: AssemblyProduct("Semantic Versioning for .NET")]
 [assembly: AssemblyCopyright("Copyright 2015-16 © Liam McSherry")]
 [assembly: AssemblyCulture("")]
-[assembly: InternalsVisibleTo("libSemVer.NET.Testing")]
+[assembly: InternalsVisibleTo("McSherry.SemanticVersioning.Testing")]
 [assembly: CLSCompliant(true)]
 
 // We're using Semantic Versioning for the library, but this doesn't translate

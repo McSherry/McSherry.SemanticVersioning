@@ -24,11 +24,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("libSemVer.NET.Testing")]
+[assembly: AssemblyTitle("McSherry.SemanticVersioning.Testing")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("libSemVer.NET.Testing")]
+[assembly: AssemblyProduct("McSherry.SemanticVersioning.Testing")]
 [assembly: AssemblyCopyright("Copyright 2015 © Liam McSherry")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
-    <AssemblyName>libSemVer.NET.Testing</AssemblyName>
+    <AssemblyName>McSherry.SemanticVersioning.Testing</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -70,7 +70,7 @@
     <Compile Include="TestingExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libSemVer.NET\McSherry.SemanticVersioning.csproj">
+    <ProjectReference Include="..\McSherry.SemanticVersioning\McSherry.SemanticVersioning.csproj">
       <Project>{8c0fd5fe-7c51-45c7-a6b6-7d73fa74588f}</Project>
       <Name>McSherry.SemanticVersioning</Name>
     </ProjectReference>
