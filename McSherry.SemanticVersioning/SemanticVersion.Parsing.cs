@@ -456,10 +456,6 @@ namespace McSherry.SemanticVersioning
             /// </summary>
             private const char ComponentSeparator = '.';
 
-            // TODO: Change this to WeakReference<SemanticVersion> so we don't
-            //       hinder garbage collection?
-            private static IDictionary<string, SemanticVersion> _memDict;
-
             /// <summary>
             /// <para>
             /// Attempts to normalise the version string provided as input
@@ -964,22 +960,6 @@ namespace McSherry.SemanticVersioning
                     );
             }
 
-            static Parser()
-            {
-                // The easiest way to represent a [SemanticVersion] is with a
-                // string (e.g. "1.1.0-alpha.7"). Each time a string is used,
-                // however, it must be parsed before it can be used, and this
-                // is an expensive operation.
-                //
-                // To avoid having to parse each time a string is used, we're
-                // going to build a cache of strings and versions and check it
-                // each time we enter the parse method.
-                //
-                // We're using a [ConcurrentDictionary] because the cache is
-                // static and may be used across threads.
-                _memDict = new ConcurrentDictionary<string, SemanticVersion>();
-            }
-
             /// <summary>
             /// <para>
             /// Implements <see cref="SemanticVersion"/> parsing and
@@ -1007,28 +987,32 @@ namespace McSherry.SemanticVersioning
                 if (normaliseResult != ParseResultType.Success)
                     return new ParseResult(normaliseResult);
 
-                SemanticVersion cacheResult;
-                // Now that we've normalised the string, we're going to see
-                // if it's in the cache. This should save us some expensive
-                // parse operations.
-                if (_memDict.TryGetValue(input, out cacheResult))
+                // Whoever's using the library may or may not have configured
+                // a memoization agent for us. If they have, we're going to
+                // see if the input string is in the cache.
+                //
+                // If they haven't configured an agent, we'll go straight to
+                // parsing. We'll also do this if the input isn't in the cache.
+                SemanticVersion cacheResult = null;
+                ParseResult result;
+                if (MemoizationAgent?.TryGetValue(input, out cacheResult) != true)
                 {
-                    // If we were successful, we just return the retrieved
-                    // [SemanticVersion] instead of proceeding.
-                    return new ParseResult(cacheResult);
+                    // There is no cache, or the item isn't in the cache.
+                    // This means we have to try and parse the input.
+                    result = _parseVersion(input, mode);
+
+                    // If parsing was successful, and if there is a cache
+                    // configured, add the result to the cache.
+                    if (result.Type == ParseResultType.Success)
+                        MemoizationAgent?.Add(input, result.Version);
+                }
+                // The item was in our cache. Our result is what we've
+                // retrieved from our cache.
+                else
+                {
+                    result = new ParseResult(cacheResult);
                 }
 
-                // The version string isn't in our cache, so we're going to
-                // need to attempt to parse it.
-                var result = _parseVersion(input, mode);
-
-                // If parsing was successful, we want to add the created
-                // version to the dictionary along with the string that it
-                // was created from.
-                if (result.Type == ParseResultType.Success)
-                    _memDict.Add(input, result.Version);
-
-                // We can now return the result to our caller.
                 return result;
             }
         }
@@ -1170,6 +1154,25 @@ namespace McSherry.SemanticVersioning
         public static bool TryParse(string version, out SemanticVersion semver)
         {
             return SemanticVersion.TryParse(version, ParseMode.Strict, out semver);
+        }
+
+
+        /// <summary>
+        /// <para>
+        /// The cache to use to memoize the result of the 
+        /// <see cref="SemanticVersion"/> parsing methods.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Assign <c>null</c> to disable memoization. The value of this
+        /// property is <c>null</c> by default.
+        /// </para>
+        /// </remarks>
+        public static IDictionary<string, SemanticVersion> MemoizationAgent
+        {
+            get;
+            set;
         }
     }
 }

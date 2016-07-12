@@ -41,6 +41,34 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Tests that <see cref="SemanticVersion.MemoizationAgent"/> is used
+        /// when assigned to.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void General_Memoize()
+        {
+            var dict = new Dictionary<string, SemanticVersion>();
+
+            SemanticVersion.MemoizationAgent = dict;
+
+            var sv0 = SemanticVersion.Parse("1.6.0+abc.def");
+
+            Assert.IsTrue(dict.ContainsKey("1.6.0+abc.def"));
+            Assert.AreEqual(sv0, dict["1.6.0+abc.def"]);
+            Assert.AreEqual(1, dict.Count);
+
+
+            SemanticVersion.MemoizationAgent = null;
+
+            var sv1 = SemanticVersion.Parse("2.3.1-beta.4");
+
+            Assert.IsFalse(dict.ContainsKey("2.3.1-beta.4"));
+            Assert.AreEqual(1, dict.Count);
+        }
+
+        /// <summary>
+        /// <para>
         /// Tests the <see cref="SemanticVersion"/> parser's internal
         /// normalisation method to ensure it correctly handles whitespace.
         /// </para>
