@@ -215,10 +215,6 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// are to start at one or zero. It is assumed that either is valid 
         /// as neither is specifically recommended nor prohibited.
         /// </para>
-        /// <para>
-        /// If the <see cref="Compatibility"/> components are to start at
-        /// one, <see cref="MonotonicVersioner()"/> may be used.
-        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="metadata"/> or an item thereof is null.
