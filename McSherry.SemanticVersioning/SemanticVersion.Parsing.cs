@@ -1159,7 +1159,7 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
-        /// The cache to use to memoize the result of the 
+        /// The cache to use to memoize the results of the 
         /// <see cref="SemanticVersion"/> parsing methods.
         /// </para>
         /// </summary>

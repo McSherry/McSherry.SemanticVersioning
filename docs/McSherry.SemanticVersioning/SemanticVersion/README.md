@@ -44,7 +44,7 @@ inherited.
 [8]: /docs/docs/McSherry.SemanticVersion/SemanticVersion/Patch.md
 
 
-## Properties
+## Instance Properties
 
 - **[Major][9]**  
   The semantic version's major version component.
@@ -62,6 +62,12 @@ inherited.
 [11]: ./Patch.md
 [12]: ./Identifiers.md
 [13]: ./Metadata.md
+
+## Static Properties
+
+- **[MemoizationAgent][35]**  
+  The cache to use to memoize the results of the 
+  [SemanticVersion][7] parsing methods.
 
 
 ## Instance Methods
