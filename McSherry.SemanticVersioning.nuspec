@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>McSherry.SemanticVersioning</id>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
         <title>McSherry.SemanticVersioning</title>
         <authors>Liam McSherry</authors>
         <licenseUrl>https://github.com/McSherry/McSherry.SemanticVersioning/blob/v1.1.0/LICENCE.txt</licenseUrl>
@@ -10,20 +10,15 @@
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
         <description>McSherry.SemanticVersioning is an easy-to-use plug-and-play library for working with Semantic Versions.</description>
         <summary>Plug-and-play Semantic Versioning for .NET.</summary>
-        <releaseNotes></releaseNotes>
+        <releaseNotes />
         <language>en-GB</language>
-        <tags>
-            library semantic version versions versioning lib libs sem ver semver 2.0 2.0.0
-            monotonic version versioning mover 1.2 support
-        </tags>
+        <tags>library semantic version versions versioning lib libs sem ver semver 2.0 2.0.0 monotonic mover 1.2 support</tags>
         <frameworkAssemblies>
-            <frameworkAssembly assemblyName="System" targetFramework="" />
+            <frameworkAssembly assemblyName="System" targetFramework=".NETFramework4.5" />
         </frameworkAssemblies>
     </metadata>
     <files>
-        <file src="LICENCE.txt" target="content\McSherry.SemanticVersioning/LICENCE.txt" />
-        <file src="README.md" target="content\McSherry.SemanticVersioning/README.md" />
-        <file src="McSherry.SemanticVersioning\bin\Release\McSherry.SemanticVersioning.dll" target="lib\McSherry.SemanticVersioning.dll" />
-        <file src="McSherry.SemanticVersioning\bin\Release\McSherry.SemanticVersioning.XML" target="lib\McSherry.SemanticVersioning.XML" />
+        <file src="McSherry.SemanticVersioning\bin\Release\McSherry.SemanticVersioning.dll" target="lib\net45\McSherry.SemanticVersioning.dll" />
+        <file src="McSherry.SemanticVersioning\bin\Release\McSherry.SemanticVersioning.xml" target="lib\net45\McSherry.SemanticVersioning.XML" />
     </files>
 </package>
