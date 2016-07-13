@@ -456,6 +456,8 @@ namespace McSherry.SemanticVersioning
             /// </summary>
             private const char ComponentSeparator = '.';
 
+            private static readonly object _lockbox = new object();
+
             /// <summary>
             /// <para>
             /// Attempts to normalise the version string provided as input
@@ -987,30 +989,44 @@ namespace McSherry.SemanticVersioning
                 if (normaliseResult != ParseResultType.Success)
                     return new ParseResult(normaliseResult);
 
-                // Whoever's using the library may or may not have configured
-                // a memoization agent for us. If they have, we're going to
-                // see if the input string is in the cache.
-                //
-                // If they haven't configured an agent, we'll go straight to
-                // parsing. We'll also do this if the input isn't in the cache.
                 SemanticVersion cacheResult = null;
                 ParseResult result;
-                if (MemoizationAgent?.TryGetValue(input, out cacheResult) != true)
-                {
-                    // There is no cache, or the item isn't in the cache.
-                    // This means we have to try and parse the input.
-                    result = _parseVersion(input, mode);
 
-                    // If parsing was successful, and if there is a cache
-                    // configured, add the result to the cache.
-                    if (result.Type == ParseResultType.Success)
-                        MemoizationAgent?.Add(input, result.Version);
-                }
-                // The item was in our cache. Our result is what we've
-                // retrieved from our cache.
-                else
+                // We don't know what the memoization agent actually is, and
+                // whether a user intends on accessing it. By locking on the
+                // property, it is possible for the parser and the user (who 
+                // may be doing anything with their cache) to safely access
+                // the cache.
+                //
+                // However, [MemoizationAgent] won't always have a value, so
+                // we have a private object to lock on when this is the case.
+                lock (MemoizationAgent ?? _lockbox)
                 {
-                    result = new ParseResult(cacheResult);
+                    // Whoever's using the library may or may not have configured
+                    // a memoization agent for us. If they have, we're going to
+                    // see if the input string is in the cache.
+                    //
+                    // If they haven't configured an agent, we'll go straight to
+                    // parsing. We'll also do this if the input isn't in the
+                    // cache.
+                    if (MemoizationAgent?.TryGetValue(input, out cacheResult) 
+                            != true)
+                    {
+                        // There is no cache, or the item isn't in the cache.
+                        // This means we have to try and parse the input.
+                        result = _parseVersion(input, mode);
+
+                        // If parsing was successful, and if there is a cache
+                        // configured, add the result to the cache.
+                        if (result.Type == ParseResultType.Success)
+                            MemoizationAgent?.Add(input, result.Version);
+                    }
+                    // The item was in our cache. Our result is what we've
+                    // retrieved from our cache.
+                    else
+                    {
+                        result = new ParseResult(cacheResult);
+                    }
                 }
 
                 return result;
@@ -1167,6 +1183,10 @@ namespace McSherry.SemanticVersioning
         /// <para>
         /// Assign <c>null</c> to disable memoization. The value of this
         /// property is <c>null</c> by default.
+        /// </para>
+        /// <para>
+        /// Accesses by the parser to the memoization agent are surrounded
+        /// by <c>lock (MemoizationAgent)</c>.
         /// </para>
         /// </remarks>
         public static IDictionary<string, SemanticVersion> MemoizationAgent

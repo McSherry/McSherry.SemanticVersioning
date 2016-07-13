@@ -19,3 +19,6 @@ parsing methods.
 
 Assign `null` to disable memoization. The value of this property is
 `null` by default.
+
+Internal accesses by the parser to the memoization agent are
+surrounded by `lock (MemoizationAgent)`.
