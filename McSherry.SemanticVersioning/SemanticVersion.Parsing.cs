@@ -1000,7 +1000,8 @@ namespace McSherry.SemanticVersioning
                 //
                 // However, [MemoizationAgent] won't always have a value, so
                 // we have a private object to lock on when this is the case.
-                lock (MemoizationAgent ?? _lockbox)
+                var lockObj = MemoizationAgent ?? _lockbox;
+                lock (lockObj)
                 {
                     // Whoever's using the library may or may not have configured
                     // a memoization agent for us. If they have, we're going to
