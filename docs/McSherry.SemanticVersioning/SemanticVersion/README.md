@@ -68,7 +68,8 @@ inherited.
 - **[MemoizationAgent][35]**  
   The cache to use to memoize the results of the 
   [SemanticVersion][7] parsing methods.
-
+  
+[35]: ./MemoizationAgent.md
 
 ## Instance Methods
 
