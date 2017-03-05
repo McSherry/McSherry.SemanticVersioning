@@ -30,5 +30,9 @@ contains everything relevant to working with semantic versions.
 - **[Ranges][4]**  
   Provides version range functionality intended to make complex comparisons
   against semantic versions easier to work with.
+- **[Monotonic][5]**  
+  Provides support for Monotonic Versions using the existing Semantic
+  Version APIs.
   
 [4]: ./Ranges
+[5]: ./Monotonic

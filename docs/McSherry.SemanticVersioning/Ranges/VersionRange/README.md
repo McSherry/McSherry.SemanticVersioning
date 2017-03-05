@@ -41,7 +41,7 @@ inherited.
 
 - **[Parse(String)][6]**  
   Parses a version range from a string.
-- **[TryParse(String, out SemanticVersion)][7]**  
+- **[TryParse(String, out VersionRange)][7]**  
   Attempts to parse a version range from a string.
   
 [6]: ./Parse(String).md
