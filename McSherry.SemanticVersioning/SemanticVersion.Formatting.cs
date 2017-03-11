@@ -239,8 +239,7 @@ namespace McSherry.SemanticVersioning
                 // Attempt to retrieve the formatter from our collection of
                 // formatters and, if we can retrieve it, call it and return
                 // what it produces.
-                FmtRoutine fmt;
-                if (Fmtrs.TryGetValue(format, out fmt))
+                if (Fmtrs.TryGetValue(format, out var fmt))
                     return fmt(semver);
 
                 // If we couldn't retrieve a formatter, throw an exception.

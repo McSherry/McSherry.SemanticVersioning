@@ -20,8 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
+
+using McSherry.SemanticVersioning.Internals;
 
 namespace McSherry.SemanticVersioning
 {
@@ -1000,11 +1001,13 @@ namespace McSherry.SemanticVersioning
                     // comparison again.
                     catch (OverflowException)
                     {
-                        BigInteger thisVal = BigInteger.Parse(prEnumThis.Current),
-                                   thatVal = BigInteger.Parse(prEnumThat.Current);
+                        var cmp = PseudoBigInt.Compare(
+                            subject: prEnumThis.Current, 
+                            against: prEnumThat.Current
+                            );
 
                         // Same as in the try part of this try-catch.
-                        if (thisVal > thatVal)
+                        if (cmp == true)
                         {
                             return CompareTo_Greater;
                         }

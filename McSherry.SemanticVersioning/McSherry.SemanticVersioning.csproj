@@ -43,10 +43,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper.cs" />
+    <Compile Include="Internals\PseudoBigInt.cs" />
     <Compile Include="Monotonic\MonotonicComparer.cs" />
     <Compile Include="Monotonic\MonotonicExtensions.cs" />
     <Compile Include="Monotonic\MonotonicVersioner.cs" />
