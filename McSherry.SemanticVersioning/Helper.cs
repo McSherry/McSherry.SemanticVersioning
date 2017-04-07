@@ -68,8 +68,8 @@ namespace McSherry.SemanticVersioning
             //
             // We have to check the length is greater than [1] because a
             // single ['0'] character as an identifier is valid.
-            if (identifier.Length > 1 && identifier.First() == '0' &&
-                identifier.All(IsNumber))
+            if (identifier.Length > 1 && identifier[0] == '0' &&
+                identifier.ToCharArray().All(IsNumber))
                 return false;
 
             // It's passed the tests, so it's a valid identifier.

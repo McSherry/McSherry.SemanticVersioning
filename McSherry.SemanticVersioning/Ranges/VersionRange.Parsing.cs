@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using McSherry.SemanticVersioning.Internals.Shims;
 using static McSherry.SemanticVersioning.Ranges.VersionRange.ParseResultType;
 
 using DD = System.Diagnostics.DebuggerDisplayAttribute;
@@ -669,7 +670,8 @@ namespace McSherry.SemanticVersioning.Ranges
                 // We're using [Nullable<char>]s so we can put a null value at the
                 // end of the string to make it easy to detect the last character
                 // in the string.
-                var chars = rangeString.Select(c => new Nullable<char>(c))
+                var chars = rangeString.ToCharArray()
+                                       .Select(c => new Nullable<char>(c))
                                        .Concat(new Nullable<char>[] { null });
 
                 var state = State.Start;
@@ -1012,7 +1014,9 @@ namespace McSherry.SemanticVersioning.Ranges
             }
 
             /// <summary>
+            /// <para>
             /// Implements <see cref="VersionRange"/> parsing.
+            /// </para>
             /// </summary>
             /// <param name="rangeString">
             /// The string representing the version range to be parsed.
@@ -1092,9 +1096,7 @@ namespace McSherry.SemanticVersioning.Ranges
             // tokens we were given for [IComparator] instances that we can
             // pass to a constructor.
             var comparators = parseResult.ComparatorSets.Select(
-                tokenSet => tokenSet.Select(
-                    token => Comparator.Create(token)
-                    )
+                tokenSet => tokenSet.Select(token => Comparator.Create(token))
                 );
 
             result = new VersionRange(comparators);

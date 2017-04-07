@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using McSherry.SemanticVersioning.Internals.Shims;
+
 namespace McSherry.SemanticVersioning.Monotonic
 {
     /// <summary>
@@ -223,9 +225,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// One or more of the items in <paramref name="metadata"/> is not
         /// a valid metadata item.
         /// </exception>
-        public MonotonicVersioner(
-            bool startAtOne, IEnumerable<string> metadata
-            )
+        public MonotonicVersioner(bool startAtOne, IEnumerable<string> metadata)
         {
             _verifyMetadataColl(metadata);
 

@@ -20,9 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 using McSherry.SemanticVersioning.Internals;
+using McSherry.SemanticVersioning.Internals.Shims;
 
 namespace McSherry.SemanticVersioning
 {
@@ -68,7 +68,7 @@ namespace McSherry.SemanticVersioning
     [Serializable]
     [CLSCompliant(true)]
     public sealed partial class SemanticVersion
-        : IEquatable<SemanticVersion>, IComparable<SemanticVersion>,
+        : IEquatable<SemanticVersion>, IComparable<SemanticVersion>, 
           IFormattable
     {
         private const int CompareTo_Greater =  1,
@@ -967,8 +967,10 @@ namespace McSherry.SemanticVersioning
 
                 // We know that the items are different, so the first thing we
                 // test for is whether the items are numeric.
-                bool thisIsNumber = prEnumThis.Current.All(Helper.IsNumber),
-                     thatIsNumber = prEnumThat.Current.All(Helper.IsNumber);
+                bool thisIsNumber = prEnumThis.Current.ToCharArray()
+                                                      .All(Helper.IsNumber),
+                     thatIsNumber = prEnumThat.Current.ToCharArray()
+                                                      .All(Helper.IsNumber);
 
                 // If both identifiers are numeric, then we perform a numeric
                 // comparison of them.
