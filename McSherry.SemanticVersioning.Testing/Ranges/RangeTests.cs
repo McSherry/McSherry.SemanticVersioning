@@ -42,6 +42,22 @@ namespace McSherry.SemanticVersioning.Ranges
         /// <para>
         /// Tests the version range equals operator, including the implicit
         /// equals operator.
+        /// Ensures that <see cref="VersionRange"/> implements the interface
+        /// <see cref="VersionRange.IComparator"/>.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void ImplementsIComparator()
+        {
+            var vr = new VersionRange("=1.0.0");
+
+            Assert.IsInstanceOfType(vr, typeof(VersionRange.IComparator));
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests version range comparison using the basic operators with
+        /// a single comparator in each range.
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]

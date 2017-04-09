@@ -31,7 +31,7 @@ namespace McSherry.SemanticVersioning.Ranges
         /// Represents an implementation of a comparator.
         /// </para>
         /// </summary>
-        private interface IComparator
+        internal interface IComparator
         {
             /*
                 So, why bother with this interface if it's private and

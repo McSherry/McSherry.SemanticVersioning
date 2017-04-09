@@ -65,6 +65,7 @@ namespace McSherry.SemanticVersioning.Ranges
     [Serializable]
     [CLSCompliant(true)]
     public sealed partial class VersionRange
+        : VersionRange.IComparator
     {
         // Used as a passthrough method so that the constructor taking a string
         // argument can use constructor chaining to avoid duplicate code.
