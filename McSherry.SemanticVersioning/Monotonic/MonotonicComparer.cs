@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-18 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -124,17 +124,13 @@ namespace McSherry.SemanticVersioning.Monotonic
 
             // If the compatibility components differ, the numerically
             // larger one has precedence.
-            if (x.Major > y.Major)
-                return XGreater;
-            else if (x.Major < y.Major)
-                return YGreater;
+            if (x.Major != y.Major)
+                return x.Major - y.Major;
 
             // If the release components differ, the numerically larger
             // one takes precedence.
-            if (x.Minor > y.Minor)
-                return XGreater;
-            else if (x.Minor < y.Minor)
-                return YGreater;
+            if (x.Minor != y.Minor)
+                return x.Minor - y.Minor;
 
             // Metadata is compared lexically, and the later-sorted
             // version takes precedence. We'll assume that "lexically"
@@ -181,12 +177,10 @@ namespace McSherry.SemanticVersioning.Monotonic
                 // determine precedence, sorting the shorter collection before
                 // the longer one due to the requirement that the lexically-
                 // later-sorted version takes precedence.
-                if (x.Metadata.Count < y.Metadata.Count)
-                    return XGreater;
-                // We already know that the collections are not equal, so
-                // we don't need to check again here.
-                else
-                    return YGreater;
+                //
+                // As we already know that the lengths are not equal, we don't
+                // need to check again for equality here.
+                return x.Metadata.Count - y.Metadata.Count;
             }
         }
     }

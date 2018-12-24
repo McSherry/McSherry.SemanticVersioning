@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-18 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -537,7 +537,6 @@ namespace McSherry.SemanticVersioning
         public IReadOnlyList<string> Identifiers
         {
             get;
-            private set;
         }
         /// <summary>
         /// <para>
@@ -554,7 +553,6 @@ namespace McSherry.SemanticVersioning
         public IReadOnlyList<string> Metadata
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -976,49 +974,27 @@ namespace McSherry.SemanticVersioning
                 // comparison of them.
                 if (thisIsNumber && thatIsNumber)
                 {
-                    #region Number Comparison
-                    // We're going to first try the comparison using longs.
-                    try
-                    {
-                        long thisVal = long.Parse(prEnumThis.Current),
-                             thatVal = long.Parse(prEnumThat.Current);
+                    // The number in a pre-release identifier can be any length,
+                    // so it may be the case that it represents a value greater
+                    // than can be represented in an [int] or [long].
+                    var cmp = PseudoBigInt.Compare(
+                        subject: prEnumThis.Current, 
+                        against: prEnumThat.Current
+                        );
 
-                        // If this version's pre-release identifier's value
-                        // is greater, then this version is of greater
-                        // precedence.
-                        if (thisVal > thatVal)
-                        {
-                            return CompareTo_Greater;
-                        }
-                        // We already know they're not equal, so if ours
-                        // isn't greater it must be lessser.
-                        else
-                        {
-                            return CompareTo_Lesser;
-                        }
-                    }
-                    // It's possible that the identifier will be too
-                    // large for a [long], so if we get an [OverflowException]
-                    // we're going to switch to a [BigInteger] and do the
-                    // comparison again.
-                    catch (OverflowException)
+                    // If our pre-release identifier has the greater value, then
+                    // we have greater precedence.
+                    if (cmp == true)
                     {
-                        var cmp = PseudoBigInt.Compare(
-                            subject: prEnumThis.Current, 
-                            against: prEnumThat.Current
-                            );
-
-                        // Same as in the try part of this try-catch.
-                        if (cmp == true)
-                        {
-                            return CompareTo_Greater;
-                        }
-                        else
-                        {
-                            return CompareTo_Lesser;
-                        }
+                        return CompareTo_Greater;
                     }
-                    #endregion
+                    // Otherwise, we must have lesser precedence. As we've
+                    // already checked for equality, we don't need to test for
+                    // equality again here: we can be sure not-true means lesser.
+                    else
+                    {
+                        return CompareTo_Lesser;
+                    }
                 }
                 // If only one is numeric, then the one that is not numeric has
                 // higher precedence.
@@ -1053,17 +1029,7 @@ namespace McSherry.SemanticVersioning
             // We now have to use the lengths of the collections to determine
             // which has higher precedence. Whichever collection has more items
             // has higher precedence.
-            if (this.Identifiers.Count > semver.Identifiers.Count)
-            {
-                // We have more items, so we are of higher precedence.
-                return CompareTo_Greater;
-            }
-            else
-            {
-                // We know they're not equal, so we must have fewer items
-                // and so lower precedence.
-                return CompareTo_Lesser;
-            }
+            return this.Identifiers.Count - semver.Identifiers.Count;
         }
     }
 }

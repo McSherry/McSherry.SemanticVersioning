@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-17 Liam McSherry
+﻿// Copyright (c) 2015-18 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -152,10 +152,8 @@ namespace McSherry.SemanticVersioning.Internals
                         continue;
                     // But if they aren't, we have to determine which has
                     // a greater value.
-                    else if (subEn.Current > agnEn.Current)
-                        return true;
                     else
-                        return false;
+                        return subEn.Current > agnEn.Current;
                 }
 
                 // If we end up here, we enumerated through all the chars and

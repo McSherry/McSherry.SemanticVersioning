@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-18 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -146,12 +146,6 @@ namespace McSherry.SemanticVersioning.Monotonic
 
             return sv;
         }
-        // Creates all the various read-only copies used by the instance.
-        private void _createReadOnlies()
-        {
-            this.LatestVersions = _latestVers.AsReadOnly();
-            this.Chronology = _chronology.AsReadOnly();
-        }
 
         /// <summary>
         /// <para>
@@ -244,8 +238,8 @@ namespace McSherry.SemanticVersioning.Monotonic
             
             _chronology = new List<SemanticVersion>() { _latest };
 
-
-            _createReadOnlies();
+            this.LatestVersions = _latestVers.AsReadOnly();
+            this.Chronology = _chronology.AsReadOnly();
         }
         /// <summary>
         /// <para>
@@ -381,7 +375,8 @@ namespace McSherry.SemanticVersioning.Monotonic
 
             _chronology = new List<SemanticVersion>(orderedChron);
 
-            _createReadOnlies();
+            this.LatestVersions = _latestVers.AsReadOnly();
+            this.Chronology = _chronology.AsReadOnly();
         }
 
         /// <summary>
@@ -663,7 +658,6 @@ namespace McSherry.SemanticVersioning.Monotonic
         public IReadOnlyDictionary<int, SemanticVersion> LatestVersions
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -696,7 +690,6 @@ namespace McSherry.SemanticVersioning.Monotonic
         public IEnumerable<SemanticVersion> Chronology
         {
             get;
-            private set;
         }
     }
 }
