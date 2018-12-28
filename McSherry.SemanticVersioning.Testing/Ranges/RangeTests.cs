@@ -160,6 +160,8 @@ namespace McSherry.SemanticVersioning.Ranges
             var dict = new Dictionary<SemanticVersion, bool>();
             var vr = new VersionRange(">1.5.0");
 
+            vr.MemoizationAgent = dict;
+
 
             // True evaluation
             var sv0 = SemanticVersion.Parse("1.5.1");
