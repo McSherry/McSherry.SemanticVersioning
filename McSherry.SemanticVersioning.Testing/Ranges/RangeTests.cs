@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-18 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -148,6 +148,37 @@ namespace McSherry.SemanticVersioning.Ranges
 
             Assert.IsFalse(vr0.SatisfiedBy(sv3), "Incorrect acceptance (0).");
             Assert.IsFalse(vr0.SatisfiedBy(sv4), "Incorrect acceptance (1).");
+        }
+
+        /// <summary>
+        /// Tests that <see cref="VersionRange.MemoizationAgent"/> is used when
+        /// assigned to, and that the correct values are assigned.
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Memoize_General()
+        {
+            var dict = new Dictionary<SemanticVersion, bool>();
+            var vr = new VersionRange(">1.5.0");
+
+
+            // True evaluation
+            var sv0 = SemanticVersion.Parse("1.5.1");
+            var rs0 = vr.SatisfiedBy(sv0);
+
+            Assert.IsTrue(dict.ContainsKey(sv0));
+            Assert.IsTrue(rs0);
+            Assert.AreEqual(rs0, dict[sv0]);
+            Assert.AreEqual(1, dict.Count);
+
+
+            // False evaluation
+            var sv1 = SemanticVersion.Parse("1.4.0");
+            var rs1 = vr.SatisfiedBy(sv1);
+
+            Assert.IsTrue(dict.ContainsKey(sv1));
+            Assert.IsFalse(rs1);
+            Assert.AreEqual(rs1, dict[sv1]);
+            Assert.AreEqual(2, dict.Count);
         }
     }
 }

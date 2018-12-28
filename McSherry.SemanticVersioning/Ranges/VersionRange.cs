@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-18 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -94,14 +94,12 @@ namespace McSherry.SemanticVersioning.Ranges
                 );
         }
 
+
         // The comparators that make up the version range. Each [IComparator]
         // is an individual comparator, so we need two [IEnumerable<T>] wraps:
         // one for comparator sets, and one to contain the multiple comparator
         // sets that make up the version range.
         private readonly IEnumerable<IEnumerable<IComparator>> _comparators;
-        // A cache of versions that match and that don't match so that
-        // many repeated comparisons might be sped up a bit.
-        private readonly ISet<SemanticVersion> _matches, _mismatches;
 
         /// <summary>
         /// <para>
@@ -163,11 +161,6 @@ namespace McSherry.SemanticVersioning.Ranges
             // passed us the collection isn't going to modify it so we can avoid
             // copying the contents.
             _comparators = cmps;
-            // We're using [HashSet<T>]s for our caches because they're fast and
-            // because we only need to know whether a [SemanticVersion] is in
-            // there.
-            _matches = new HashSet<SemanticVersion>();
-            _mismatches = new HashSet<SemanticVersion>();
         }
         /// <summary>
         /// <para>
@@ -196,6 +189,30 @@ namespace McSherry.SemanticVersioning.Ranges
         }
 
         /// <summary>
+        /// The cache to use to memoize the results of <see cref="VersionRange"/>
+        /// satisfaction methods.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Assign <c>null</c> to disable memoization. The value of this
+        /// property is <c>null</c> by default.
+        /// </para>
+        /// <para>
+        /// Accesses by <see cref="VersionRange"/> to the memoization agent
+        /// are surrounded by <c>lock (<see cref="SynchronizationObject"/>)</c>.
+        /// </para>
+        /// </remarks>
+        public IDictionary<SemanticVersion, bool> MemoizationAgent
+        {
+            get; set;
+        }
+        /// <summary>
+        /// The object used in synchronising accesses to the
+        /// <see cref="MemoizationAgent"/>.
+        /// </summary>
+        public object SynchronizationObject { get; } = new object();
+
+        /// <summary>
         /// <para>
         /// Determines whether the current version range is
         /// satisfied by a specified <see cref="SemanticVersion"/>.
@@ -211,13 +228,16 @@ namespace McSherry.SemanticVersioning.Ranges
         /// </returns>
         public bool SatisfiedBy(SemanticVersion semver)
         {
-            // If this is a known match, return true.
-            if (_matches.Contains(semver))
-                return true;
-
-            // If it's a known non-match, return false.
-            if (_mismatches.Contains(semver))
-                return false;
+            // If we've cached a comparison to this semantic version, return
+            // the result we cached.
+            lock (this.SynchronizationObject)
+            {
+                if (this.MemoizationAgent != null &&
+                    this.MemoizationAgent.TryGetValue(semver, out var res))
+                {
+                    return res;
+                }
+            }
 
             // If it's not in the cache, run it against our comparators
             // to check whether it's a match or not.
@@ -233,9 +253,11 @@ namespace McSherry.SemanticVersioning.Ranges
                 set => set.All(cmp => cmp.SatisfiedBy(semver))
                 );
 
-            // We know whether it matches or not now, so we add it to the
-            // appropriate cache so that it is known for future checks.
-            (result ? _matches : _mismatches).Add(semver);
+            // If we have a cache, add the result of the comparison to it.
+            lock (this.SynchronizationObject)
+            {
+                this.MemoizationAgent?.Add(semver, result);
+            }
 
             // Result cached, we can now return that result to our caller.
             return result;
