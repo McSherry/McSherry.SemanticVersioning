@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -163,8 +163,8 @@ namespace McSherry.SemanticVersioning.Ranges
                         return false;
                 }
                 // If the comparator doesn't have pre-release identifiers but
-                // the comparand does, then we want to return false.
-                else if (arg.Identifiers.Any())
+                // the comparand does, or vice versa, we want to return false.
+                else if (arg.Identifiers.Any() ^ comparator.Identifiers.Any())
                 {
                     return false;
                 }
@@ -175,23 +175,9 @@ namespace McSherry.SemanticVersioning.Ranges
             private static bool OpGreater(SemanticVersion arg, 
                                           SemanticVersion comparator)
             {
-                // This function is going to be mostly the same as [OpLess], just
-                // using a greater-than precedence comparison instead of a
-                // less-than comparison.
-                //
-                // As a result, any comments that would be practical duplicates
-                // are omitted. See the body of [OpLess] for roughly equivalent
-                // comments.
-
-                if (arg.Identifiers.Any() && comparator.Identifiers.Any())
-                {
-                    if (comparator.Major != arg.Major ||
-                        comparator.Minor != arg.Minor ||
-                        comparator.Patch != arg.Patch)
-                        return false;
-                }
-
-                return arg > comparator;
+                // If the order of the operands is reversed, a less-than is the
+                // same as a greater-than. No sense in duplicating code.
+                return OpLess(comparator, arg);
             }
 
             private static bool OpLTEQ(SemanticVersion arg,
