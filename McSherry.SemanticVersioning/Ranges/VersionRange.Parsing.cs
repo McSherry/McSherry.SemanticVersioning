@@ -29,7 +29,7 @@ using DD = System.Diagnostics.DebuggerDisplayAttribute;
 
 namespace McSherry.SemanticVersioning.Ranges
 {
-    using ResultSet = IEnumerable<IEnumerable<VersionRange.ComparatorToken>>;
+    using ResultSet = IEnumerable<IEnumerable<VersionRange.IComparator>>;
 
     // Documentation and attributes are in 'Ranges\VersionRange.cs'
     public sealed partial class VersionRange
@@ -77,107 +77,6 @@ namespace McSherry.SemanticVersioning.Ranges
             /// </para>
             /// </summary>
             GreaterThanOrEqual,
-        }
-
-        /// <summary>
-        /// <para>
-        /// Represents an <see cref="Operator"/> and <see cref="SemanticVersion"/>
-        /// grouping identified by the parser.
-        /// </para>
-        /// </summary>
-        internal struct ComparatorToken
-        {
-            private readonly Operator _op;
-            private readonly SemanticVersion _sv;
-            private readonly bool _valid;
-
-            /// <summary>
-            /// <para>
-            /// Ensures that the the current instance has been
-            /// correctly constructed and is valid.
-            /// </para>
-            /// </summary>
-            /// <typeparam name="T">
-            /// The type of the value to pass through on valid
-            /// construction.
-            /// </typeparam>
-            /// <param name="passthrough">
-            /// A value to be passed through if the current
-            /// instance is valid.
-            /// </param>
-            /// <returns>
-            /// If the current instance is valid, returns the
-            /// value given in <paramref name="passthrough"/>.
-            /// Otherwise, throws an exception.
-            /// </returns>
-            /// <exception cref="InvalidOperationException">
-            /// Thrown when the current instance is not valid.
-            /// </exception>
-            private T Validate<T>(T passthrough)
-            {
-                if (_valid)
-                    return passthrough;
-
-                throw new InvalidOperationException(
-                    "An attempt was made to use a Comparator that was " +
-                    "not correctly constructed."
-                    );
-            }
-
-            /// <summary>
-            /// <para>
-            /// Creates a new <see cref="ComparatorToken"/> instance with
-            /// the specified operator and semantic version.
-            /// </para>
-            /// </summary>
-            /// <param name="op">
-            /// The <see cref="VersionRange.Operator"/> to use.
-            /// </param>
-            /// <param name="semver">
-            /// The <see cref="SemanticVersion"/> to use.
-            /// </param>
-            /// <exception cref="ArgumentNullException">
-            /// Thrown when <paramref name="semver"/> is null.
-            /// </exception>
-            /// <exception cref="ArgumentException">
-            /// Thrown when <paramref name="op"/> is not a recognised
-            /// <see cref="VersionRange.Operator"/>.
-            /// </exception>
-            public ComparatorToken(Operator op, SemanticVersion semver)
-            {
-                if (semver == null)
-                {
-                    throw new ArgumentNullException(
-                        message:    "The specified version cannot be null.",
-                        paramName:  nameof(semver)
-                        );
-                }
-
-                if (!Enum.IsDefined(typeof(Operator), op))
-                {
-                    throw new ArgumentException(
-                        message:    "The specified operator is not valid.",
-                        paramName:  nameof(op)
-                        );
-                }
-
-                _op = op;
-                _sv = semver;
-                _valid = true;
-            }
-
-            /// <summary>
-            /// <para>
-            /// The operator used during comparison.
-            /// </para>
-            /// </summary>
-            public Operator Operator => Validate(_op);
-            /// <summary>
-            /// <para>
-            /// The semantic version that is compared against.
-            /// </para>
-            /// </summary>
-            public SemanticVersion Version => Validate(_sv);
         }
 
         /// <summary>
@@ -688,10 +587,10 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 // This is where we push each comparator set once we've collected
                 // each comparator in it.
-                var setOfSets = new List<IEnumerable<ComparatorToken>>();
+                var setOfSets = new List<IEnumerable<IComparator>>();
                 // And this is the list we use to build each comparator set before
                 // we push it into [setOfSets].
-                var cmpSet = new List<ComparatorToken>();
+                var cmpSet = new List<IComparator>();
 
                 // The characters of the input string.
                 var chars = rangeString.GetEnumerator();
@@ -1045,7 +944,7 @@ namespace McSherry.SemanticVersioning.Ranges
                                     {
                                         // Add the parsed version and its operator
                                         // to our current set of comparators.
-                                        cmpSet.Add(new ComparatorToken(
+                                        cmpSet.Add(UnaryComparator.Create(
                                             op:     @operator,
                                             semver: verParse.Version
                                             ));
@@ -1109,7 +1008,7 @@ namespace McSherry.SemanticVersioning.Ranges
                                 setOfSets.Add(cmpSet.AsReadOnly());
 
                                 // Begin a new one
-                                cmpSet = new List<ComparatorToken>();
+                                cmpSet = new List<IComparator>();
 
                                 // We don't push any state here. This is left
                                 // to our caller, as this enables this state
@@ -1220,14 +1119,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 return false;
             }
 
-            // If parsing was successful, then exchange all of the comparator
-            // tokens we were given for [IComparator] instances that we can
-            // pass to a constructor.
-            var comparators = parseResult.ComparatorSets.Select(
-                tokenSet => tokenSet.Select(token => Comparator.Create(token))
-                );
-
-            result = new VersionRange(comparators);
+            result = new VersionRange(parseResult.ComparatorSets);
             return true;
         }
     }

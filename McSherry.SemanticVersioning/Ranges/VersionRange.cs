@@ -82,17 +82,9 @@ namespace McSherry.SemanticVersioning.Ranges
             if (parseResult.Type != ParseResultType.Success)
                 throw parseResult.CreateException();
 
-            // If it was successful, then we want to transform the parser
-            // output into something that we can return to our caller.
-            //
-            // The parser returns [ComparatorToken]s, which represent
-            // individual comparators in a comparator set, but have no
-            // actual implementation. We need to hand these tokens off
-            // to our [Comparator] class, which will provide us with an
-            // [IComparator] instance we can use.
-            return parseResult.ComparatorSets.Select(
-                tokenSet => tokenSet.Select(token => Comparator.Create(token))
-                );
+            // If it was successful, return the comparator sets that the parser
+            // produced from the range string.
+            return parseResult.ComparatorSets;
         }
 
 
@@ -260,10 +252,7 @@ namespace McSherry.SemanticVersioning.Ranges
             //
             // If the rules mean it isn't possible for any comparator set to be
             // satisfied, then there's no sense in checking against them.
-            if (semver.Identifiers.Any() && !_comparators.Any(
-                                                set => set.Any(
-                                                    cmp => cmp.ComparableTo(semver)
-                                                    )))
+            if (semver.Identifiers.Any() && !((IComparator)this).ComparableTo(semver))
             {
                 result = false;
             }
@@ -329,6 +318,13 @@ namespace McSherry.SemanticVersioning.Ranges
         public bool SatisfiedBy(IEnumerable<SemanticVersion> semvers)
         {
             return semvers.All(this.SatisfiedBy);
+        }
+
+        bool IComparator.ComparableTo(SemanticVersion comparand)
+        {
+            return _comparators.Any(
+                set => set.Any(cmp => cmp.ComparableTo(comparand))
+                );
         }
     }
 }

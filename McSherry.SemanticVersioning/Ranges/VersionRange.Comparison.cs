@@ -89,11 +89,11 @@ namespace McSherry.SemanticVersioning.Ranges
 
         /// <summary>
         /// <para>
-        /// Implements comparison using the <see cref="ComparatorToken"/>
-        /// instances produced by the <see cref="Parser"/>.
+        /// Provides the <see cref="Parser"/> with implementations for unary
+        /// operators.
         /// </para>
         /// </summary>
-        private sealed class Comparator : IComparator
+        internal sealed class UnaryComparator : IComparator
         {
             /// <summary>
             /// <para>
@@ -102,12 +102,12 @@ namespace McSherry.SemanticVersioning.Ranges
             /// </summary>
             /// <param name="comparand">
             /// The <see cref="SemanticVersion"/> that is being compared
-            /// against the version specified in the <see cref="ComparatorToken"/>.
+            /// against the version specified in the range string.
             /// </param>
             /// <param name="comparator">
             /// The <see cref="SemanticVersion"/> that the version being
             /// checked is compared against. This is the version that is
-            /// specified in the <see cref="ComparatorToken"/>.
+            /// extracted from the range string by the parser.
             /// </param>
             /// <returns>
             /// True if the comparator is satisfied, false if otherwise.
@@ -158,7 +158,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 return arg >= comparator;
             }
 
-            static Comparator()
+            static UnaryComparator()
             {
                 Comparers = new Dictionary<Operator, ComparatorImpl>
                 {
@@ -173,34 +173,38 @@ namespace McSherry.SemanticVersioning.Ranges
             /// <summary>
             /// <para>
             /// Creates a new <see cref="IComparator"/> using the specified
-            /// <see cref="ComparatorToken"/>.
+            /// operator and version.
             /// </para>
             /// </summary>
-            /// <param name="cmp">
-            /// The <see cref="ComparatorToken"/> to create an equivalent
-            /// <see cref="IComparator"/> for.
+            /// <param name="op">
+            /// The operator to create an equivalent <see cref="IComparator"/>
+            /// for.
+            /// </param>
+            /// <param name="semver">
+            /// The <see cref="SemanticVersion"/> the operator is associated with.
             /// </param>
             /// <returns>
             /// An <see cref="IComparator"/> instance that implements the
             /// comparison function represented by the specified
-            /// <see cref="ComparatorToken"/>.
+            /// <see cref="Operator"/>.
             /// </returns>
             /// <exception cref="ArgumentException">
-            /// Thrown when <paramref name="cmp"/> has an unrecognised
-            /// <see cref="ComparatorToken.Operator"/> value.
+            /// Thrown when <paramref name="op"/> is not a recognised
+            /// <see cref="Operator"/> value.
             /// </exception>
-            public static IComparator Create(ComparatorToken cmp)
+            public static IComparator Create(Operator op, SemanticVersion semver)
             {
-                if (!Comparers.TryGetValue(cmp.Operator, out var cmpImpl))
+                if (!Comparers.TryGetValue(op, out var cmpImpl))
                 {
                     throw new ArgumentException(
                         message: "Unrecognised operator.",
-                        paramName: nameof(cmp));
+                        paramName: nameof(op));
                 }
 
-                return new Comparator(sv => cmpImpl(sv, cmp.Version))
+                return new UnaryComparator(sv => cmpImpl(sv, semver))
                 {
-                    Version = cmp.Version
+                    Operator = op,
+                    Version = semver
                 };
             }
 
@@ -208,14 +212,14 @@ namespace McSherry.SemanticVersioning.Ranges
 
             /// <summary>
             /// <para>
-            /// Creates a new <see cref="Comparator"/> with the specified
+            /// Creates a new <see cref="UnaryComparator"/> with the specified
             /// function as its comparison function.
             /// </para>
             /// </summary>
             /// <param name="impl">
             /// The function to use as the comparison function.
             /// </param>
-            private Comparator(Predicate<SemanticVersion> impl)
+            private UnaryComparator(Predicate<SemanticVersion> impl)
             {
                 if (impl == null)
                 {
@@ -229,6 +233,19 @@ namespace McSherry.SemanticVersioning.Ranges
                 _cmpFn = impl;
             }
 
+            /// <summary>
+            /// The operator the comparator implements.
+            /// </summary>
+            public Operator Operator
+            {
+                get;
+                private set;
+            }
+            /// <summary>
+            /// <para>
+            /// The version against which the comparator compares.
+            /// </para>
+            /// </summary>
             public SemanticVersion Version
             {
                 get;
