@@ -693,13 +693,8 @@ namespace McSherry.SemanticVersioning.Ranges
                 // we push it into [setOfSets].
                 var cmpSet = new List<ComparatorToken>();
 
-                // We're using [Nullable<char>]s so we can put a null value at the
-                // end of the string to make it easy to detect the last character
-                // in the string.
-                var chars = rangeString.ToCharArray()
-                                       .Select(c => new Nullable<char>(c))
-                                       .Concat(new Nullable<char>[] { null })
-                                       .GetEnumerator();
+                // The characters of the input string.
+                var chars = rangeString.GetEnumerator();
 
                 // A stack to keep track of the states we are to transition to.
                 var stateStack = new Stack<State>();
@@ -745,9 +740,17 @@ namespace McSherry.SemanticVersioning.Ranges
                         // queued state.
                         case State.Consume:
                         {
-                            chars.MoveNext();
-
-                            input = chars.Current;
+                            if (chars.MoveNext())
+                            {
+                                input = chars.Current;
+                            }
+                            else
+                            {
+                                // We're using [null] to indicate the end of
+                                // the string, as this lets us avoid duplicating
+                                // code outside of the loop.
+                                input = null;
+                            }
 
                             state = PopState();
                         } break;
