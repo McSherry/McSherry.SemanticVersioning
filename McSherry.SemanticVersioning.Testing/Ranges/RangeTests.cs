@@ -40,10 +40,9 @@ namespace McSherry.SemanticVersioning.Ranges
 
         /// <summary>
         /// <para>
-        /// Tests the version range equals operator, including the implicit
-        /// equals operator.
-        /// Ensures that <see cref="VersionRange"/> implements the interface
-        /// <see cref="VersionRange.IComparator"/>.
+        /// Tests that <see cref="VersionRange"/> implements the
+        /// <see cref="VersionRange.IComparator"/> interface, which is to be
+        /// used in implementing advanced range syntax.
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
@@ -56,8 +55,10 @@ namespace McSherry.SemanticVersioning.Ranges
 
         /// <summary>
         /// <para>
-        /// Tests version range comparison using the basic operators with
-        /// a single comparator in each range.
+        /// Tests the version range equals operator, including the implicit
+        /// equals operator.
+        /// Ensures that <see cref="VersionRange"/> implements the interface
+        /// <see cref="VersionRange.IComparator"/>.
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
@@ -94,6 +95,149 @@ namespace McSherry.SemanticVersioning.Ranges
 
             Test("Implicit", im);
             Test("Explicit", ex);
+        }
+        /// <summary>
+        /// <para>
+        /// Tests the version range caret operator, which represents a range
+        /// where the leftmost non-zero component of the major-minor-patch trio
+        /// cannot change.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Operator_Caret()
+        {
+            // Tests for ranges where the major version is non-zero
+            var vr1 = new VersionRange("^1.2.3");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors1 =
+            {
+                ("T1.1", (SemanticVersion)"1.2.3",          true),
+                ("T1.2", (SemanticVersion)"1.2.4",          true),
+                ("T1.3", (SemanticVersion)"1.3.3",          true),
+                ("T1.4", (SemanticVersion)"1.5.0+mta.dta",  true),
+
+                ("F1.1", (SemanticVersion)"1.2.2",          false),
+                ("F1.2", (SemanticVersion)"1.2.3-alpha",    false),
+                ("F1.3", (SemanticVersion)"1.2.4-alpha",    false),
+                ("F1.4", (SemanticVersion)"1.1.3",          false),
+                ("F1.5", (SemanticVersion)"0.2.3",          false),
+                ("F1.6", (SemanticVersion)"2.0.0",          false),
+                ("F1.7", (SemanticVersion)"2.2.3",          false),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr1.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for ranges where the minor version is non-zero
+            var vr2 = new VersionRange("^0.2.3");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors2 =
+            {
+                ("T2.1", (SemanticVersion)"0.2.3",          true),
+                ("T2.2", (SemanticVersion)"0.2.4",          true),
+                ("T2.3", (SemanticVersion)"0.3.3",          true),
+                ("T2.4", (SemanticVersion)"0.5.0+mta.dta",  true),
+
+                ("F2.1", (SemanticVersion)"0.2.2",          false),
+                ("F2.2", (SemanticVersion)"0.2.3-alpha",    false),
+                ("F2.3", (SemanticVersion)"0.2.4-alpha",    false),
+                ("F2.4", (SemanticVersion)"1.2.3",          false),
+                ("F2.5", (SemanticVersion)"0.3.0",          false),
+            };
+
+            foreach (var vector in vectors2)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr2.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for ranges where the patch version is non-zero
+            var vr3 = new VersionRange("^0.0.5");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors3 =
+            {
+                ("T3.1", (SemanticVersion)"0.0.5",          true),
+
+                ("F3.1", (SemanticVersion)"0.0.6",          false),
+                ("F3.2", (SemanticVersion)"0.0.4",          false),
+                ("F3.3", (SemanticVersion)"0.1.0",          false),
+                ("F3.4", (SemanticVersion)"1.0.0",          false),
+                ("F3.5", (SemanticVersion)"0.1.6",          false),
+                ("F3.6", (SemanticVersion)"1.0.6",          false),
+                ("F3.7", (SemanticVersion)"0.0.5-alpha.2",  false),
+                ("F3.8", (SemanticVersion)"0.0.6-alpha.2",  false),
+            };
+
+            foreach (var vector in vectors3)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr3.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for ranges including pre-release identifiers and where a
+            // trio component other than the patch version is non-zero
+            var vr4 = new VersionRange("^1.2.3-alpha.2");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors4 =
+            {
+                ("T4.1", (SemanticVersion)"1.2.3-alpha.3",  true),
+                ("T4.2", (SemanticVersion)"1.2.3-beta",     true),
+                ("T4.3", (SemanticVersion)"1.2.3-beta.2",   true),
+                ("T4.4", (SemanticVersion)"1.2.3",          true),
+                ("T4.5", (SemanticVersion)"1.2.4",          true),
+                ("T4.6", (SemanticVersion)"1.3.0",          true),
+
+                ("F4.1", (SemanticVersion)"1.2.2",          false),
+                ("F4.2", (SemanticVersion)"1.2.3-alpha.1",  false),
+            };
+
+            foreach (var vector in vectors4)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr3.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for ranges including pre-release identifiers and where
+            // the patch trio component is non-zero
+            var vr5 = new VersionRange("^0.0.5-alpha.2");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors5 =
+            {
+                ("T5.1", (SemanticVersion)"0.0.5-alpha.3",  true),
+                ("T5.2", (SemanticVersion)"0.0.5-beta",     true),
+                ("T5.3", (SemanticVersion)"0.0.5-beta.2",   true),
+
+                ("F5.1", (SemanticVersion)"0.0.6",          false),
+                ("F5.2", (SemanticVersion)"0.0.6-alpha.2",  false),
+            };
+
+            foreach (var vector in vectors5)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr5.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
         }
         /// <summary>
         /// <para>
