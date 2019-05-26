@@ -142,8 +142,7 @@ namespace McSherry.SemanticVersioning.Ranges
             {
                 ("T2.1", (SemanticVersion)"0.2.3",          true),
                 ("T2.2", (SemanticVersion)"0.2.4",          true),
-                ("T2.3", (SemanticVersion)"0.3.3",          true),
-                ("T2.4", (SemanticVersion)"0.5.0+mta.dta",  true),
+                ("T2.3", (SemanticVersion)"0.2.5+mta.dta",  true),
 
                 ("F2.1", (SemanticVersion)"0.2.2",          false),
                 ("F2.2", (SemanticVersion)"0.2.3-alpha",    false),
@@ -195,12 +194,13 @@ namespace McSherry.SemanticVersioning.Ranges
 
             (string VID, SemanticVersion Version, bool Expected)[] vectors4 =
             {
-                ("T4.1", (SemanticVersion)"1.2.3-alpha.3",  true),
-                ("T4.2", (SemanticVersion)"1.2.3-beta",     true),
-                ("T4.3", (SemanticVersion)"1.2.3-beta.2",   true),
-                ("T4.4", (SemanticVersion)"1.2.3",          true),
-                ("T4.5", (SemanticVersion)"1.2.4",          true),
-                ("T4.6", (SemanticVersion)"1.3.0",          true),
+                ("T4.1", (SemanticVersion)"1.2.3-alpha.2",  true),
+                ("T4.2", (SemanticVersion)"1.2.3-alpha.3",  true),
+                ("T4.3", (SemanticVersion)"1.2.3-beta",     true),
+                ("T4.4", (SemanticVersion)"1.2.3-beta.2",   true),
+                ("T4.5", (SemanticVersion)"1.2.3",          true),
+                ("T4.6", (SemanticVersion)"1.2.4",          true),
+                ("T4.7", (SemanticVersion)"1.3.0",          true),
 
                 ("F4.1", (SemanticVersion)"1.2.2",          false),
                 ("F4.2", (SemanticVersion)"1.2.3-alpha.1",  false),
@@ -210,7 +210,7 @@ namespace McSherry.SemanticVersioning.Ranges
             {
                 Assert.AreEqual(
                     expected:   vector.Expected,
-                    actual:     vr3.SatisfiedBy(vector.Version),
+                    actual:     vr4.SatisfiedBy(vector.Version),
                     message:    $"Failure: vector {vector.VID}"
                     );
             }
@@ -525,31 +525,57 @@ namespace McSherry.SemanticVersioning.Ranges
         [TestMethod, TestCategory(Category)]
         public void MultipleComparators()
         {
-            // This test is taken from the README of the 'node-semver'
-            // repository, because what better source than the horse's
-            // mouth?
-            //
-            // We only have a single test because we have another test
-            // for the individual comparators, we just want to make sure
-            // that multiple comparators are treated as expected.
-            VersionRange vr0 = new VersionRange(">=1.2.7 <1.3.0")
-                        ;
+            // Most of this test is taken from the README of the 'node-semver'
+            // repository, because what better source than the horse's mouth?
 
-            SemanticVersion sv0 = new SemanticVersion(1, 2, 7), // These three are
-                            sv1 = new SemanticVersion(1, 2, 8), // matches.
-                            sv2 = new SemanticVersion(1, 2, 99),
-                            sv3 = new SemanticVersion(1, 2, 6), // And these are
-                            sv4 = new SemanticVersion(1, 3, 0), // mismatches.
-                            sv5 = new SemanticVersion(1, 1, 0)
-                            ;
+            var vr1 = new VersionRange(">=1.2.7 <1.3.0");
 
-            Assert.IsTrue(vr0.SatisfiedBy(sv0), "Incorrect rejection (0).");
-            Assert.IsTrue(vr0.SatisfiedBy(sv1), "Incorrect rejection (1).");
-            Assert.IsTrue(vr0.SatisfiedBy(sv2), "Incorrect rejection (2).");
+            (string VID, SemanticVersion Version, bool Expected)[] vectors1 =
+            {
+                ("T1.1", (SemanticVersion)"1.2.7",  true),
+                ("T1.2", (SemanticVersion)"1.2.8",  true),
+                ("T1.3", (SemanticVersion)"1.2.99", true),
 
-            Assert.IsFalse(vr0.SatisfiedBy(sv3), "Incorrect acceptance (0).");
-            Assert.IsFalse(vr0.SatisfiedBy(sv4), "Incorrect acceptance (1).");
-            Assert.IsFalse(vr0.SatisfiedBy(sv5), "Incorrect acceptance (2).");
+                ("F1.1", (SemanticVersion)"1.2.6",          false),
+                ("F1.2", (SemanticVersion)"1.3.0",          false),
+                ("F1.3", (SemanticVersion)"1.1.0",          false),
+                ("F1.4", (SemanticVersion)"1.2.8-alpha",    false),
+                ("F1.5", (SemanticVersion)"1.3.0-alpha",    false),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr1.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Test to ensure that pre-release versions in comparators are 
+            // handled correctly.
+            var vr2 = new VersionRange(">=1.2.3-alpha.2 <1.5.0");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors2 =
+            {
+                ("T2.1", (SemanticVersion)"1.2.3-alpha.3",  true),
+                ("T2.2", (SemanticVersion)"1.2.4",          true),
+                ("T2.3", (SemanticVersion)"1.3.0",          true),
+
+                ("F2.1", (SemanticVersion)"1.2.3-alpha.1",  false),
+                ("F2.2", (SemanticVersion)"1.2.4-alpha",    false),
+                ("F2.3", (SemanticVersion)"1.5.0",          false),
+            };
+
+            foreach (var vector in vectors2)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr2.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
         }
         /// <summary>
         /// <para>
@@ -563,21 +589,45 @@ namespace McSherry.SemanticVersioning.Ranges
             // from the 'node-semver' README, and there's only a single test
             // because individual comparators and multiple comparators are
             // already tested.
-            VersionRange vr0 = new VersionRange("1.2.7 || >=1.2.9 <2.0.0");
+            var vr1 = new VersionRange("1.2.7 || >=1.2.9 <2.0.0");
 
-            SemanticVersion sv0 = new SemanticVersion(1, 2, 7), // These match.
-                            sv1 = new SemanticVersion(1, 2, 9),
-                            sv2 = new SemanticVersion(1, 4, 6),
-                            sv3 = new SemanticVersion(1, 2, 8), // These don't.
-                            sv4 = new SemanticVersion(2, 0, 0)
-                                ;
+            (string VID, SemanticVersion Version, bool Expected)[] vectors1 =
+            {
+                ("T1.1", (SemanticVersion)"1.2.7",  true),
+                ("T1.2", (SemanticVersion)"1.2.9",  true),
+                ("T1.3", (SemanticVersion)"1.4.6",  true),
 
-            Assert.IsTrue(vr0.SatisfiedBy(sv0), "Incorrect rejection (0).");
-            Assert.IsTrue(vr0.SatisfiedBy(sv1), "Incorrect rejection (1).");
-            Assert.IsTrue(vr0.SatisfiedBy(sv2), "Incorrect rejection (2).");
+                ("F1.1", (SemanticVersion)"1.2.8",          false),
+                ("F1.2", (SemanticVersion)"2.0.0",          false),
+                ("F1.3", (SemanticVersion)"1.3.0-alpha.2",  false),
+            };
 
-            Assert.IsFalse(vr0.SatisfiedBy(sv3), "Incorrect acceptance (0).");
-            Assert.IsFalse(vr0.SatisfiedBy(sv4), "Incorrect acceptance (1).");
+            foreach (var vector in vectors1)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr1.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Test that a pre-release version in one comparator set does not
+            // allow the other comparator set to be satisfied.
+            var vr2 = new VersionRange(">1.2.3-alpha.2 <1.3.0 || <1.1.0");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors2 =
+            {
+                ("T2.1", (SemanticVersion)"1.2.3-alpha.3",  true),
+                ("T2.2", (SemanticVersion)"1.2.4",          true),
+                ("T2.3", (SemanticVersion)"1.0.5",          true),
+
+                ("F2.1", (SemanticVersion)"1.2.3-alpha.2",  false),
+                ("F2.2", (SemanticVersion)"1.3.0",          false),
+                ("F2.3", (SemanticVersion)"1.1.0",          false),
+                ("F2.4", (SemanticVersion)"1.1.0-alpha",    false),
+                ("F2.5", (SemanticVersion)"1.0.6-alpha",    false),
+            };
         }
 
         /// <summary>

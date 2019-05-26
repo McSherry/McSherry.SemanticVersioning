@@ -233,44 +233,13 @@ namespace McSherry.SemanticVersioning.Ranges
             }
 
 
-            bool result;
-
-            // If it isn't in the cache, run it against the comparators to
-            // check whether or not it's a match.
-            //
-            // If the version to check against the range has pre-release
-            // identifiers, special comparison rules have to be applied in
-            // order to follow 'node-semver'.
-            //
-            // Where this is the case, a comparator set can only be satisfied
-            // by the comparand version if:
-            //
-            //  a) the comparand shares a major-minor-patch trio with one or
-            //     more of the comparator versions, and
-            //
-            //  b) one of those comparator versions has pre-release identifiers
-            //
-            // If the rules mean it isn't possible for any comparator set to be
-            // satisfied, then there's no sense in checking against them.
-            if (semver.Identifiers.Any() && !((IComparator)this).ComparableTo(semver))
-            {
-                result = false;
-            }
-            // If special rules do not apply, or if the comparand version can
-            // be compared, check it against the comparators as normal.
-            else
-            {
-                // The [_comparators] variable contains all of the comparator
-                // sets that were parsed from the string, and only one of the
-                // comparator sets has to be satisfied for the range to be
-                // satisfied.
-                result = _comparators.Any(
-                    // Each comparator set has a number of comparators in it,
-                    // and for a comparator set to be satisfied all of the
-                    // comparators in that set must be satisfied.
-                    set => set.All(cmp => cmp.SatisfiedBy(semver))
-                    );
-            }
+            bool result = _comparators
+                // Sets which can be satisfied by the specified version (needed
+                // for correct handling of pre-release versions)
+                .Where(set => set.Any(cmp => cmp.ComparableTo(semver)))
+                // In at least one of the comparator sets, all comparators are
+                // satisfied by the specified version
+                .Any(set => set.All(cmp => cmp.SatisfiedBy(semver)));
 
             // If we have a cache, add the result of the comparison to it.
             lock (this.SynchronizationObject)
