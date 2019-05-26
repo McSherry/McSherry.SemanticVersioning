@@ -71,6 +71,20 @@ namespace McSherry.SemanticVersioning.Ranges
             /// specified semantic version, false if otherwise.
             /// </returns>
             bool SatisfiedBy(SemanticVersion comparand);
+
+            /// <summary>
+            /// Whether a <see cref="SemanticVersion"/> with the pre-release
+            /// identifers of the specified version can satisfy the comparator.
+            /// </summary>
+            /// <param name="comparand">
+            /// The <see cref="SemanticVersion"/> of the kind to test.
+            /// </param>
+            /// <returns>
+            /// True if, in line with version range comparison rules for
+            /// versions with pre-release identifiers, the comparand is capable
+            /// of satisfying the comparator. False if otherwise.
+            /// </returns>
+            bool ComparableTo(SemanticVersion comparand);
         }
 
         /// <summary>
@@ -104,6 +118,13 @@ namespace McSherry.SemanticVersioning.Ranges
             private static readonly IReadOnlyDictionary<Operator, ComparatorImpl>
                 Comparers;
 
+
+            /*
+                The [VersionRange] class handles special rules for comparing
+                against versions with pre-release identifiers, so these
+                implementations need not be concerned with it.
+            */
+
             private static bool OpEqual(SemanticVersion arg, 
                                         SemanticVersion comparator)
             {
@@ -116,80 +137,25 @@ namespace McSherry.SemanticVersioning.Ranges
             private static bool OpLess(SemanticVersion arg,
                                        SemanticVersion comparator)
             {
-                // This one's slightly trickier since it isn't a direct
-                // translation to one of the [SemanticVersion] operators or
-                // methods.
-
-                // Generally, a "less than" comparison will be a simple
-                // precedence comparison, but in certain situations we need
-                // to do some extra work.
-                //
-                // If the comparator version ([ca]) has pre-release identifiers,
-                // then we need to check whether the comparand ([c]) has them as
-                // well. If it does, [c] and [ca] must have the same 
-                // major -minor-patch trio for [c] to satisfy the comparator.
-                // However, if [c] does not have identifiers, then a simple
-                // precedence comparison will work.
-                //
-                // Example:
-                //
-                //      Comparator:     <1.2.3-alpha.5
-                //
-                //      +---------------+------------+
-                //      | Comparand     | Satisfies? |
-                //      +---------------+------------+
-                //      | 1.2.3         | False      |
-                //      | 1.2.3-alpha.4 | True       |
-                //      | 1.2.3-alpha.6 | False      |
-                //      | 1.2.2         | True       |
-                //      | 1.2.2-alpha.1 | False      |
-                //      | 2.3.4         | False      |
-                //      | 2.3.4-alpha.1 | False      |
-                //      +---------------+------------+
-                //
-                // The 'node-semver' documentation justifies this behaviour by
-                // saying that a user, by specifying a comparator with pre-release
-                // identifiers, has stated that they are okay with pre-releases of
-                // the same version, but not of any other version.
-
-
-                // If both versions have identifiers, they must have the same
-                // major-minor-patch trio. If not, then we must return false.
-                if (arg.Identifiers.Any() && comparator.Identifiers.Any())
-                {
-                    if (comparator.Major != arg.Major ||
-                        comparator.Minor != arg.Minor ||
-                        comparator.Patch != arg.Patch)
-                        return false;
-                }
-                // If the comparator doesn't have pre-release identifiers but
-                // the comparand does, or vice versa, we want to return false.
-                else if (arg.Identifiers.Any() ^ comparator.Identifiers.Any())
-                {
-                    return false;
-                }
-
                 return arg < comparator;
             }
 
             private static bool OpGreater(SemanticVersion arg, 
                                           SemanticVersion comparator)
             {
-                // If the order of the operands is reversed, a less-than is the
-                // same as a greater-than. No sense in duplicating code.
-                return OpLess(comparator, arg);
+                return arg > comparator;
             }
 
             private static bool OpLTEQ(SemanticVersion arg,
                                        SemanticVersion comparator)
             {
-                return OpEqual(arg, comparator) || OpLess(arg, comparator);
+                return arg <= comparator;
             }
 
             private static bool OpGTEQ(SemanticVersion arg,
                                        SemanticVersion comparator)
             {
-                return OpEqual(arg, comparator) || OpGreater(arg, comparator);
+                return arg >= comparator;
             }
 
             static Comparator()
@@ -232,7 +198,10 @@ namespace McSherry.SemanticVersioning.Ranges
                         paramName: nameof(cmp));
                 }
 
-                return new Comparator(sv => cmpImpl(sv, cmp.Version));
+                return new Comparator(sv => cmpImpl(sv, cmp.Version))
+                {
+                    Version = cmp.Version
+                };
             }
 
             private readonly Predicate<SemanticVersion> _cmpFn;
@@ -260,9 +229,20 @@ namespace McSherry.SemanticVersioning.Ranges
                 _cmpFn = impl;
             }
 
+            public SemanticVersion Version
+            {
+                get;
+                private set;
+            }
+
             bool IComparator.SatisfiedBy(SemanticVersion comparand)
             {
                 return _cmpFn(comparand);
+            }
+
+            bool IComparator.ComparableTo(SemanticVersion comparand)
+            {
+                return this.Version.ComparableTo(comparand);
             }
         }
     }

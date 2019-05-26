@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -150,6 +150,46 @@ namespace McSherry.SemanticVersioning
             )
         {
             return new ReadOnlyDictionary<K, V>(dictionary);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Determines whether a specified <see cref="SemanticVersion"/> can
+        /// satisfy a <see cref="Ranges.VersionRange"/> comparator using another
+        /// specified <see cref="SemanticVersion"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="comparator">
+        /// The <see cref="SemanticVersion"/> representing the comparator.
+        /// </param>
+        /// <param name="comparand">
+        /// The <see cref="SemanticVersion"/> which is to be compared against
+        /// the comparator.
+        /// </param>
+        /// <returns>
+        /// True if, based on the rules for version range comparisons, the
+        /// comparator can be satisfied by the comparand.
+        /// </returns>
+        public static bool ComparableTo(
+            this SemanticVersion comparator, SemanticVersion comparand
+            )
+        {
+            var noIdentifiers = !comparand.Identifiers.Any() &&
+                                !comparator.Identifiers.Any();
+
+            var bothIdentifiers = comparand.Identifiers.Any() &&
+                                  comparator.Identifiers.Any();
+
+            var sameTrio      = comparand.Major == comparator.Major &&
+                                comparand.Minor == comparator.Minor &&
+                                comparand.Patch == comparator.Patch ;
+
+            // Comparison rules for 'node-semver' differ from the typical
+            // rules for Semantic Versioning: a pre-release version can
+            // only satisfy a comparator set if at least one comparator in
+            // the set has a matching major-minor-patch trio as well as
+            // also having pre-release identifiers.
+            return noIdentifiers || (bothIdentifiers && sameTrio);
         }
     }
 }

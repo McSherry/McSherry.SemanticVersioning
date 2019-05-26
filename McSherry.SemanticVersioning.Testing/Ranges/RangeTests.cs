@@ -105,8 +105,9 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 // Comparison rules for 'node-semver' differ from the typical
                 // rules for Semantic Versioning: a pre-release version can
-                // only satisfy a comparator if the comparator has the same
-                // major-minor-patch trio and its own pre-release identifiers.
+                // only satisfy a comparator set if at least one comparator in
+                // the set has a matching major-minor-patch trio as well as
+                // also having pre-release identifiers.
                 ("F1.5", (SemanticVersion)"1.2.4-alpha",    false),
             };
 
@@ -129,11 +130,12 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("T2.2", (SemanticVersion)"1.2.3-alpha.6.7",    true),
                 ("T2.3", (SemanticVersion)"1.2.3-beta",         true),
                 ("T2.4", (SemanticVersion)"1.2.3-alpha.a",      true),
+                ("T2.5", (SemanticVersion)"1.2.4",              true),
+
 
                 ("F2.1", (SemanticVersion)"1.2.3-alpha.4",  false),
                 ("F2.2", (SemanticVersion)"1.2.3-alpha",    false),
-                ("F2.3", (SemanticVersion)"1.2.4",          false),
-                ("F2.4", (SemanticVersion)"1.2.4-alpha.2",  false),
+                ("F2.3", (SemanticVersion)"1.2.4-alpha.2",  false),
             };
 
             foreach (var vector in vectors2)
@@ -171,8 +173,9 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 // Comparison rules for 'node-semver' differ from the typical
                 // rules for Semantic Versioning: a pre-release version can
-                // only satisfy a comparator if the comparator has the same
-                // major-minor-patch trio and its own pre-release identifiers.
+                // only satisfy a comparator set if at least one comparator in
+                // the set has a matching major-minor-patch trio as well as
+                // also having pre-release identifiers.
                 ("F1.5", (SemanticVersion)"1.2.4-alpha",    false),
                 ("F1.6", (SemanticVersion)"1.2.3-alpha",    false),
                 ("F1.7", (SemanticVersion)"1.2.2-alpha",    false),
@@ -197,11 +200,12 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("T2.2", (SemanticVersion)"1.2.3-alph",     true),
                 ("T2.3", (SemanticVersion)"1.2.3-5678",     true),
                 ("T2.4", (SemanticVersion)"1.2.3-5678+abc", true),
+                ("T2.5", (SemanticVersion)"1.2.2",          true),
 
-                ("F2.1", (SemanticVersion)"1.2.2",              false),
                 ("F2.2", (SemanticVersion)"1.2.3-alpha.6",      false),
                 ("F2.3", (SemanticVersion)"1.2.3-alpha.5.6",    false),
-                ("F2.4", (SemanticVersion)"1.2.3-beta.2",       false),
+                ("F2.3", (SemanticVersion)"1.2.3-beta.2",       false),
+                ("F2.4", (SemanticVersion)"1.2.2-beta.2",       false),
             };
 
             foreach (var vector in vectors2)
@@ -239,8 +243,9 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 // Comparison rules for 'node-semver' differ from the typical
                 // rules for Semantic Versioning: a pre-release version can
-                // only satisfy a comparator if the comparator has the same
-                // major-minor-patch trio and its own pre-release identifiers.
+                // only satisfy a comparator set if at least one comparator in
+                // the set has a matching major-minor-patch trio as well as
+                // also having pre-release identifiers.
                 ("F1.4", (SemanticVersion)"1.2.4-alpha",    false),
             };
 
@@ -263,11 +268,11 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("T2.2", (SemanticVersion)"1.2.3-alpha.6",      true),
                 ("T2.3", (SemanticVersion)"1.2.3-alpha.6.7",    true),
                 ("T2.4", (SemanticVersion)"1.2.3-alpha.a",      true),
+                ("T2.5", (SemanticVersion)"1.2.4",              true),
 
                 ("F2.1", (SemanticVersion)"1.2.3-alpha.4",      false),
                 ("F2.2", (SemanticVersion)"1.2.3-alpha",        false),
-                ("F2.3", (SemanticVersion)"1.2.4",              false),
-                ("F2.4", (SemanticVersion)"1.2.4-alpha.2",      false),
+                ("F2.3", (SemanticVersion)"1.2.4-alpha.2",      false),
             };
 
             foreach (var vector in vectors2)
@@ -305,8 +310,9 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 // Comparison rules for 'node-semver' differ from the typical
                 // rules for Semantic Versioning: a pre-release version can
-                // only satisfy a comparator if the comparator has the same
-                // major-minor-patch trio and its own pre-release identifiers.
+                // only satisfy a comparator set if at least one comparator in
+                // the set has a matching major-minor-patch trio as well as
+                // also having pre-release identifiers.
                 ("F1.4", (SemanticVersion)"1.2.4-alpha",    false),
                 ("F1.5", (SemanticVersion)"1.2.3-alpha",    false),
                 ("F1.6", (SemanticVersion)"1.2.2-alpha",    false),
@@ -332,11 +338,12 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("T2.3", (SemanticVersion)"1.2.3-alph",     true),
                 ("T2.4", (SemanticVersion)"1.2.3-5678",     true),
                 ("T2.5", (SemanticVersion)"1.2.3-5678+abc", true),
+                ("T2.6", (SemanticVersion)"1.2.2",          true),
 
-                ("F2.1", (SemanticVersion)"1.2.2",              false),
                 ("F2.2", (SemanticVersion)"1.2.3-alpha.6",      false),
                 ("F2.3", (SemanticVersion)"1.2.3-alpha.5.6",    false),
-                ("F2.4", (SemanticVersion)"1.2.3-beta.2",       false),
+                ("F2.3", (SemanticVersion)"1.2.3-beta.2",       false),
+                ("F2.4", (SemanticVersion)"1.2.2-beta.2",       false),
             };
 
             foreach (var vector in vectors2)
