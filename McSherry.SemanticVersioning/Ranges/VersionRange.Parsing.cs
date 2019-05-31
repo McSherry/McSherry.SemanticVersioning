@@ -51,6 +51,13 @@ namespace McSherry.SemanticVersioning.Ranges
             Equal,
             /// <summary>
             /// <para>
+            /// Used to check that the leftmost non-zero trio component of a
+            /// version does not change.
+            /// </para>
+            /// </summary>
+            Caret,
+            /// <summary>
+            /// <para>
             /// Used in checking that a <see cref="SemanticVersion"/> has
             /// lesser precedence than the specified version.
             /// </para>
@@ -555,6 +562,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 {
                     { "=",  Operator.Equal              },
                     { "<",  Operator.LessThan           },
+                    { "^",  Operator.Caret              },
                     { ">",  Operator.GreaterThan        },
                     { "<=", Operator.LessThanOrEqual    },
                     { ">=", Operator.GreaterThanOrEqual },
@@ -566,7 +574,8 @@ namespace McSherry.SemanticVersioning.Ranges
             private const char  LeftChevron     = '<',
                                 RightChevron    = '>',
                                 EqualSign       = '=',
-                                VerticalBar     = '|';
+                                VerticalBar     = '|',
+                                Caret           = '^';
 
             /// <summary>
             /// <para>
@@ -685,6 +694,7 @@ namespace McSherry.SemanticVersioning.Ranges
                                 // These are single-character operators that
                                 // are prefixed to version strings.
                                 case EqualSign:
+                                case Caret:
                                     PushState(State.UnarySimple);
                                     break;
 

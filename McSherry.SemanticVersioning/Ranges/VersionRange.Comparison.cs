@@ -134,6 +134,33 @@ namespace McSherry.SemanticVersioning.Ranges
                 return arg.EquivalentTo(comparator);
             }
 
+            private static bool OpCaret(SemanticVersion arg,
+                                        SemanticVersion comparator)
+            {
+                SemanticVersion upper;
+
+                if (comparator.Major != 0)
+                    upper = new SemanticVersion(comparator.Major + 1, 0, 0);
+                else if (arg.Minor != 0)
+                {
+                    upper = new SemanticVersion(
+                        major: comparator.Major,
+                        minor: comparator.Minor + 1,
+                        patch: 0
+                        );
+                }
+                else
+                {
+                    upper = new SemanticVersion(
+                        major: comparator.Major,
+                        minor: comparator.Minor, 
+                        patch: comparator.Patch + 1
+                        );
+                }
+
+                return (arg >= comparator) && (arg < upper);
+            }
+
             private static bool OpLess(SemanticVersion arg,
                                        SemanticVersion comparator)
             {
@@ -163,6 +190,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 Comparers = new Dictionary<Operator, ComparatorImpl>
                 {
                     [Operator.Equal]                = OpEqual,
+                    [Operator.Caret]                = OpCaret,
                     [Operator.LessThan]             = OpLess,
                     [Operator.GreaterThan]          = OpGreater,
                     [Operator.LessThanOrEqual]      = OpLTEQ,
