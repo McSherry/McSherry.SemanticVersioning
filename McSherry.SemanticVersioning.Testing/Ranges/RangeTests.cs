@@ -241,6 +241,117 @@ namespace McSherry.SemanticVersioning.Ranges
         }
         /// <summary>
         /// <para>
+        /// Tests the version range tilde operator, which allows patch-level
+        /// changes where a minor version is specified and minor-level changes
+        /// where a minor version isn't specified.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Operator_Tilde()
+        {
+            // Tests for ranges where a minor version is specified, with and
+            // without a patch version specified
+            var vr1a = new VersionRange("~1.2.3");
+            var vr1b = new VersionRange("~1.2");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors1 =
+            {
+                ("T1.1", (SemanticVersion)"1.2.3",  true),
+                ("T1.2", (SemanticVersion)"1.2.4",  true),
+                ("T1.3", (SemanticVersion)"1.2.99", true),
+
+
+                ("F1.1", (SemanticVersion)"1.1.3",          false),
+                ("F1.2", (SemanticVersion)"1.3.0",          false),
+                ("F1.3", (SemanticVersion)"2.0.0",          false),
+                ("F1.4", (SemanticVersion)"0.2.3",          false),
+
+                // Comparison rules for 'node-semver' differ from the typical
+                // rules for Semantic Versioning: a pre-release version can
+                // only satisfy a comparator set if at least one comparator in
+                // the set has a matching major-minor-patch trio as well as
+                // also having pre-release identifiers.
+                ("F1.5", (SemanticVersion)"1.2.4-alpha.2",  false),
+            };
+
+            void Test1(string TID, VersionRange vr)
+            {
+                foreach (var vector in vectors1)
+                {
+                    Assert.AreEqual(
+                        expected:   vector.Expected,
+                        actual:     vr.SatisfiedBy(vector.Version),
+                        message:    $"Failure: {TID}, vector {vector.VID}"
+                        );
+                }
+            }
+
+            Test1("Patch present", vr1a);
+            Test1("Patch omitted", vr1b);
+
+
+            // Tests for ranges where a minor version isn't specified
+            var vr2 = new VersionRange("~1");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors2 =
+            {
+                ("T2.1", (SemanticVersion)"1.0.0",  true),
+                ("T2.2", (SemanticVersion)"1.1.0",  true),
+                ("T2.3", (SemanticVersion)"1.99.0", true),
+
+
+                ("F2.1", (SemanticVersion)"0.9.0",          false),
+                ("F2.2", (SemanticVersion)"2.0.0",          false),
+
+                // Comparison rules for 'node-semver' differ from the typical
+                // rules for Semantic Versioning: a pre-release version can
+                // only satisfy a comparator set if at least one comparator in
+                // the set has a matching major-minor-patch trio as well as
+                // also having pre-release identifiers.
+                ("F2.3", (SemanticVersion)"1.1.0-alpha.2",  false),
+            };
+
+            foreach (var vector in vectors2)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr2.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for ranges including pre-release identifiers
+            var vr3 = new VersionRange("~1.2.3-alpha.2");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors3 =
+            {
+                ("T3.1", (SemanticVersion)"1.2.3-alpha.2",  true),
+                ("T3.2", (SemanticVersion)"1.2.3-alpha.3",  true),
+                ("T3.3", (SemanticVersion)"1.2.3-beta.2",   true),
+                ("T3.4", (SemanticVersion)"1.2.3",          true),
+                ("T3.5", (SemanticVersion)"1.2.4",          true),
+                ("T3.6", (SemanticVersion)"1.2.99",         true),
+
+                ("F3.1", (SemanticVersion)"1.2.3-alpha.1",  false),
+                ("F3.2", (SemanticVersion)"1.2.4-alpha.2",  false),
+                ("F3.3", (SemanticVersion)"1.3.0",          false),
+                ("F3.4", (SemanticVersion)"1.2.2",          false),
+                ("F3.5", (SemanticVersion)"2.2.4",          false),
+                ("F3.6", (SemanticVersion)"0.2.4",          false),
+            };
+
+            foreach (var vector in vectors3)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr3.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+        }
+        /// <summary>
+        /// <para>
         /// Tests the version range greater-than operator.
         /// </para>
         /// </summary>
