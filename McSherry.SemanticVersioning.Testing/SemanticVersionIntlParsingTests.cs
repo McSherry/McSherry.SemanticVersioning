@@ -665,6 +665,95 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Tests that parsing with the <see cref="InternalModes.OptionalMinor"/>
+        /// flag works as intended.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_OptionalMinorFlag()
+        {
+            // Tests for valid inputs
+            (string VID, string Input, SemanticVersion Expected)[] vectors1 =
+            {
+                ("V1.1", "1",       (SemanticVersion)"1.0.0"),
+                ("V1.2", "2",       (SemanticVersion)"2.0.0"),
+                ("V1.3", "3.5",     (SemanticVersion)"3.5.0"),
+                ("V1.4", "4.7.2",   (SemanticVersion)"4.7.2"),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                const ParseMode mode = InternalModes.OptionalMinor |
+                                       ParseMode.OptionalPatch;
+
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     SemanticVersion.Parse(vector.Input, mode),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for invalid inputs
+            (string VID, string Input, ParseMode Mode)[] vectors2 =
+            {
+                ("V2.1", "1", ParseMode.Strict),
+                ("V2.2", "2", ParseMode.Lenient),
+                ("V2.3", "3", ParseMode.OptionalPatch),
+                ("V2.4", "4", InternalModes.OptionalMinor),
+                ("V2.5", "4..0", InternalModes.OptionalMinor | ParseMode.OptionalPatch),
+            };
+
+            foreach (var vector in vectors2)
+            {
+                Assert.ThrowsException<FormatException>(
+                    action:     () => SemanticVersion.Parse(vector.Input, vector.Mode),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+        }
+        /// <summary>
+        /// <para>
+        /// Tests that parsing with the <see cref="InternalModes.IndicateOmits"/>
+        /// flag results in omitted components being indicated.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_Valid_IndicateOmitsFlag()
+        {
+            const ParseMode patch = ParseMode.OptionalPatch | InternalModes.IndicateOmits;
+            const ParseMode both  = patch | InternalModes.OptionalMinor;
+
+            // Tests for valid input
+            (string VID, string Input, ParseMode Mode, (int Minor, int Patch) Expected)[] vectors1 =
+            {
+                ("V1.1", "1.0.0",   patch,              (0, 0)),
+                ("V1.2", "2.0",     patch,              (0, -1)),
+                ("V1.3", "3.0.0",   both,               (0, 0)),
+                ("V1.4", "4.0",     both,               (0, -1)),
+                ("V1.5", "5",       both,               (-1, -1)),
+                ("V1.6", "5.0",     ParseMode.Lenient,  (0, 0)),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     SemanticVersion.Parse(vector.Input, vector.Mode),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for invalid input
+            Assert.ThrowsException<FormatException>(
+                action:     () => SemanticVersion.Parse("5", ParseMode.Lenient),
+                message:    $"Failure: vector V2"
+                );
+        }
+
+        /// <summary>
+        /// <para>
         /// Tests that parsing <see cref="SemanticVersion"/> strings works
         /// as expected when the parser is given an invalid string.
         /// </para>
@@ -812,6 +901,21 @@ namespace McSherry.SemanticVersioning
                     $"Did not produce expected status ({i})."
                     );
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests that the regular values of <see cref="ParseMode"/> do not
+        /// overlap with the <see cref="InternalModes"/> values.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void ParseMode_NoOverlap()
+        {
+            Assert.IsFalse(
+                Enum.GetValues(typeof(ParseMode))
+                    .Cast<ParseMode>()
+                    .Any(i => (i & InternalModes.Mask) > 0));
         }
     }
 }

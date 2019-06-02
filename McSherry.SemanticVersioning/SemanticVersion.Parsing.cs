@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -156,6 +156,76 @@ namespace McSherry.SemanticVersioning
             /// </para>
             /// </summary>
             MetadataInvalid,
+        }
+
+        /// <summary>
+        /// <para>
+        /// Represents internal <see cref="ParseMode"/> values which don't make
+        /// sense to expose to users.
+        /// </para>
+        /// </summary>
+        internal static class InternalModes
+        {
+            /// <summary>
+            /// <para>
+            /// A mask for the bits the internal mode bits occupy.
+            /// </para>
+            /// </summary>
+            public const ParseMode Mask            = (ParseMode)(0b1111 << 28);
+
+
+            /// <summary>
+            /// <para>
+            /// The internal parser modes are enabled.
+            /// </para>
+            /// </summary>
+            public const ParseMode Enabled         = (ParseMode)(0b1000 << 28);
+
+            /// <summary>
+            /// <para>
+            /// The parser will accept versions with the <see cref="Minor"/>
+            /// version component omitted. Has no effect if
+            /// <see cref="ParseMode.OptionalPatch"/> is not also specified.
+            /// </para>
+            /// </summary>
+            public const ParseMode OptionalMinor   = (ParseMode)(0b0001 << 28);
+            /// <summary>
+            /// <para>
+            /// The parser will set any omitted components (permitted by
+            /// <see cref="ParseMode.OptionalPatch"/> or <see cref="OptionalMinor"/>)
+            /// to a negative value.
+            /// </para>
+            /// </summary>
+            public const ParseMode IndicateOmits   = (ParseMode)(0b0010 << 28);
+
+
+            /// <summary>
+            /// <para>
+            /// Determines whether an internal parse mode is present.
+            /// </para>
+            /// </summary>
+            /// <param name="target">
+            /// The <see cref="ParseMode"/> to check for the specified flags.
+            /// </param>
+            /// <param name="mode">
+            /// The flags to check for.
+            /// </param>
+            /// <returns>
+            /// True if the specified internal parse modes are present.
+            /// </returns>
+            public static bool Has(ParseMode target, ParseMode mode)
+            {
+                // These internal modes are currently used to enable version
+                // ranges to be properly implemented, as some features from
+                // the 'node-semver' specification require special handling in
+                // the parser to work.
+                //
+                // To avoid unintended use through [ParseMode.Lenient], we require
+                // that the sign bit be unset. As [Lenient] sets all bits high,
+                // the sign bit will also be high when it is used and so internal
+                // modes will not be used.
+                return (target ^ Enabled) < 0 && (target & mode) == mode;
+            }
         }
 
         /// <summary>
@@ -591,8 +661,7 @@ namespace McSherry.SemanticVersioning
                         //
                         // Similarly, [Identifiers] has more comments than
                         // [Metadata].
-
-                        #region Major
+                        
                         case State.Major:
                         {
                             // No value means we've hit the end of the
@@ -675,8 +744,7 @@ namespace McSherry.SemanticVersioning
                             }
                         }
                         break;
-                        #endregion
-                        #region Minor
+
                         case State.Minor:
                         {
                             if (!c.HasValue ||
@@ -764,8 +832,7 @@ namespace McSherry.SemanticVersioning
                             }
                         }
                         break;
-                        #endregion
-                        #region Patch
+
                         case State.Patch:
                         {
                             // The [Patch] state differs slightly from [Major] and
@@ -826,8 +893,7 @@ namespace McSherry.SemanticVersioning
                             }
                         }
                         break;
-                        #endregion
-                        #region Identifiers
+
                         case State.Identifiers:
                         {
                             // When we get here, the hyphen will have already
@@ -898,8 +964,7 @@ namespace McSherry.SemanticVersioning
                             }
                         }
                         break;
-                        #endregion
-                        #region Metadata
+
                         case State.Metadata:
                         {
                             // The [Metadata] state is much the same as the
@@ -945,7 +1010,6 @@ namespace McSherry.SemanticVersioning
                             }
                         }
                         break;
-                        #endregion
                     }
                 }
 
