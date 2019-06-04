@@ -229,6 +229,65 @@ namespace McSherry.SemanticVersioning.Ranges
                     );
             }
 
+            private static Predicate<SemanticVersion> OpTildeFactory(
+                SemanticVersion comparator
+                )
+            {
+                SemanticVersion lower, upper;
+
+                // When parsing tilde-operator comparators, we use an internal
+                // mode that allows the minor version to be omitted and sets
+                // any omitted components negative. This allows us to determine
+                // how we should behave.
+                //
+                // If no minor version is specified, the tilde operator allows
+                // minor- and patch-level changes.
+                if (comparator.Minor < 0)
+                {
+                    lower = new SemanticVersion(
+                        major:       comparator.Major,
+                        minor:       0,
+                        patch:       0,
+                        identifiers: comparator.Identifiers,
+                        metadata:    comparator.Metadata
+                        );
+
+                    upper = new SemanticVersion(
+                        major:       lower.Major + 1,
+                        minor:       0,
+                        patch:       0,
+                        identifiers: lower.Identifiers,
+                        metadata:    lower.Metadata
+                        );
+                }
+                // If one is specified, the tilde operator allows only changes
+                // at the patch level.
+                else
+                {
+                    // We want to maintain a patch version if we have it, or
+                    // reset it to zero if we don't.
+                    var patch = comparator.Patch < 0 ? 0 : comparator.Patch;
+
+                    lower = new SemanticVersion(
+                        major:       comparator.Major,
+                        minor:       comparator.Minor,
+                        patch:       patch,
+                        identifiers: comparator.Identifiers,
+                        metadata:    comparator.Metadata
+                        );
+
+                    upper = new SemanticVersion(
+                        major:       lower.Major,
+                        minor:       lower.Minor + 1,
+                        patch:       0,
+                        identifiers: lower.Identifiers,
+                        metadata:    lower.Metadata
+                        );
+                }
+
+                return (sv) => (sv >= lower) && (sv < upper);
+            }
+
             static UnaryComparator()
             {
                 SimpleComparers = new Dictionary<Operator, ComparatorImpl>
@@ -243,6 +302,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 ComplexComparers = new Dictionary<Operator, ComparatorFactory>
                 {
                     [Operator.Caret]                = OpCaretFactory,
+                    [Operator.Tilde]                = OpTildeFactory,
                 }.AsReadOnly();
             }
 

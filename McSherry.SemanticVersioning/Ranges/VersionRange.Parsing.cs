@@ -58,6 +58,14 @@ namespace McSherry.SemanticVersioning.Ranges
             Caret,
             /// <summary>
             /// <para>
+            /// If a minor version is specified, used to check that only patch-level
+            /// changes are made. Otherwise, used to check that only minor-level
+            /// changes are made.
+            /// </para>
+            /// </summary>
+            Tilde,
+            /// <summary>
+            /// <para>
             /// Used in checking that a <see cref="SemanticVersion"/> has
             /// lesser precedence than the specified version.
             /// </para>
@@ -563,6 +571,7 @@ namespace McSherry.SemanticVersioning.Ranges
                     { "=",  Operator.Equal              },
                     { "<",  Operator.LessThan           },
                     { "^",  Operator.Caret              },
+                    { "~",  Operator.Tilde              },
                     { ">",  Operator.GreaterThan        },
                     { "<=", Operator.LessThanOrEqual    },
                     { ">=", Operator.GreaterThanOrEqual },
@@ -575,7 +584,8 @@ namespace McSherry.SemanticVersioning.Ranges
                                 RightChevron    = '>',
                                 EqualSign       = '=',
                                 VerticalBar     = '|',
-                                Caret           = '^';
+                                Caret           = '^',
+                                Tilde           = '~';
 
             /// <summary>
             /// <para>
@@ -632,6 +642,9 @@ namespace McSherry.SemanticVersioning.Ranges
                 ParseResult result = default(ParseResult);
                 Operator @operator = (Operator)(-1);
                 var builder = new StringBuilder();
+
+                const ParseMode parseMode = ParseMode.AllowPrefix;
+                var tempMode = ParseMode.Strict;
 
                 do
                 {
@@ -697,6 +710,20 @@ namespace McSherry.SemanticVersioning.Ranges
                                 case Caret:
                                     PushState(State.UnarySimple);
                                     break;
+
+                                // While [Tilde] is a simple unary operator, it
+                                // requires a temporary parsing mode.
+                                //
+                                // We'll set that then piggybag onto the regular
+                                // case for simple unary operators.
+                                case Tilde:
+                                {
+                                    tempMode =
+                                        ParseMode.OptionalPatch |
+                                        SemanticVersion.InternalModes.OptionalMinor |
+                                        SemanticVersion.InternalModes.IndicateOmits;
+
+                                } goto case EqualSign;
 
                                 // Identify complex unary operators.
                                 //
@@ -946,8 +973,10 @@ namespace McSherry.SemanticVersioning.Ranges
                                     // with 'v'.
                                     var verParse = SemanticVersion.Parser.Parse(
                                         input:  builder.ToString(),
-                                        mode:   ParseMode.AllowPrefix
+                                        mode:   parseMode | tempMode
                                         );
+
+                                    tempMode = ParseMode.Strict;
 
                                     // If we successfully parse a version...
                                     if (verParse.Type == SemanticVersion.ParseResultType.Success)
