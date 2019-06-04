@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using McSherry.SemanticVersioning.Internals.Shims;
+
 namespace McSherry.SemanticVersioning
 {
     /// <summary>
@@ -488,21 +490,6 @@ namespace McSherry.SemanticVersioning
         {
             /// <summary>
             /// <para>
-            /// Represents the states of the <see cref="SemanticVersion"/>
-            /// parser.
-            /// </para>
-            /// </summary>
-            private enum State
-            {
-                Major,
-                Minor,
-                Patch,
-                Identifiers,
-                Metadata
-            }
-
-            /// <summary>
-            /// <para>
             /// The character used to start the sequence of pre-release
             /// identifiers (a hyphen).
             /// </para>
@@ -606,7 +593,7 @@ namespace McSherry.SemanticVersioning
             /// Implements <see cref="SemanticVersion"/> parsing.
             /// </para>
             /// </summary>
-            /// <param name="input">
+            /// <param name="versionString">
             /// The string representing the semantic version.
             /// </param>
             /// <param name="mode">
@@ -616,7 +603,7 @@ namespace McSherry.SemanticVersioning
             /// A <see cref="ParseResult"/> describing whether the
             /// parse succeeded.
             /// </returns>
-            private static ParseResult _parseVersion(string input, 
+            private static ParseResult _parseVersion(string versionString, 
                                                      ParseMode mode)
             {
                 // This could all probably be accomplished with a single
@@ -627,20 +614,9 @@ namespace McSherry.SemanticVersioning
                 // I'll take slower parsing for better error reporting
                 // any day of the week.
 
-                // The major version is the first thing we're expecting,
-                // so the [Major] state seems like a good pick for initial
-                // state.
-                var state = State.Major;
-                var sb = new StringBuilder();
-
-                // We're converting to a list of nullable characters to
-                // make handling the end of the string easier.
-                //
-                // Instead of having some duplicate code outside of the
-                // loop, we can now detect null as appropriate.
-                var chars = new List<char?>(input.ToCharArray()
-                                                 .Select(c => (char?)c));
-                chars.Add(null);
+                var chars = versionString.GetEnumerator();
+                var builder = new StringBuilder();
+                char? input = null;
 
                 // Negative values will cause an exception if we pass them
                 // to the [SemanticVersion] constructor.
@@ -650,378 +626,458 @@ namespace McSherry.SemanticVersioning
                 ICollection<string> identifiers = new List<string>(),
                                     metadata = new List<string>();
 
-                foreach (char? c in chars)
+                // Whether the patch version component can be omitted
+                var optionalPatch = mode.HasFlag(ParseMode.OptionalPatch);
+                // Whether the minor (and, consequently, the patch) version
+                // component can be omitted
+                var optionalMinor = optionalPatch &&
+                                    InternalModes.Has(mode, InternalModes.OptionalMinor);
+                // Whether the parser should indicate that components were
+                // omitted by setting their values negative.
+                var indicateOmits = InternalModes.Has(mode, InternalModes.IndicateOmits);
+
+                // Get the party started
+                return Parse();
+
+
+                // Consumes a character from the input.
+                char? Consume()
                 {
-                    switch (state)
+                    if (chars.MoveNext())
                     {
-                        // [Major], [Minor], and [Patch] state handling is mostly
-                        // the same. If you're looking at [Minor]/[Patch] and
-                        // are wondering why some bits are sparsely-commented,
-                        // look at the [Major] state to see comments.
-                        //
-                        // Similarly, [Identifiers] has more comments than
-                        // [Metadata].
-                        
-                        case State.Major:
-                        {
-                            // No value means we've hit the end of the
-                            // string. This isn't allowed in the major
-                            // version, so we raise an error.
-                            if (!c.HasValue)
-                            {
-                                return new ParseResult(
-                                    error: ParseResultType.TrioItemMissing);
-                            }
-                            // If it has a value, we want to check if it's
-                            // a number before we add it to the builder.
-                            else if (Helper.IsNumber(c.Value))
-                            {
-                                // We're leaving leading-zero checks until
-                                // we hit the end of the major version as
-                                // doing it that way simplifies the check.
-                                sb.Append(c.Value);
-                            }
-                            // If it's not a number, it might be a period,
-                            // which would indicate that we're now moving
-                            // on to the minor version.
-                            else if (c.Value == ComponentSeparator)
-                            {
-                                // If there's nothing in the [StringBuilder],
-                                // it means we didn't have a major version, so
-                                // we need to report a missing component.
-                                if (sb.Length == 0)
-                                    return new ParseResult(
-                                        error: ParseResultType.TrioItemMissing);
-
-                                // Major versions can't have leading zeroes, so
-                                // if the major version is more than a single
-                                // digit long and its first digit is a leading
-                                // zero, we need to raise an error, too.
-                                if (sb.Length > 1 && sb[0] == '0')
-                                    return new ParseResult(
-                                        ParseResultType.TrioItemLeadingZero);
-
-                                // Next step, we need to convert the numeric
-                                // major version component string to an integer
-                                // so we can have it in our [SemanticVersion]
-                                // class. We know that the string is a valid
-                                // number (i.e. composed of characters 0-9),
-                                // so the only reason this call should fail is
-                                // if the number is too long and causes an
-                                // overflow.
-                                if (!Int32.TryParse(sb.ToString(), out major))
-                                    return new ParseResult(
-                                        ParseResultType.TrioItemOverflow);
-
-                                // If we're here, we've got our major version
-                                // parsed and now we need to handle the minor
-                                // version.
-                                state = State.Minor;
-                                // Remember to clear the [StringBuilder] so
-                                // the next iteration doesn't get any of our
-                                // leftover state.
-                                sb.Clear();
-                            }
-                            // These characters have special significance in
-                            // that they are used to indicate the start of
-                            // identifiers or metadata after the major, minor,
-                            // and patch versions.
-                            //
-                            // If we hit one in the [Major] version state, it
-                            // means that both the minor and patch version
-                            // components are missing.
-                            else if (c == IdentifierStart || c == MetadataStart)
-                            {
-                                return new ParseResult(
-                                    error: ParseResultType.TrioItemMissing);
-                            }
-                            // If it's none of the above, it's the character
-                            // is invalid so we have to raise an error.
-                            else
-                            {
-                                return new ParseResult(
-                                    error: ParseResultType.TrioInvalidChar);
-                            }
-                        }
-                        break;
-
-                        case State.Minor:
-                        {
-                            if (!c.HasValue ||
-                                c.Value == ComponentSeparator ||
-                                c.Value == IdentifierStart    ||
-                                c.Value == MetadataStart)
-                            {
-                                if (sb.Length == 0)
-                                    return new ParseResult(
-                                        error: ParseResultType.TrioItemMissing);
-
-                                if (sb.Length > 1 && sb[0] == '0')
-                                    return new ParseResult(
-                                        ParseResultType.TrioItemLeadingZero);
-
-                                if (!Int32.TryParse(sb.ToString(), out minor))
-                                    return new ParseResult(
-                                        ParseResultType.TrioItemOverflow);
-
-                                if (!c.HasValue)
-                                {
-                                    // If the [OptionalPatch] flag is present, 
-                                    // then we're going to allow the version 
-                                    // string to end in the [Minor] state.
-                                    if (mode.HasFlag(ParseMode.OptionalPatch))
-                                    {
-                                        return new ParseResult(
-                                            new SemanticVersion(
-                                                major: major,
-                                                minor: minor
-                                            ));
-                                    }
-
-                                    // If it isn't, then this is an invalid 
-                                    // version and we want to return an error.
-                                    return new ParseResult(
-                                        error: ParseResultType.TrioItemMissing);
-                                }
-                                else if (c.Value == ComponentSeparator)
-                                    state = State.Patch;
-                                // Here's the bit where [Minor] differs from
-                                // [Major] in how it's handled. The [ParseMode]
-                                // flag has a flag, [OptionalPatch], that allows
-                                // the caller to omit the patch version.
-                                //
-                                // If the character is a hyphen or plus sign, we
-                                // are going to test for that flag.
-                                else if (c.Value == MetadataStart ||
-                                         c.Value == IdentifierStart)
-                                {
-                                    // If the flag isn't present, it means that
-                                    // the version string is trying to omit the
-                                    // patch version without enabling the ability
-                                    // to do so, which is an error.
-                                    if (!mode.HasFlag(ParseMode.OptionalPatch))
-                                        return new ParseResult(
-                                            ParseResultType.TrioItemMissing);
-                                    
-                                    // We've been passed the correct flag and, if
-                                    // we're here, there is no patch version
-                                    // present, so we want to default it to zero.
-                                    patch = 0;
-
-                                    // If the flag is set, then we need to make
-                                    // a decision on the state to transition to
-                                    // based on the character we're on.
-                                    //
-                                    // Hyphen for identifiers, plus for metadata.
-                                    if (c.Value == IdentifierStart)
-                                        state = State.Identifiers;
-                                    else
-                                        state = State.Metadata;
-                                }
-
-                                sb.Clear();
-                            }
-                            else if (Helper.IsNumber(c.Value))
-                            {
-                                sb.Append(c.Value);
-                            }
-                            else
-                            {
-                                return new ParseResult(
-                                    error: ParseResultType.TrioInvalidChar);
-                            }
-                        }
-                        break;
-
-                        case State.Patch:
-                        {
-                            // The [Patch] state differs slightly from [Major] and
-                            // [Minor] because it is acceptable for the end of the
-                            // string to occur in the [Patch] state.
-                            //
-                            // We're going to share the end-of-string code with
-                            // the identifier-start/metadata-start code so we
-                            // don't repeat ourselves more than we already have.
-                            if (!c.HasValue ||
-                                c == IdentifierStart || c == MetadataStart)
-                            {
-                                // All the "try to turn this into an actual
-                                // number" code from the other states.
-                                if (sb.Length == 0)
-                                    return new ParseResult(
-                                        error: ParseResultType.TrioItemMissing);
-
-                                if (sb.Length > 1 && sb[0] == '0')
-                                    return new ParseResult(
-                                        ParseResultType.TrioItemLeadingZero);
-
-                                if (!Int32.TryParse(sb.ToString(), out patch))
-                                    return new ParseResult(
-                                        ParseResultType.TrioItemOverflow);
-
-                                // If we hit a hyphen, we need to transition to
-                                // the identifier-parsing state.
-                                if (c == IdentifierStart)
-                                    state = State.Identifiers;
-                                // Similarly, if we hit a plus we need to move
-                                // into the metadata-parsing state.
-                                else if (c == MetadataStart)
-                                    state = State.Metadata;
-                                // If it isn't either, then it's the end of the
-                                // string and we want to indicate success by
-                                // returning the parsed [SemanticVersion].
-                                else
-                                    return new ParseResult(new SemanticVersion(
-                                        major: major,
-                                        minor: minor,
-                                        patch: patch
-                                        ));
-
-                                // If we're transitioning into a new state, we
-                                // want the [StringBuilder] to be clear so it
-                                // doesn't end up with any of our data.
-                                sb.Clear();
-                            }
-                            else if (Helper.IsNumber(c.Value))
-                            {
-                                sb.Append(c);
-                            }
-                            else
-                            {
-                                return new ParseResult(
-                                    error: ParseResultType.TrioInvalidChar);
-                            }
-                        }
-                        break;
-
-                        case State.Identifiers:
-                        {
-                            // When we get here, the hyphen will have already
-                            // been consumed by the previous state's handler, so
-                            // we can launch straight in to parsing identifiers.
-
-                            // What we do when we hit the end of the string or a
-                            // component separator (period) is much the same.
-                            if (!c.HasValue || c.Value == ComponentSeparator ||
-                                c == MetadataStart)
-                            {
-                                // First, we check to see whether we actually
-                                // picked up any content that could be an
-                                // identifier.
-                                //
-                                // If we didn't, it means an identifier is missing
-                                // where one is expected, and that's an error.
-                                if (sb.Length == 0)
-                                {
-                                    return new ParseResult(
-                                        error: ParseResultType.IdentifierMissing);
-                                }
-
-                                // If there is content, then we want to check to
-                                // make sure that it's a valid identifier.
-                                //
-                                // If it isn't, that's also an error so we need
-                                // to report it.
-                                if (!Helper.IsValidIdentifier(sb.ToString()))
-                                {
-                                    return new ParseResult(
-                                        error: ParseResultType.IdentifierInvalid);
-                                }
-
-                                // And finally, if it passes the above checks, we
-                                // can add it to our list of identifiers and clear
-                                // the string builder for the next iteration.
-                                identifiers.Add(sb.ToString());
-                                sb.Clear();
-
-                                // Now we check to see whether this is the end of
-                                // the string. If it is, we want to return the
-                                // created [SemanticVersion].
-                                if (!c.HasValue)
-                                {
-                                    return new ParseResult(new SemanticVersion(
-                                        major:          major,
-                                        minor:          minor,
-                                        patch:          patch,
-                                        identifiers:    identifiers
-                                        ));
-                                }
-                                // If it isn't the end of the string, it might be
-                                // the start of the metadata. If it is, we want to
-                                // transition to the metadata-parsing state.
-                                else if (c == MetadataStart)
-                                {
-                                    state = State.Metadata;
-                                }
-                            }
-                            // If it isn't any of the characters we've previously
-                            // checked for, we add it to the [StringBuilder]. We
-                            // don't care about whether it's valid, because that
-                            // will be checked in future.
-                            else
-                            {
-                                sb.Append(c);
-                            }
-                        }
-                        break;
-
-                        case State.Metadata:
-                        {
-                            // The [Metadata] state is much the same as the
-                            // [Identifiers] state, except for the validation
-                            // method called and it not being able to switch
-                            // to other states (metadata is always last).
-                            //
-                            // Like with [Identifiers] and hyphens, we don't
-                            // need to handle a leading plus sign because it
-                            // will have been consumed by the previous state.
-
-                            if (!c.HasValue || c == ComponentSeparator)
-                            {
-                                if (sb.Length == 0)
-                                {
-                                    return new ParseResult(
-                                        error: ParseResultType.MetadataMissing);
-                                }
-
-                                if (!Helper.IsValidMetadata(sb.ToString()))
-                                {
-                                    return new ParseResult(
-                                        error: ParseResultType.MetadataInvalid);
-                                }
-
-                                metadata.Add(sb.ToString());
-                                sb.Clear();
-
-                                if (!c.HasValue)
-                                {
-                                    return new ParseResult(new SemanticVersion(
-                                        major:          major,
-                                        minor:          minor,
-                                        patch:          patch,
-                                        identifiers:    identifiers,
-                                        metadata:       metadata
-                                        ));
-                                }
-                            }
-                            else
-                            {
-                                sb.Append(c);
-                            }
-                        }
-                        break;
+                        input = chars.Current;
                     }
+                    else
+                    {
+                        input = null;
+                    }
+
+                    return input;
                 }
 
-                // We should never be able to enter this state, because we should
-                // never break out of the switch statement.
-                //
-                // If we do hit this state, we want to immediately throw an
-                // exception because something must have gone horribly, horribly
-                // wrong and we're probably not recoverable.
-                throw new InvalidOperationException(
-                    "Invalid state entered: SemanticVersion parser error."
-                    );
+                ParseResult Parse()
+                {
+                    // Move the enumerator to the first character
+                    Consume();
+
+                    // The [ParseMajor] function calls all subsequent functions
+                    // and relays back their results.
+                    var res = ParseMajor();
+
+                    // If they indicated success...
+                    if (res == ParseResultType.Success)
+                    {
+                        // If we've been configured to indicate where components
+                        // are omitted, we have to use a different constructor
+                        // that won't throw when provided with negative values.
+                        if (indicateOmits)
+                        {
+                            return new ParseResult(new SemanticVersion(
+                                ackNoVerif:  true,
+                                major:       major,
+                                minor:       minor,
+                                patch:       patch,
+                                identifiers: identifiers,
+                                metadata:    metadata
+                                ));
+                        }
+                        // If not, though, we assemble as normal
+                        else
+                        {
+                            return new ParseResult(new SemanticVersion(
+                                major:       major,
+                                minor:       minor,
+                                patch:       patch,
+                                identifiers: identifiers,
+                                metadata:    metadata
+                                ));
+                        }
+                    }
+                    // If they didn't indicate success, relay their error up.
+                    else
+                    {
+                        return new ParseResult(res);
+                    }
+                }
+                // Attempts to parse a major version component
+                ParseResultType ParseMajor()
+                {
+                    var result = ParseComponent(ref major);
+
+                    // If we managed to obtain a component value, we now need
+                    // to carry out major version-specific error checking
+                    if (result == ParseResultType.Success)
+                    {
+                        // If we've encountered a component separator, we expect
+                        // that the minor version component will come next.
+                        if (input == ComponentSeparator)
+                        {
+                            // Move past the separator.
+                            Consume();
+
+                            // Parse the minor version and subsequent parts
+                            return ParseMinor();
+                        }
+                        // A major version must normally be followed by a minor
+                        // version, but we can be configured to allow the omission
+                        // of a minor version.
+                        //
+                        // In that case, encountering the end of the string or
+                        // the start of the pre-release identifiers or metadata
+                        // is not an error.
+                        else if (!input.HasValue || input == IdentifierStart ||
+                                 input == MetadataStart)
+                        {
+                            // If we haven't been so configured, error.
+                            if (!optionalMinor)
+                            {
+                                return ParseResultType.TrioItemMissing;
+                            }
+                            else
+                            {
+                                // If we have, we want to reset the values of
+                                // the other components unless we're configured
+                                // to indicate their omission.
+                                if (!indicateOmits)
+                                {
+                                    minor = 0;
+                                    patch = 0;
+                                }
+
+                                // Then our next action depends on which of the
+                                // characters we encountered.
+                                //
+                                // The end of the string means we've parsed all
+                                // that we need to.
+                                if (!input.HasValue)
+                                {
+                                    return ParseResultType.Success;
+                                }
+                                // The start of identifiers means we want to try
+                                // and parse identifiers.
+                                else if (input == IdentifierStart)
+                                {
+                                    // Move past the separator
+                                    Consume();
+
+                                    return ParseIdentifiers();
+                                }
+                                // And anything else means metadata.
+                                else
+                                {
+                                    // Move past the separator
+                                    Consume();
+
+                                    return ParseMetadata();
+                                }
+                            }
+                        }
+                        // Anything else is a character we don't expect.
+                        else
+                        {
+                            return ParseResultType.TrioInvalidChar;
+                        }
+                    }
+                    // If parsing the component wasn't successful, let the error
+                    // bubble up to our caller
+                    else
+                    {
+                        return result;
+                    }
+                }
+                // Attempts to parse a minor version component
+                ParseResultType ParseMinor()
+                {
+                    var result = ParseComponent(ref minor);
+
+                    // This part is somewhat similar to [ParseMajor], except
+                    // that we're dealing with the patch version being omitted
+                    // rather than the minor version.
+
+                    if (result == ParseResultType.Success)
+                    {
+                        // A component separator means the patch version is
+                        // present, so we can proceed to parse it.
+                        if (input == ComponentSeparator)
+                        {
+                            // Move past the separator.
+                            Consume();
+
+                            return ParsePatch();
+                        }
+                        // Similarly to the major version, a minor version must
+                        // normally be followed by a patch version but we can be
+                        // configured to accept its omission.
+                        //
+                        // If we are so configured, encountering the end of the
+                        // string or the start of the identifiers or metadata is
+                        // not an error.
+                        else if (!input.HasValue || input == IdentifierStart ||
+                                 input == MetadataStart)
+                        {
+                            // If we haven't been so configured, error.
+                            if (!optionalPatch)
+                            {
+                                return ParseResultType.TrioItemMissing;
+                            }
+                            else
+                            {
+                                // If the patch version is omitted, we want to
+                                // reset it to zero unless we've been configured
+                                // to indicate when a component is omitted.
+                                if (!indicateOmits)
+                                {
+                                    patch = 0;
+                                }
+
+                                // As with the major version, what we do next
+                                // depends on which of the three characters we
+                                // encountered.
+                                //
+                                // We can validly finish parsing when we reach
+                                // the end of the input string.
+                                if (!input.HasValue)
+                                {
+                                    return ParseResultType.Success;
+                                }
+                                // Or move on to parsing pre-release identifiers.
+                                else if (input == IdentifierStart)
+                                {
+                                    // Move past the separator
+                                    Consume();
+
+                                    return ParseIdentifiers();
+                                }
+                                // Or move to parsing metadata.
+                                else
+                                {
+                                    // Move past the separator
+                                    Consume();
+
+                                    return ParseMetadata();
+                                }
+                            }
+                        }
+                        // We don't recognise any other characters.
+                        else
+                        {
+                            return ParseResultType.TrioInvalidChar;
+                        }
+                    }
+                    // If we couldn't successfully parse the component, then
+                    // we want to bubble the error up.
+                    else
+                    {
+                        return result;
+                    }
+                }
+                // Attempts to parse a patch version component.
+                ParseResultType ParsePatch()
+                {
+                    var result = ParseComponent(ref patch);
+
+                    if (result == ParseResultType.Success)
+                    {
+                        // If we've successfully parsed a patch version, we can
+                        // finish parsing here under all circumstances. However,
+                        // it is possible for pre-release identifiers or
+                        // metadata to follow.
+                        //
+                        // If we reach the end of the string, we're all done.
+                        if (!input.HasValue)
+                        {
+                            return ParseResultType.Success;
+                        }
+                        // If we encounter pre-release identifiers, parse them.
+                        else if (input == IdentifierStart)
+                        {
+                            // Move past separator
+                            Consume();
+
+                            return ParseIdentifiers();
+                        }
+                        // Or metadata.
+                        else if (input == MetadataStart)
+                        {
+                            // Move past separator
+                            Consume();
+
+                            return ParseMetadata();
+                        }
+                        // Anything else means we've encountered an invalid
+                        // character, which is an error.
+                        else
+                        {
+                            return ParseResultType.TrioInvalidChar;
+                        }
+                    }
+                    // If parsing was unsuccessful, let the result bubble up.
+                    else
+                    {
+                        return result;
+                    }
+                }
+                // Provides default parsing for version components
+                ParseResultType ParseComponent(ref int comp)
+                {
+                    // A version component can only contain numbers, so we want
+                    // to accumulate all numeric characters we can.
+                    while (input.HasValue && Helper.IsNumber(input.Value))
+                    {
+                        builder.Append(input.Value);
+
+                        Consume();
+                    }
+
+                    // Our caller will deal with the first non-numeric character,
+                    // so all we need to do is try to turn what we have into an
+                    // actual value.
+                    //
+                    // If what caused us to stop accumulating isn't the end of
+                    // the string or a separator, it's an invalid character.
+                    if (input.HasValue && input != ComponentSeparator &&
+                        input != IdentifierStart && input != MetadataStart)
+                    {
+                        return ParseResultType.TrioInvalidChar;
+                    }
+
+                    
+
+                    // If we didn't accumulate anything, we don't have a version
+                    // component, which is an error. We don't consider whether it
+                    // can be omitted, and leave it to the caller to only call
+                    // us if it expects a component to be present.
+                    if (builder.Length == 0)
+                        return ParseResultType.TrioItemMissing;
+
+                    // Version components can't have leading zeroes.
+                    if (builder.Length > 1 && builder[0] == '0')
+                        return ParseResultType.TrioItemLeadingZero;
+
+                    // We already know that we only have numeric characters, so
+                    // the only reason parsing can fail is if they represent a
+                    // number too great to be stored in an [Int32].
+                    if (!Int32.TryParse(builder.ToString(), out var parseComp))
+                        return ParseResultType.TrioItemOverflow;
+
+                    // If all these tests pass, we have a valid result. Store it
+                    // and clear the accumulator.
+                    comp = parseComp;
+                    builder.Clear();
+
+                    return ParseResultType.Success;
+                }
+
+                // Attempts to parse a set of pre-release identifiers
+                ParseResultType ParseIdentifiers()
+                {
+                    // Our caller consumed the separating hyphen, so we're free
+                    // to assume that we're starting on the first character of
+                    // what should be a pre-release identifier.
+                    //
+                    // As we're calling this method recursively, the same is
+                    // true of any separating periods.
+
+                    // Accumulate until we reach the end of input or a separator.
+                    while (input.HasValue && input != ComponentSeparator &&
+                           input != MetadataStart)
+                    {
+                        builder.Append(input.Value);
+
+                        Consume();
+                    }
+
+                    // If we didn't accumulate anything, then the metadata item
+                    // is missing. Error.
+                    if (builder.Length == 0)
+                        return ParseResultType.IdentifierMissing;
+
+                    // If what we did accumulate isn't a valid identifier, error.
+                    if (!Helper.IsValidIdentifier(builder.ToString()))
+                        return ParseResultType.IdentifierInvalid;
+
+                    // If we get here, we know we have a valid identifier. Store
+                    // it and clear stored state.
+                    identifiers.Add(builder.ToString());
+                    builder.Clear();
+
+                    // As before, what we do next depends on what character we
+                    // encountered to end accumulation.
+                    //
+                    // If it's the end of the string, we've successfully parsed.
+                    if (!input.HasValue)
+                    {
+                        return ParseResultType.Success;
+                    }
+                    // If it's a component separator, there are more identifiers
+                    // that we need to parse.
+                    else if (input == ComponentSeparator)
+                    {
+                        // Move past separator
+                        Consume();
+
+                        return ParseIdentifiers();
+                    }
+                    // And if it's the start of metadata, parse those.
+                    else
+                    {
+                        // Move past separator
+                        Consume();
+
+                        return ParseMetadata();
+                    }
+                }
+                // Attempts to parse a set of metadata items
+                ParseResultType ParseMetadata()
+                {
+                    // Parsing metadata is largely the same as parsing identifiers,
+                    // although the formats for each component are slightly different.
+                    //
+                    // As with [ParseIdentifiers], our caller will move us past
+                    // any separating plus sign or full stop, so we can assume
+                    // that we're on what should be the first character of an
+                    // identifier.
+
+                    // As with identifiers, accumulate until we reach the end
+                    // of the string or a separator.
+                    while (input.HasValue && input != ComponentSeparator)
+                    {
+                        builder.Append(input.Value);
+
+                        Consume();
+                    }
+
+                    // Accumulating nothing means the metadata item is missing,
+                    // which isn't valid.
+                    if (builder.Length == 0)
+                        return ParseResultType.MetadataMissing;
+
+                    // If we have accumulated something, it has to be valid.
+                    if (!Helper.IsValidMetadata(builder.ToString()))
+                        return ParseResultType.MetadataInvalid;
+
+                    // If it is valid, store it and clear stored state.
+                    metadata.Add(builder.ToString());
+                    builder.Clear();
+
+                    // And, as with identifiers, determine what we do next
+                    // based on what caused us to stop accumulating.
+                    //
+                    // The end of the string means our job is done.
+                    if (!input.HasValue)
+                    {
+                        return ParseResultType.Success;
+                    }
+                    // Whereas a component separator means we expect another
+                    // metadata item to follow.
+                    else
+                    {
+                        // Move past separator
+                        Consume();
+
+                        return ParseMetadata();
+                    }
+                }
             }
 
             /// <summary>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -694,7 +694,7 @@ namespace McSherry.SemanticVersioning
             }
 
 
-            // Tests for invalid inputs
+            // Tests for invalid inputs that should throw [ArgumentException]
             (string VID, string Input, ParseMode Mode)[] vectors2 =
             {
                 ("V2.1", "1", ParseMode.Strict),
@@ -706,7 +706,7 @@ namespace McSherry.SemanticVersioning
 
             foreach (var vector in vectors2)
             {
-                Assert.ThrowsException<FormatException>(
+                Assert.ThrowsException<ArgumentException>(
                     action:     () => SemanticVersion.Parse(vector.Input, vector.Mode),
                     message:    $"Failure: vector {vector.VID}"
                     );
@@ -737,16 +737,18 @@ namespace McSherry.SemanticVersioning
 
             foreach (var vector in vectors1)
             {
+                var output = SemanticVersion.Parse(vector.Input, vector.Mode);
+
                 Assert.AreEqual(
                     expected:   vector.Expected,
-                    actual:     SemanticVersion.Parse(vector.Input, vector.Mode),
+                    actual:     (output.Minor, output.Patch),
                     message:    $"Failure: vector {vector.VID}"
                     );
             }
 
 
-            // Tests for invalid input
-            Assert.ThrowsException<FormatException>(
+            // Tests for invalid input which should throw [ArgumentException]
+            Assert.ThrowsException<ArgumentException>(
                 action:     () => SemanticVersion.Parse("5", ParseMode.Lenient),
                 message:    $"Failure: vector V2"
                 );

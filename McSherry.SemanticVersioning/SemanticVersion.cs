@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-18 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -266,6 +266,32 @@ namespace McSherry.SemanticVersioning
 
         private readonly int _major, _minor, _patch;
         private readonly List<string> _prIds, _metadata;
+
+
+        /// <summary>
+        /// <para>
+        /// An internal constructor which allows setting minor and patch
+        /// versions negative. Intended for use with 
+        /// <see cref="InternalModes.IndicateOmits"/>.
+        /// </para>
+        /// </summary>
+        private SemanticVersion(bool ackNoVerif,
+                                int major, int minor, int patch,
+                                IEnumerable<string> identifiers,
+                                IEnumerable<string> metadata)
+            : this(major, 0, 0, identifiers, metadata)
+        {
+            if (!ackNoVerif)
+            {
+                throw new ArgumentException(
+                    "Use of non-verifying Semantic Version constructor must " +
+                    "be acknowledged."
+                    );
+            }
+
+            _minor = minor;
+            _patch = patch;
+        }
 
         /// <summary>
         /// <para>
