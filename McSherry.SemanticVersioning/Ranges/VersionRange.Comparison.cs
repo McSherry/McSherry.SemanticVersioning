@@ -97,7 +97,7 @@ namespace McSherry.SemanticVersioning.Ranges
         {
             /// <summary>
             /// <para>
-            /// Represents a method implementing a comparator.
+            /// Represents a method implementing a unary comparator.
             /// </para>
             /// </summary>
             /// <param name="comparand">
@@ -119,7 +119,7 @@ namespace McSherry.SemanticVersioning.Ranges
             /// <summary>
             /// <para>
             /// Represents a method capable of generating a delegate which
-            /// implements a comparator.
+            /// implements a unary comparator.
             /// </para>
             /// </summary>
             /// <param name="comparator">
@@ -309,7 +309,7 @@ namespace McSherry.SemanticVersioning.Ranges
             /// <summary>
             /// <para>
             /// Creates a new <see cref="IComparator"/> using the specified
-            /// operator and version.
+            /// version and unary operator.
             /// </para>
             /// </summary>
             /// <param name="op">
@@ -326,7 +326,7 @@ namespace McSherry.SemanticVersioning.Ranges
             /// </returns>
             /// <exception cref="ArgumentException">
             /// Thrown when <paramref name="op"/> is not a recognised
-            /// <see cref="Operator"/> value.
+            /// <see cref="Operator"/> value, or is not a unary operator.
             /// </exception>
             public static IComparator Create(Operator op, SemanticVersion semver)
             {
@@ -343,7 +343,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 else
                 {
                     throw new ArgumentException(
-                        message: $"Unrecognised operator (value: {op:N}).",
+                        message: $"Unrecognised unary operator (value: {op:N}).",
                         paramName: nameof(op)
                         );
                 }
@@ -407,6 +407,138 @@ namespace McSherry.SemanticVersioning.Ranges
             bool IComparator.ComparableTo(SemanticVersion comparand)
             {
                 return this.Version.ComparableTo(comparand);
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Provides the parser with implementations for binary operators.
+        /// </para>
+        /// </summary>
+        internal sealed class BinaryComparator : IComparator
+        {
+            /// <summary>
+            /// <para>
+            /// Represents a method capable of generating a delegate which
+            /// implements a binary comparator.
+            /// </para>
+            /// </summary>
+            /// <param name="lhs">
+            /// The <see cref="SemanticVersion"/> which appears on the left
+            /// hand side of the operator.
+            /// </param>
+            /// <param name="rhs">
+            /// The <see cref="SemanticVersion"/> which appears on the right
+            /// hand side of the operator.
+            /// </param>
+            /// <returns></returns>
+            private delegate Predicate<SemanticVersion> Factory(
+                SemanticVersion lhs, SemanticVersion rhs);
+
+            private static readonly IReadOnlyDictionary<Operator, Factory>
+                ComparerFactories;
+
+
+            private static Predicate<SemanticVersion> OpHyphenFactory(
+                SemanticVersion lhs, SemanticVersion rhs)
+            {
+                throw new NotImplementedException();
+            }
+
+
+            static BinaryComparator()
+            {
+                ComparerFactories = new Dictionary<Operator, Factory>
+                {
+                    [Operator.Hyphen]   = OpHyphenFactory,
+                }.AsReadOnly();
+            }
+
+
+            /// <summary>
+            /// <para>
+            /// Creates a new <see cref="IComparator"/> using the specified
+            /// versions and binary operator.
+            /// </para>
+            /// </summary>
+            /// <param name="op">
+            /// The operator to create an equivalent <see cref="IComparator"/>
+            /// for.
+            /// </param>
+            /// <param name="lhs">
+            /// The <see cref="SemanticVersion"/> that appears on the left-hand
+            /// side of the operator.
+            /// </param>
+            /// <param name="rhs">
+            /// The <see cref="SemanticVersion"/> that appears on the right-hand
+            /// side of the operator.
+            /// </param>
+            /// <returns>
+            /// An <see cref="IComparator"/> that implements the comparison
+            /// function represented by <paramref name="op"/>.
+            /// </returns>
+            /// <exception cref="ArgumentException">
+            /// Thrown when <paramref name="op"/> is not a recognised
+            /// <see cref="Operator"/> value, or is not a binary operator.
+            /// </exception>
+            public static IComparator Create(
+                Operator op, SemanticVersion lhs, SemanticVersion rhs)
+            {
+                if (ComparerFactories.TryGetValue(op, out var fact))
+                {
+                    return new BinaryComparator(fact(lhs, rhs));
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        message: $"Unrecognised binary operator (value: {op:N}).",
+                        paramName: nameof(op)
+                        );
+                }
+            }
+
+
+            private readonly Predicate<SemanticVersion> _cmp;
+
+            private BinaryComparator(Predicate<SemanticVersion> impl)
+            {
+                _cmp = impl;
+            }
+
+
+            /// <summary>
+            /// <para>
+            /// The <see cref="SemanticVersion"/> on the left-hand side of the
+            /// operator.
+            /// </para>
+            /// </summary>
+            public SemanticVersion LeftVersion
+            {
+                get;
+                private set;
+            }
+            /// <summary>
+            /// <para>
+            /// The <see cref="SemanticVersion"/> on the right-hand side of the
+            /// operator.
+            /// </para>
+            /// </summary>
+            public SemanticVersion RightVersion
+            {
+                get;
+                private set;
+            }
+
+
+            bool IComparator.SatisfiedBy(SemanticVersion comparand)
+            {
+                return _cmp(comparand);
+            }
+
+            bool IComparator.ComparableTo(SemanticVersion comparand)
+            {
+                return this.LeftVersion.ComparableTo(comparand) ||
+                       this.RightVersion.ComparableTo(comparand);
             }
         }
     }

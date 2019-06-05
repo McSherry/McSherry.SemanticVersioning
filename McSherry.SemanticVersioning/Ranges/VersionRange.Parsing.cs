@@ -92,6 +92,13 @@ namespace McSherry.SemanticVersioning.Ranges
             /// </para>
             /// </summary>
             GreaterThanOrEqual,
+            /// <summary>
+            /// <para>
+            /// Checks that a <see cref="SemanticVersion"/> falls within an
+            /// inclusive range of versions.
+            /// </para>
+            /// </summary>
+            Hyphen,
         }
 
         /// <summary>
@@ -539,6 +546,13 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 /// <summary>
                 /// <para>
+                /// Attempts to parse a binary infix comparator.
+                /// </para>
+                /// </summary>
+                TentativeBinary,
+
+                /// <summary>
+                /// <para>
                 /// Parses a version string.
                 /// </para>
                 /// </summary>
@@ -575,6 +589,7 @@ namespace McSherry.SemanticVersioning.Ranges
                     { ">",  Operator.GreaterThan        },
                     { "<=", Operator.LessThanOrEqual    },
                     { ">=", Operator.GreaterThanOrEqual },
+                    { "-",  Operator.Hyphen             },
                 };
 
             // Rather than directly typing the literals in the parser,
@@ -639,10 +654,16 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 var state = State.Start;
                 char? input = null;
-                ParseResult result = default(ParseResult);
-                Operator @operator = (Operator)(-1);
+                var result = default(ParseResult);
+                var @operator = (Operator)(-1);
                 var builder = new StringBuilder();
 
+                // Where we'll store the lefthand version of a binary infix
+                // operator, if we encounter one.
+                SemanticVersion binLeft = null;
+
+                // The default modes for the parser, and temporary modes which
+                // are reset after a version string is parsed.
                 const ParseMode parseMode = ParseMode.AllowPrefix;
                 var tempMode = ParseMode.Strict;
 
@@ -959,59 +980,68 @@ namespace McSherry.SemanticVersioning.Ranges
                                 // And if there are characters accumulated...
                                 if (builder.Length > 0)
                                 {
-                                    // If we didn't encounter an operator, then
-                                    // we implicitly use the equals operator.
-                                    if (@operator < 0)
+                                    // Attempt to parse whatever we have
+                                    var sv = CollectVersion();
+
+                                    // Null indicates a failure to parse. Error.
+                                    if (sv == null)
+                                    {
+                                        PushState(State.Terminate);
+                                    }
+                                    // A lack of an operator means we have to do
+                                    // two things.
+                                    //
+                                    // First, we implicitly use the equals
+                                    // for the comparator.
+                                    //
+                                    // Second, as it tells us that we haven't
+                                    // tried to parse a binary version, we see
+                                    // if we're able to do so.
+                                    else if (@operator < 0)
+                                    {
+                                        // Implicitly use equals
                                         @operator = Operator.Equal;
 
-                                    // Any characters we accumulated must be
-                                    // our version string, and we must attempt
-                                    // to parse it to confirm.
+                                        // Store for later
+                                        binLeft = sv;
+
+                                        // Determine whether we're dealing with
+                                        // a binary infix operator.
+                                        PushState(State.TentativeBinary);
+                                    }
+                                    // If we have an operator, then either one
+                                    // was specified with the comparator or we're
+                                    // trying to parse the second version in a
+                                    // binary comparator.
                                     //
-                                    // We pass [AllowPrefix] as version ranges
-                                    // are allowed to prefix version strings
-                                    // with 'v'.
-                                    var verParse = SemanticVersion.Parser.Parse(
-                                        input:  builder.ToString(),
-                                        mode:   parseMode | tempMode
-                                        );
-
-                                    tempMode = ParseMode.Strict;
-
-                                    // If we successfully parse a version...
-                                    if (verParse.Type == SemanticVersion.ParseResultType.Success)
+                                    // If we haven't stored a lefthand version,
+                                    // we can't be parsing a binary comparator.
+                                    else if (binLeft == null)
                                     {
-                                        // Add the parsed version and its operator
-                                        // to our current set of comparators.
-                                        cmpSet.Add(UnaryComparator.Create(
-                                            op:     @operator,
-                                            semver: verParse.Version
-                                            ));
+                                        // Collect the unary comparator and add
+                                        // it to our set of comparators.
+                                        CollectUnary(sv);
 
-                                        // Clear state
-                                        builder.Clear();
-                                        @operator = (Operator)(-1);
-
-                                        // Do it all over again
-                                        //
-                                        // We don't want to consume the character
-                                        // as, if it's a null character, it is up
-                                        // to the [Identify] state to properly
-                                        // handle clean-up.
+                                        // And do it all again
                                         PushState(State.Identify);
                                     }
-                                    // If the characters are not a valid version
-                                    // string...
+                                    // If we do have a lefthand version, we're
+                                    // now parsing the righthand version.
                                     else
                                     {
-                                        // Indicate failure, passing along the
-                                        // exception that the parser would throw.
-                                        result = new ParseResult(
-                                            InvalidVersion,
-                                            new Lazy<Exception>(verParse.CreateException)
-                                            );
+                                        // Add the comparator
+                                        cmpSet.Add(BinaryComparator.Create(
+                                            op:  @operator,
+                                            lhs: binLeft,
+                                            rhs: sv
+                                            ));
 
-                                        PushState(State.Terminate);
+                                        // Reset our state
+                                        @operator = (Operator)(-1);
+                                        binLeft = null;
+
+                                        // And do it all again
+                                        PushState(State.Identify);
                                     }
                                 }
                                 // And if there are no accumulated characters...
@@ -1034,6 +1064,87 @@ namespace McSherry.SemanticVersioning.Ranges
 
                             state = PopState();
                         } break;
+
+                        // Attempts to determine whether a binary infix operator
+                        // is present, and parse it if it is.
+                        case State.TentativeBinary:
+                        {
+                            // If we reach the end of the string before an
+                            // operator, we obviously don't have a binary comparator.
+                            if (!input.HasValue)
+                            {
+                                // Store the comparator and quit parsing
+
+                                CollectUnary(binLeft);
+
+                                PushState(State.Terminate, State.CollectSet);
+                            }
+                            // If we end up on whitespace, then we want to skip
+                            // to a useful character
+                            else if (Char.IsWhiteSpace(input.Value))
+                            {
+                                PushState(
+                                    State.TentativeBinary,
+                                    State.CollapseWhitespace
+                                    );
+                            }
+                            // If we're on a useful character and it represents
+                            // an operator, we want to make sure it's a binary
+                            // operator before handling it.
+                            else if (OperatorMap.TryGetValue(
+                                key: new string(input.Value, 1),
+                                value: out var op))
+                            {
+                                switch (op)
+                                {
+                                    // If it's a binary operator...
+                                    case Operator.Hyphen:
+                                    {
+                                        // Update our stored operator
+                                        @operator = op;
+
+                                        // Move past the operator, collapse
+                                        // whatever whitespace follows, and try
+                                        // to parse the right-hand version.
+                                        PushState(
+                                            State.VersionString,
+                                            State.CollapseWhitespace,
+                                            State.Consume
+                                            );
+                                    }
+                                    break;
+
+                                    // If it isn't a binary operator...
+                                    default:
+                                    {
+                                        // Turn whatever we have into a
+                                        // comparator
+                                        CollectUnary(binLeft);
+
+                                        // Clear state
+                                        binLeft = null;
+
+                                        // And try to identify it
+                                        PushState(State.Identify);
+                                    }
+                                    break;
+                                }
+                            }
+                            // If it doesn't represent an operator, then we
+                            // want to turn whatever we have into a comparator
+                            // and try to identify whatever the character is
+                            else
+                            {
+                                CollectUnary(binLeft);
+
+                                binLeft = null;
+
+                                PushState(State.Identify);
+                            }
+
+                            state = PopState();
+                        } break;
+
 
                         // Attempts to collect all the currently-identified
                         // comparators into a comparator set and begin a new
@@ -1077,6 +1188,45 @@ namespace McSherry.SemanticVersioning.Ranges
                 }
                 
                 return result;
+
+
+                SemanticVersion CollectVersion()
+                {
+                    var verParse = SemanticVersion.Parser.Parse(
+                        input:  builder.ToString(),
+                        mode:   parseMode | tempMode
+                        );
+
+                    tempMode = ParseMode.Strict;
+
+                    if (verParse.Type == SemanticVersion.ParseResultType.Success)
+                    {
+                        builder.Clear();
+
+                        return verParse.Version;
+                    }
+                    else
+                    {
+                        result = new ParseResult(
+                            InvalidVersion,
+                            new Lazy<Exception>(verParse.CreateException)
+                            );
+
+                        return null;
+                    }
+                }
+
+                void CollectUnary(SemanticVersion sv)
+                {
+                    // Add the comparator to the set
+                    cmpSet.Add(UnaryComparator.Create(
+                        op:     @operator,
+                        semver: sv
+                        ));
+
+                    // Reset state
+                    @operator = (Operator)(-1);
+                }
             }
 
             /// <summary>
