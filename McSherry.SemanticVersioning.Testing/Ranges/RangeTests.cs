@@ -691,7 +691,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("F2.2", (SemanticVersion)"2.4.1",          false),
                 ("F2.3", (SemanticVersion)"0.5.0",          false),
                 ("F2.4", (SemanticVersion)"3.2.1",          false),
-                ("F2.5", (SemanticVersion)"1.2.0.alpha.2",  false),
+                ("F2.5", (SemanticVersion)"1.2.0-alpha.2",  false),
                 ("F2.6", (SemanticVersion)"1.2.1-alpha.3",  false),
                 ("F2.7", (SemanticVersion)"2.4.0-alpha.4",  false),
                 ("F2.8", (SemanticVersion)"2.2.0-alpha.5",  false),
@@ -766,8 +766,7 @@ namespace McSherry.SemanticVersioning.Ranges
             //
             // '1.0 - 2.5' --> '>=1.0.0 <2.6.0'
             //
-            var vr4a = new VersionRange("1.0.0 - 2.6.0");
-            var vr4b = new VersionRange("1.0.0 - 2.5");
+            var vr4 = new VersionRange("1.0.0 - 2.5");
 
             (string VID, SemanticVersion Version, bool Expected)[] vectors4 =
             {
@@ -785,20 +784,14 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("F4.6", (SemanticVersion)"1.3.5-alpha.4",  false),
             };
 
-            void Test4(string TID, VersionRange vr)
+            foreach (var vector in vectors4)
             {
-                foreach (var vector in vectors4)
-                {
-                    Assert.AreEqual(
-                        expected:   vector.Expected,
-                        actual:     vr.SatisfiedBy(vector.Version),
-                        message:    $"Failure: {TID}, vector {vector.VID}"
-                        );
-                }
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr4.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
             }
-
-            Test4("Patch present", vr4a);
-            Test4("Patch omitted", vr4b);
 
 
             // Tests for the case where the minor version is omitted on the
@@ -806,8 +799,7 @@ namespace McSherry.SemanticVersioning.Ranges
             //
             // '1.5.7 - 2' --> '>=1.5.7 <3.0.0'
             //
-            var vr5a = new VersionRange("1.5.7 - 3.0.0");
-            var vr5b = new VersionRange("1.5.7 - 2");
+            var vr5 = new VersionRange("1.5.7 - 2");
 
             (string VID, SemanticVersion Version, bool Expected)[] vectors5 =
             {
@@ -830,20 +822,14 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("F5.10", (SemanticVersion)"2.5.5-alpha.6", false),
             };
 
-            void Test5(string TID, VersionRange vr)
+            foreach (var vector in vectors5)
             {
-                foreach (var vector in vectors5)
-                {
-                    Assert.AreEqual(
-                        expected:   vector.Expected,
-                        actual:     vr.SatisfiedBy(vector.Version),
-                        message:    $"Failure: {TID}, vector {vector.VID}"
-                        );
-                }
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     vr5.SatisfiedBy(vector.Version),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
             }
-
-            Test5("Full string", vr5a);
-            Test5("Minor, Patch omitted", vr5b);
 
 
             // Tests for the case where the left-hand version has pre-release

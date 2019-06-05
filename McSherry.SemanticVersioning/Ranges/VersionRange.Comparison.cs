@@ -442,7 +442,53 @@ namespace McSherry.SemanticVersioning.Ranges
             private static Predicate<SemanticVersion> OpHyphenFactory(
                 SemanticVersion lhs, SemanticVersion rhs)
             {
-                throw new NotImplementedException();
+                // Anything omitted in the left-hand version resets to zero.
+                var lower = new SemanticVersion(
+                    major:       lhs.Major,
+                    minor:       lhs.Minor < 0 ? 0 : lhs.Minor,
+                    patch:       lhs.Patch < 0 ? 0 : lhs.Patch,
+                    identifiers: lhs.Identifiers,
+                    metadata:    lhs.Metadata
+                    );
+
+                // In the right-hand version, behaviour depends on which of
+                // the components is omitted.
+                //
+                // If the minor version is omitted, the major is incremented by
+                // one, the others are reset to zero, and it's a less-than
+                // comparison only.
+                if (rhs.Minor < 0)
+                {
+                    var upper = new SemanticVersion(
+                        major: rhs.Major + 1,
+                        minor: 0,
+                        patch: 0,
+                        identifiers: rhs.Identifiers,
+                        metadata: rhs.Metadata
+                        );
+
+                    return (sv) => (sv >= lower) && (sv < upper);
+                }
+                // If the patch version is omitted it's similar, but the minor
+                // version is incremented by one instead.
+                else if (rhs.Patch < 0)
+                {
+                    var upper = new SemanticVersion(
+                        major:       rhs.Major,
+                        minor:       rhs.Minor + 1,
+                        patch:       0,
+                        identifiers: rhs.Identifiers,
+                        metadata:    rhs.Metadata
+                        );
+
+                    return (sv) => (sv >= lower) && (sv < upper);
+                }
+                // And if nothing is omitted, then it's a simple inclusive
+                // range comparison against the right-hand version
+                else
+                {
+                    return (sv) => (sv >= lower) && (sv <= rhs);
+                }
             }
 
 
@@ -486,7 +532,11 @@ namespace McSherry.SemanticVersioning.Ranges
             {
                 if (ComparerFactories.TryGetValue(op, out var fact))
                 {
-                    return new BinaryComparator(fact(lhs, rhs));
+                    return new BinaryComparator(fact(lhs, rhs))
+                    {
+                        LeftVersion = lhs,
+                        RightVersion = rhs,
+                    };
                 }
                 else
                 {

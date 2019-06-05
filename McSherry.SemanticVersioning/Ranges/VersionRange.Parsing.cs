@@ -660,7 +660,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 // Where we'll store the lefthand version of a binary infix
                 // operator, if we encounter one.
-                SemanticVersion binLeft = null;
+                string leftVerStr = null;
 
                 // The default modes for the parser, and temporary modes which
                 // are reset after a version string is parsed.
@@ -980,14 +980,6 @@ namespace McSherry.SemanticVersioning.Ranges
                                 // And if there are characters accumulated...
                                 if (builder.Length > 0)
                                 {
-                                    // Attempt to parse whatever we have
-                                    var sv = CollectVersion();
-
-                                    // Null indicates a failure to parse. Error.
-                                    if (sv == null)
-                                    {
-                                        PushState(State.Terminate);
-                                    }
                                     // A lack of an operator means we have to do
                                     // two things.
                                     //
@@ -997,13 +989,14 @@ namespace McSherry.SemanticVersioning.Ranges
                                     // Second, as it tells us that we haven't
                                     // tried to parse a binary version, we see
                                     // if we're able to do so.
-                                    else if (@operator < 0)
+                                    if (@operator < 0)
                                     {
                                         // Implicitly use equals
                                         @operator = Operator.Equal;
 
                                         // Store for later
-                                        binLeft = sv;
+                                        leftVerStr = builder.ToString();
+                                        builder.Clear();
 
                                         // Determine whether we're dealing with
                                         // a binary infix operator.
@@ -1016,29 +1009,57 @@ namespace McSherry.SemanticVersioning.Ranges
                                     //
                                     // If we haven't stored a lefthand version,
                                     // we can't be parsing a binary comparator.
-                                    else if (binLeft == null)
+                                    else if (leftVerStr == null)
                                     {
-                                        // Collect the unary comparator and add
-                                        // it to our set of comparators.
-                                        CollectUnary(sv);
+                                        // And so we can try to parse what we've
+                                        // accumulated as normal.
+                                        var sv = CollectVersion(builder.ToString());
 
-                                        // And do it all again
-                                        PushState(State.Identify);
+                                        builder.Clear();
+
+                                        // Null means failure to parse
+                                        if (sv == null)
+                                        {
+                                            PushState(State.Terminate);
+                                        }
+                                        else
+                                        {
+                                            // Collect the unary comparator and add
+                                            // it to our set of comparators.
+                                            CollectUnary(sv);
+
+                                            // And do it all again
+                                            PushState(State.Identify);
+                                        }
                                     }
                                     // If we do have a lefthand version, we're
                                     // now parsing the righthand version.
                                     else
                                     {
+                                        // We want to preserve any temporary
+                                        // parse mode that was set. Collecting
+                                        // a version will ordinarily reset it.
+                                        var tempModeCopy = tempMode;
+
+                                        // Parse our left-hand side
+                                        var svl = CollectVersion(leftVerStr);
+
+                                        // And right, restoring the temporary
+                                        // parsing modes now cleared
+                                        tempMode = tempModeCopy;
+                                        var svr = CollectVersion(builder.ToString());
+
                                         // Add the comparator
                                         cmpSet.Add(BinaryComparator.Create(
                                             op:  @operator,
-                                            lhs: binLeft,
-                                            rhs: sv
+                                            lhs: svl,
+                                            rhs: svr
                                             ));
 
                                         // Reset our state
                                         @operator = (Operator)(-1);
-                                        binLeft = null;
+                                        leftVerStr = null;
+                                        builder.Clear();
 
                                         // And do it all again
                                         PushState(State.Identify);
@@ -1075,9 +1096,16 @@ namespace McSherry.SemanticVersioning.Ranges
                             {
                                 // Store the comparator and quit parsing
 
-                                CollectUnary(binLeft);
+                                var sv = CollectVersion(leftVerStr);
 
-                                PushState(State.Terminate, State.CollectSet);
+                                PushState(State.Terminate);
+
+                                if (sv != null)
+                                {
+                                    CollectUnary(sv);
+
+                                    PushState(State.CollectSet);
+                                }
                             }
                             // If we end up on whitespace, then we want to skip
                             // to a useful character
@@ -1103,6 +1131,13 @@ namespace McSherry.SemanticVersioning.Ranges
                                         // Update our stored operator
                                         @operator = op;
 
+                                        // Set the temporary parse modes as
+                                        // appropriate for the hyphen operator
+                                        tempMode =
+                                            ParseMode.OptionalPatch |
+                                            SemanticVersion.InternalModes.OptionalMinor |
+                                            SemanticVersion.InternalModes.IndicateOmits;
+
                                         // Move past the operator, collapse
                                         // whatever whitespace follows, and try
                                         // to parse the right-hand version.
@@ -1117,15 +1152,27 @@ namespace McSherry.SemanticVersioning.Ranges
                                     // If it isn't a binary operator...
                                     default:
                                     {
-                                        // Turn whatever we have into a
-                                        // comparator
-                                        CollectUnary(binLeft);
+                                        // Try to parse whatever we have
+                                        var sv = CollectVersion(leftVerStr);
 
-                                        // Clear state
-                                        binLeft = null;
+                                        // If it's not valid, terminate.
+                                        if (sv == null)
+                                        {
+                                            PushState(State.Terminate);
+                                        }
+                                        // If it is valid...
+                                        else
+                                        {
+                                            // Turn whatever we have into a
+                                            // comparator
+                                            CollectUnary(sv);
 
-                                        // And try to identify it
-                                        PushState(State.Identify);
+                                            // Clear state
+                                            leftVerStr = null;
+
+                                            // And try to identify it
+                                            PushState(State.Identify);
+                                        }
                                     }
                                     break;
                                 }
@@ -1135,11 +1182,21 @@ namespace McSherry.SemanticVersioning.Ranges
                             // and try to identify whatever the character is
                             else
                             {
-                                CollectUnary(binLeft);
+                                var sv = CollectVersion(leftVerStr);
 
-                                binLeft = null;
+                                if (sv == null)
+                                {
+                                    PushState(State.Terminate);
+                                }
+                                else
+                                {
 
-                                PushState(State.Identify);
+                                    CollectUnary(sv);
+
+                                    leftVerStr = null;
+
+                                    PushState(State.Identify);
+                                }
                             }
 
                             state = PopState();
@@ -1190,10 +1247,10 @@ namespace McSherry.SemanticVersioning.Ranges
                 return result;
 
 
-                SemanticVersion CollectVersion()
+                SemanticVersion CollectVersion(string verString)
                 {
                     var verParse = SemanticVersion.Parser.Parse(
-                        input:  builder.ToString(),
+                        input:  verString,
                         mode:   parseMode | tempMode
                         );
 
@@ -1201,8 +1258,6 @@ namespace McSherry.SemanticVersioning.Ranges
 
                     if (verParse.Type == SemanticVersion.ParseResultType.Success)
                     {
-                        builder.Clear();
-
                         return verParse.Version;
                     }
                     else

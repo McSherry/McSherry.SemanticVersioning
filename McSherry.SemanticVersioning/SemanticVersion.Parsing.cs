@@ -168,6 +168,11 @@ namespace McSherry.SemanticVersioning
         /// </summary>
         internal static class InternalModes
         {
+            // TODO:    Can using negative values as sentinels when parsing
+            //          with [IndicateOmits] be replaced by added properties
+            //          exposed via [ParseResult], and can [ParseResult] be
+            //          easily used by consumers?
+
             /// <summary>
             /// <para>
             /// A mask for the bits the internal mode bits occupy.
