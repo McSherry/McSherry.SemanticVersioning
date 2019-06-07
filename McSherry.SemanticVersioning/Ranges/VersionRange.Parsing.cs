@@ -741,8 +741,7 @@ namespace McSherry.SemanticVersioning.Ranges
                                 {
                                     tempMode =
                                         ParseMode.OptionalPatch |
-                                        SemanticVersion.InternalModes.OptionalMinor |
-                                        SemanticVersion.InternalModes.IndicateOmits;
+                                        SemanticVersion.InternalModes.OptionalMinor;
 
                                 } goto case EqualSign;
 
@@ -1135,8 +1134,7 @@ namespace McSherry.SemanticVersioning.Ranges
                                         // appropriate for the hyphen operator
                                         tempMode =
                                             ParseMode.OptionalPatch |
-                                            SemanticVersion.InternalModes.OptionalMinor |
-                                            SemanticVersion.InternalModes.IndicateOmits;
+                                            SemanticVersion.InternalModes.OptionalMinor;
 
                                         // Move past the operator, collapse
                                         // whatever whitespace follows, and try

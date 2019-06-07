@@ -23,6 +23,8 @@ using System.Linq;
 
 namespace McSherry.SemanticVersioning.Ranges
 {
+    using ComponentState = SemanticVersion.ComponentState;
+
     // Documentation and attributes are in 'Ranges\VersionRange.cs'
     public sealed partial class VersionRange
     {
@@ -235,14 +237,13 @@ namespace McSherry.SemanticVersioning.Ranges
             {
                 SemanticVersion lower, upper;
 
-                // When parsing tilde-operator comparators, we use an internal
-                // mode that allows the minor version to be omitted and sets
-                // any omitted components negative. This allows us to determine
-                // how we should behave.
+                // The behaviour of tilde-operator comparators varies depending
+                // on how the provided semantic version was written, so we must
+                // rely on parse metadata to produce the correct bounds.
                 //
                 // If no minor version is specified, the tilde operator allows
                 // minor- and patch-level changes.
-                if (comparator.Minor < 0)
+                if (comparator.ParseInfo.MinorState == ComponentState.Omitted)
                 {
                     lower = new SemanticVersion(
                         major:       comparator.Major,
@@ -266,7 +267,9 @@ namespace McSherry.SemanticVersioning.Ranges
                 {
                     // We want to maintain a patch version if we have it, or
                     // reset it to zero if we don't.
-                    var patch = comparator.Patch < 0 ? 0 : comparator.Patch;
+                    var patch = comparator.ParseInfo.PatchState == ComponentState.Omitted
+                        ? 0 
+                        : comparator.Patch;
 
                     lower = new SemanticVersion(
                         major:       comparator.Major,
@@ -445,8 +448,8 @@ namespace McSherry.SemanticVersioning.Ranges
                 // Anything omitted in the left-hand version resets to zero.
                 var lower = new SemanticVersion(
                     major:       lhs.Major,
-                    minor:       lhs.Minor < 0 ? 0 : lhs.Minor,
-                    patch:       lhs.Patch < 0 ? 0 : lhs.Patch,
+                    minor:       lhs.ParseInfo.MinorState == ComponentState.Omitted ? 0 : lhs.Minor,
+                    patch:       lhs.ParseInfo.PatchState == ComponentState.Omitted ? 0 : lhs.Patch,
                     identifiers: lhs.Identifiers,
                     metadata:    lhs.Metadata
                     );
@@ -457,7 +460,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 // If the minor version is omitted, the major is incremented by
                 // one, the others are reset to zero, and it's a less-than
                 // comparison only.
-                if (rhs.Minor < 0)
+                if (rhs.ParseInfo.MinorState == ComponentState.Omitted)
                 {
                     var upper = new SemanticVersion(
                         major: rhs.Major + 1,
@@ -471,7 +474,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 }
                 // If the patch version is omitted it's similar, but the minor
                 // version is incremented by one instead.
-                else if (rhs.Patch < 0)
+                else if (rhs.ParseInfo.PatchState == ComponentState.Omitted)
                 {
                     var upper = new SemanticVersion(
                         major:       rhs.Major,

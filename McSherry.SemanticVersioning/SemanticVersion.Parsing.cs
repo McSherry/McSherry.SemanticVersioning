@@ -162,17 +162,45 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Represents the different ways a major-minor-patch trio component
+        /// can be specified in a version string.
+        /// </para>
+        /// </summary>
+        internal enum ComponentState
+        {
+            /// <summary>
+            /// <para>
+            /// The component was present in the version string.
+            /// </para>
+            /// </summary>
+            Present,
+
+            /// <summary>
+            /// <para>
+            /// The component was omitted and the omission was acceptable due
+            /// to the provided <see cref="ParseMode"/>.
+            /// </para>
+            /// </summary>
+            Omitted,
+
+            /// <summary>
+            /// <para>
+            /// A wildcard was present in the place of the component and this
+            /// substitution was acceptable due to the provided
+            /// <see cref="ParseMode"/>.
+            /// </para>
+            /// </summary>
+            Wildcard,
+        }
+
+        /// <summary>
+        /// <para>
         /// Represents internal <see cref="ParseMode"/> values which don't make
         /// sense to expose to users.
         /// </para>
         /// </summary>
         internal static class InternalModes
         {
-            // TODO:    Can using negative values as sentinels when parsing
-            //          with [IndicateOmits] be replaced by added properties
-            //          exposed via [ParseResult], and can [ParseResult] be
-            //          easily used by consumers?
-
             /// <summary>
             /// <para>
             /// A mask for the bits the internal mode bits occupy.
@@ -196,14 +224,6 @@ namespace McSherry.SemanticVersioning
             /// </para>
             /// </summary>
             public const ParseMode OptionalMinor   = (ParseMode)(0b0001 << 28);
-            /// <summary>
-            /// <para>
-            /// The parser will set any omitted components (permitted by
-            /// <see cref="ParseMode.OptionalPatch"/> or <see cref="OptionalMinor"/>)
-            /// to a negative value.
-            /// </para>
-            /// </summary>
-            public const ParseMode IndicateOmits   = (ParseMode)(0b0010 << 28);
 
 
             /// <summary>
@@ -233,6 +253,19 @@ namespace McSherry.SemanticVersioning
                 // modes will not be used.
                 return (target ^ Enabled) < 0 && (target & mode) == mode;
             }
+            /// <summary>
+            /// <para>
+            /// Determines whether any internal parse mode is present.
+            /// </para>
+            /// </summary>
+            /// <param name="mode">
+            /// The <see cref="ParseMode"/> to check for internal modes.
+            /// </param>
+            /// <returns></returns>
+            public static bool HasAny(ParseMode mode)
+            {
+                return (mode ^ Enabled) < 0 && (Mask & mode) > 0;
+            }
         }
 
         /// <summary>
@@ -241,44 +274,8 @@ namespace McSherry.SemanticVersioning
         /// parser.
         /// </para>
         /// </summary>
-        internal struct ParseResult
+        internal class ParseResult
         {
-            // This will be false if we're default-constructed.
-            private readonly bool _successfulCreation;
-            // Backing fields for properties
-            private readonly ParseResultType _type;
-            private readonly SemanticVersion _version;
-
-            /// <summary>
-            /// <para>
-            /// Checks the <see cref="_successfulCreation"/> field,
-            /// and throws if it is false.
-            /// </para>
-            /// </summary>
-            /// <typeparam name="T">
-            /// The type of the value to be returned on success.
-            /// </typeparam>
-            /// <param name="passthrough">
-            /// A value to be returned from the function if the
-            /// <see cref="ParseResult"/> was successfully constructed.
-            /// </param>
-            /// <returns>
-            /// If <see cref="_successfulCreation"/> is true, returns
-            /// <paramref name="passthrough"/>.
-            /// </returns>
-            /// <exception cref="InvalidOperationException">
-            /// Thrown when <see cref="_successfulCreation"/> is false.
-            /// </exception>
-            private T VerifyResult<T>(T passthrough)
-            {
-                if (_successfulCreation)
-                    return passthrough;
-
-                throw new InvalidOperationException(
-                    "Attempt to use a [SemanticVersion.ParseResult] that " +
-                    "was default-constructed.");
-            }
-
             /// <summary>
             /// <para>
             /// Creates a new successful <see cref="ParseResult"/> with
@@ -301,9 +298,8 @@ namespace McSherry.SemanticVersioning
                         );
                 }
 
-                _successfulCreation = true;
-                _type = ParseResultType.Success;
-                _version = version;
+                this.Type = ParseResultType.Success;
+                this.Version = version;
             }
             /// <summary>
             /// <para>
@@ -336,9 +332,8 @@ namespace McSherry.SemanticVersioning
                         paramName:  nameof(error));
                 }
 
-                _type = error;
-                _version = null;
-                _successfulCreation = true;
+                this.Type = error;
+                this.Version = null;
             }
 
             /// <summary>
@@ -346,14 +341,20 @@ namespace McSherry.SemanticVersioning
             /// The result code describing the parse result.
             /// </para>
             /// </summary>
-            public ParseResultType Type => VerifyResult(_type);
+            public ParseResultType Type
+            {
+                get;
+            }
             /// <summary>
             /// <para>
             /// The produced <see cref="SemanticVersion"/>, if
             /// the parsing was successful.
             /// </para>
             /// </summary>
-            public SemanticVersion Version => VerifyResult(_version);
+            public SemanticVersion Version
+            {
+                get;
+            }
 
             /// <summary>
             /// <para>
@@ -483,6 +484,66 @@ namespace McSherry.SemanticVersioning
                             $"Unrecognised result code {(int)Type:X8} provided.");
                     };
                 }
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Provides information about the semantic version that was parsed.
+        /// </para>
+        /// </summary>
+        [Serializable]
+        internal class ParseMetadata
+        {
+            public static ParseMetadata Default { get; } = new ParseMetadata(
+                minor: ComponentState.Present,
+                patch: ComponentState.Present
+                );
+
+            public ParseMetadata(ComponentState minor, ComponentState patch)
+            {
+                if (minor == ComponentState.Omitted && patch != ComponentState.Omitted)
+                    throw new ArgumentException(
+                        "A patch component cannot be specified as present if " +
+                        "a minor component is not also present."
+                        );
+
+                this.MinorState = minor;
+                this.PatchState = patch;
+            }
+
+            /// <summary>
+            /// <para>
+            /// The state of the <see cref="SemanticVersion.Minor"/> component
+            /// in the parsed version string.
+            /// </para>
+            /// </summary>
+            public ComponentState MinorState
+            {
+                get;
+            }
+            /// <summary>
+            /// <para>
+            /// The state of the <see cref="SemanticVersion.Patch"/> component
+            /// in the parsed version string.
+            /// </para>
+            /// </summary>
+            public ComponentState PatchState
+            {
+                get;
+            }
+
+            /// <summary>
+            /// <para>
+            /// Determines whether the instance contains only default values.
+            /// </para>
+            /// </summary>
+            /// <returns></returns>
+            public bool IsDefault()
+            {
+                return this.MinorState == Default.MinorState &&
+                       this.PatchState == Default.PatchState
+                       ;
             }
         }
 
@@ -631,15 +692,17 @@ namespace McSherry.SemanticVersioning
                 ICollection<string> identifiers = new List<string>(),
                                     metadata = new List<string>();
 
+                // Values to populate a [ParseMetadata] instance
+                var minorState = ComponentState.Present;
+                var patchState = ComponentState.Present;
+
+
                 // Whether the patch version component can be omitted
                 var optionalPatch = mode.HasFlag(ParseMode.OptionalPatch);
                 // Whether the minor (and, consequently, the patch) version
                 // component can be omitted
                 var optionalMinor = optionalPatch &&
                                     InternalModes.Has(mode, InternalModes.OptionalMinor);
-                // Whether the parser should indicate that components were
-                // omitted by setting their values negative.
-                var indicateOmits = InternalModes.Has(mode, InternalModes.IndicateOmits);
 
                 // Get the party started
                 return Parse();
@@ -672,31 +735,19 @@ namespace McSherry.SemanticVersioning
                     // If they indicated success...
                     if (res == ParseResultType.Success)
                     {
-                        // If we've been configured to indicate where components
-                        // are omitted, we have to use a different constructor
-                        // that won't throw when provided with negative values.
-                        if (indicateOmits)
-                        {
-                            return new ParseResult(new SemanticVersion(
-                                ackNoVerif:  true,
-                                major:       major,
-                                minor:       minor,
-                                patch:       patch,
-                                identifiers: identifiers,
-                                metadata:    metadata
-                                ));
-                        }
-                        // If not, though, we assemble as normal
-                        else
-                        {
-                            return new ParseResult(new SemanticVersion(
-                                major:       major,
-                                minor:       minor,
-                                patch:       patch,
-                                identifiers: identifiers,
-                                metadata:    metadata
-                                ));
-                        }
+                        // Return the version we parsed and metadata about its
+                        // being parsed
+                        return new ParseResult(new SemanticVersion(
+                            major:       major,
+                            minor:       minor,
+                            patch:       patch,
+                            identifiers: identifiers,
+                            metadata:    metadata,
+                            parseInfo:   new ParseMetadata(
+                                minor:      minorState,
+                                patch:      patchState
+                                )
+                            ));
                     }
                     // If they didn't indicate success, relay their error up.
                     else
@@ -740,14 +791,13 @@ namespace McSherry.SemanticVersioning
                             }
                             else
                             {
-                                // If we have, we want to reset the values of
-                                // the other components unless we're configured
-                                // to indicate their omission.
-                                if (!indicateOmits)
-                                {
-                                    minor = 0;
-                                    patch = 0;
-                                }
+                                // If the minor version is omitted, reset it and
+                                // the patch version to zero and indicate that
+                                // they were omitted.
+                                minor = 0;
+                                patch = 0;
+                                minorState = ComponentState.Omitted;
+                                patchState = ComponentState.Omitted;
 
                                 // Then our next action depends on which of the
                                 // characters we encountered.
@@ -827,13 +877,10 @@ namespace McSherry.SemanticVersioning
                             }
                             else
                             {
-                                // If the patch version is omitted, we want to
-                                // reset it to zero unless we've been configured
-                                // to indicate when a component is omitted.
-                                if (!indicateOmits)
-                                {
-                                    patch = 0;
-                                }
+                                // If the patch version is omitted, reset it to
+                                // zero and store its state.
+                                patch = 0;
+                                patchState = ComponentState.Omitted;
 
                                 // As with the major version, what we do next
                                 // depends on which of the three characters we
@@ -1123,6 +1170,7 @@ namespace McSherry.SemanticVersioning
                 //
                 // However, [MemoizationAgent] won't always have a value, so
                 // we have a private object to lock on when this is the case.
+
                 var lockObj = MemoizationAgent ?? _lockbox;
                 lock (lockObj)
                 {
@@ -1133,8 +1181,7 @@ namespace McSherry.SemanticVersioning
                     // If they haven't configured an agent, we'll go straight to
                     // parsing. We'll also do this if the input isn't in the
                     // cache.
-                    if (MemoizationAgent?.TryGetValue(input, out cacheResult) 
-                            != true)
+                    if (MemoizationAgent?.TryGetValue(input, out cacheResult) != true)
                     {
                         // There is no cache, or the item isn't in the cache.
                         // This means we have to try and parse the input.
@@ -1142,13 +1189,19 @@ namespace McSherry.SemanticVersioning
 
                         // If parsing was successful, and if there is a cache
                         // configured, add the result to the cache.
-                        if (result.Type == ParseResultType.Success)
+                        //
+                        // We don't want to store if any internal modes are
+                        // passed, as these might leak out to an external caller
+                        // who won't be expecting them or able to handle them.
+                        if (result.Type == ParseResultType.Success &&
+                            !InternalModes.HasAny(mode))
                             MemoizationAgent?.Add(input, result.Version);
                     }
                     // The item was in our cache. Our result is what we've
                     // retrieved from our cache.
                     else
                     {
+                        // We know that 
                         result = new ParseResult(cacheResult);
                     }
                 }

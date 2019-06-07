@@ -28,6 +28,8 @@ using static System.Linq.Enumerable;
 
 namespace McSherry.SemanticVersioning
 {
+    using CompSt = ComponentState;
+
     /// <summary>
     /// <para>
     /// Tests the internal <see cref="SemanticVersion"/> version string
@@ -297,36 +299,6 @@ namespace McSherry.SemanticVersioning
                 .AssertThrows<InvalidOperationException>(
                     "Call to [GetErrorMessage] with status [Success] did " +
                     "not throw.");
-        }
-        /// <summary>
-        /// <para>
-        /// Tests that a default-constructed <see cref="ParseResult"/> behaves
-        /// as expected.
-        /// </para>
-        /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void ParseResult_DefaultConstructed()
-        {
-            // Default-constructed parse results don't contain a valid version or
-            // an error code, so the only thing they can reasonably do is throw
-            // an exception when you try to use them.
-            var pr = new ParseResult();
-
-            new Action(() => { var x = pr.Type == ParseResultType.Success; })
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (0).");
-
-            new Action(() => { var x = pr.Version == null; })
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (1).");
-
-            new Action(() => pr.GetErrorMessage())
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (2).");
-
-            new Action(() => pr.CreateException())
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (3).");
         }
 
         /// <summary>
@@ -712,27 +684,31 @@ namespace McSherry.SemanticVersioning
                     );
             }
         }
+
         /// <summary>
         /// <para>
-        /// Tests that parsing with the <see cref="InternalModes.IndicateOmits"/>
-        /// flag results in omitted components being indicated.
+        /// Tests that component states are correctly indicated in parse
+        /// metadata provided with a semantic version.
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
-        public void Parse_Valid_IndicateOmitsFlag()
+        public void Parse_Valid_ComponentStates()
         {
-            const ParseMode patch = ParseMode.OptionalPatch | InternalModes.IndicateOmits;
+            const ParseMode patch = ParseMode.OptionalPatch;
             const ParseMode both  = patch | InternalModes.OptionalMinor;
 
+            const CompSt present = CompSt.Present;
+            const CompSt omitted = CompSt.Omitted;
+
             // Tests for valid input
-            (string VID, string Input, ParseMode Mode, (int Minor, int Patch) Expected)[] vectors1 =
+            (string VID, string Input, ParseMode Mode, (CompSt Minor, CompSt Patch) Expected)[] vectors1 =
             {
-                ("V1.1", "1.0.0",   patch,              (0, 0)),
-                ("V1.2", "2.0",     patch,              (0, -1)),
-                ("V1.3", "3.0.0",   both,               (0, 0)),
-                ("V1.4", "4.0",     both,               (0, -1)),
-                ("V1.5", "5",       both,               (-1, -1)),
-                ("V1.6", "5.0",     ParseMode.Lenient,  (0, 0)),
+                ("V1.1", "1.0.0",   patch,              (present, present)),
+                ("V1.2", "2.0",     patch,              (present, omitted)),
+                ("V1.3", "3.0.0",   both,               (present, present)),
+                ("V1.4", "4.0",     both,               (present, omitted)),
+                ("V1.5", "5",       both,               (omitted, omitted)),
+                ("V1.6", "5.0",     ParseMode.Lenient,  (present, omitted)),
             };
 
             foreach (var vector in vectors1)
@@ -741,7 +717,7 @@ namespace McSherry.SemanticVersioning
 
                 Assert.AreEqual(
                     expected:   vector.Expected,
-                    actual:     (output.Minor, output.Patch),
+                    actual:     (output.ParseInfo.MinorState, output.ParseInfo.PatchState),
                     message:    $"Failure: vector {vector.VID}"
                     );
             }
