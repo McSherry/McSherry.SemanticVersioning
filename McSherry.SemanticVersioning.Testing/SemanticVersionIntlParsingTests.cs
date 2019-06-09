@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,8 @@ using static System.Linq.Enumerable;
 
 namespace McSherry.SemanticVersioning
 {
+    using CompSt = ComponentState;
+
     /// <summary>
     /// <para>
     /// Tests the internal <see cref="SemanticVersion"/> version string
@@ -297,36 +299,6 @@ namespace McSherry.SemanticVersioning
                 .AssertThrows<InvalidOperationException>(
                     "Call to [GetErrorMessage] with status [Success] did " +
                     "not throw.");
-        }
-        /// <summary>
-        /// <para>
-        /// Tests that a default-constructed <see cref="ParseResult"/> behaves
-        /// as expected.
-        /// </para>
-        /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void ParseResult_DefaultConstructed()
-        {
-            // Default-constructed parse results don't contain a valid version or
-            // an error code, so the only thing they can reasonably do is throw
-            // an exception when you try to use them.
-            var pr = new ParseResult();
-
-            new Action(() => { var x = pr.Type == ParseResultType.Success; })
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (0).");
-
-            new Action(() => { var x = pr.Version == null; })
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (1).");
-
-            new Action(() => pr.GetErrorMessage())
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (2).");
-
-            new Action(() => pr.CreateException())
-                .AssertThrows<InvalidOperationException>(
-                    "Did not throw on use of default-constructed result (3).");
         }
 
         /// <summary>
@@ -665,6 +637,160 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Tests that parsing with the <see cref="InternalModes.OptionalMinor"/>
+        /// flag works as intended.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_OptionalMinorFlag()
+        {
+            // Tests for valid inputs
+            (string VID, string Input, SemanticVersion Expected)[] vectors1 =
+            {
+                ("V1.1", "1",       (SemanticVersion)"1.0.0"),
+                ("V1.2", "2",       (SemanticVersion)"2.0.0"),
+                ("V1.3", "3.5",     (SemanticVersion)"3.5.0"),
+                ("V1.4", "4.7.2",   (SemanticVersion)"4.7.2"),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                const ParseMode mode = InternalModes.OptionalMinor |
+                                       ParseMode.OptionalPatch;
+
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     SemanticVersion.Parse(vector.Input, mode),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for invalid inputs that should throw [ArgumentException]
+            (string VID, string Input, ParseMode Mode)[] vectors2 =
+            {
+                ("V2.1", "1", ParseMode.Strict),
+                ("V2.2", "2", ParseMode.Lenient),
+                ("V2.3", "3", ParseMode.OptionalPatch),
+                ("V2.4", "4", InternalModes.OptionalMinor),
+                ("V2.5", "4..0", InternalModes.OptionalMinor | ParseMode.OptionalPatch),
+            };
+
+            foreach (var vector in vectors2)
+            {
+                Assert.ThrowsException<ArgumentException>(
+                    action:     () => SemanticVersion.Parse(vector.Input, vector.Mode),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests that component states are correctly indicated in parse
+        /// metadata provided with a semantic version.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates()
+        {
+            const ParseMode patch = ParseMode.OptionalPatch;
+            const ParseMode both  = patch | InternalModes.OptionalMinor;
+            const ParseMode wcard = InternalModes.AllowWildcard;
+
+            const CompSt present = CompSt.Present;
+            const CompSt omitted = CompSt.Omitted;
+            const CompSt wildcard = CompSt.Wildcard;
+
+            // Tests for valid input
+            (
+                string VID, 
+                string Input, 
+                ParseMode Mode, 
+                (CompSt Major, CompSt Minor, CompSt Patch) Expected
+            )[] vectors1 =
+            {
+                ("V1.1",  "1.0.0",  patch,              (present, present, present)),
+                ("V1.2",  "2.0",    patch,              (present, present, omitted)),
+                ("V1.3",  "3.0.0",  both,               (present, present, present)),
+                ("V1.4",  "4.0",    both,               (present, present, omitted)),
+                ("V1.5",  "5",      both,               (present, omitted, omitted)),
+                ("V1.6",  "5.0",    ParseMode.Lenient,  (present, present, omitted)),
+                ("V1.7",  "6.0.x",  wcard,              (present, present, wildcard)),
+                ("V1.8",  "6.0.X",  wcard,              (present, present, wildcard)),
+                ("V1.9",  "6.0.*",  wcard,              (present, present, wildcard)),
+                ("V1.10", "6.x",    wcard,              (present, wildcard, wildcard)),
+                ("V1.11", "6.X",    wcard,              (present, wildcard, wildcard)),
+                ("V1.12", "6.*",    wcard,              (present, wildcard, wildcard)),
+                ("V1.13", "x",      wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.14", "X",      wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.15", "*",      wcard,              (wildcard, wildcard, wildcard)),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                // Appease the unassigned variable checker
+                ParseMetadata info = null;
+
+                try
+                {
+                    info = SemanticVersion.Parse(vector.Input, vector.Mode).ParseInfo;
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail(
+                        message:    $"Parse failure: vector {vector.VID}",
+                        parameters: ex
+                        );
+                }
+
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     (info.MajorState, info.MinorState, info.PatchState),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests for invalid input which should throw [ArgumentException]
+            Assert.ThrowsException<ArgumentException>(
+                action:     () => SemanticVersion.Parse("5", ParseMode.Lenient),
+                message:    $"Failure: vector V2"
+                );
+
+            // Tests for invalid input which should throw [FormatException]
+            (string VID, string Input, ParseMode mode)[] vectors3 =
+            {
+                ("V3.1",    "1.2.x",    ParseMode.Lenient),
+                ("V3.2",    "1.x",      ParseMode.Lenient),
+                ("V3.3",    "x",        ParseMode.Lenient),
+                ("V3.4",    "1.x.0",    wcard),
+                ("V3.5",    "x.2",      wcard),
+                ("V3.6",    "x.2.3",    wcard),
+
+                // Wildcards with pre-release identifiers make no logical sense,
+                // and don't appear to work in 'node-semver' anyway
+                ("V3.7",    "1.0.x-alpha",  wcard),
+                ("V3.8",    "1.x-beta",     wcard),
+                ("V3.9",    "x-rc",         wcard),
+
+                // And although not part of the 'node-semver' specification, it
+                // makes the most sense not to allow multiple wildcards.
+                ("V3.10",   "1.x.x",        wcard),
+                ("V3.11",   "x.x.x",        wcard),
+            };
+
+            foreach (var vector in vectors3)
+            {
+                Assert.ThrowsException<FormatException>(
+                    action:  () => SemanticVersion.Parse(vector.Input, vector.mode),
+                    message: $"Failure: vector {vector.VID}"
+                    );
+            }
+        }
+
+        /// <summary>
+        /// <para>
         /// Tests that parsing <see cref="SemanticVersion"/> strings works
         /// as expected when the parser is given an invalid string.
         /// </para>
@@ -812,6 +938,21 @@ namespace McSherry.SemanticVersioning
                     $"Did not produce expected status ({i})."
                     );
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests that the regular values of <see cref="ParseMode"/> do not
+        /// overlap with the <see cref="InternalModes"/> values.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void ParseMode_NoOverlap()
+        {
+            Assert.IsFalse(
+                Enum.GetValues(typeof(ParseMode))
+                    .Cast<ParseMode>()
+                    .Any(i => (i & InternalModes.Mask) > 0));
         }
     }
 }

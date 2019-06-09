@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,7 @@ namespace McSherry.SemanticVersioning.Ranges
         /// <summary>
         /// <para>
         /// Tests the parser's identification of basic constructs, such as
-        /// the basic operators and semantic version strings.
+        /// the unary operators and semantic version strings.
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
@@ -51,8 +51,8 @@ namespace McSherry.SemanticVersioning.Ranges
         {
             // Convenience function to extract the first comparator token
             // from the set we get returned by the parse method.
-            var get = new Func<ParseResult, ComparatorToken>(
-                x => x.ComparatorSets.First().First()
+            var get = new Func<ParseResult, UnaryComparator>(
+                x => x.ComparatorSets.First().Cast<UnaryComparator>().First()
                 );
 
             // Each operator is tested twice: once with a prefixing 'v',
@@ -117,6 +117,7 @@ namespace McSherry.SemanticVersioning.Ranges
             var cmpSet = Parser.Parse(">1.0.0 <=2.0.0 3.1.5")
                                .ComparatorSets
                                .First()
+                               .Cast<UnaryComparator>()
                                .ToArray();
 
             Assert.AreEqual(Operator.GreaterThan, cmpSet[0].Operator,
@@ -145,7 +146,8 @@ namespace McSherry.SemanticVersioning.Ranges
         {
             var cmpSetSet = Parser.Parse("=1.0.0 || >2.0.0 || <3.0.0")
                                   .ComparatorSets
-                                  .Select(set => set.ToArray())
+                                  .Select(set => set.Cast<UnaryComparator>()
+                                                    .ToArray())
                                   .ToArray();
 
             Assert.AreEqual(1, cmpSetSet[0].Length,
@@ -342,7 +344,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
             // Makes sure that attempting to create an exception/retrieve an
             // error message with a success-state [ParseResult] fails.
-            var sucPr = new ParseResult(new ComparatorToken[0][]);
+            var sucPr = new ParseResult(new IComparator[0][]);
             new Action(() => sucPr.GetErrorMessage())
                 .AssertThrows<InvalidOperationException>(
                     "Did not throw on invalid [GetErrorMessage] call.");

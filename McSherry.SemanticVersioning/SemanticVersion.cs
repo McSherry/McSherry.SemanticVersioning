@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-18 Liam McSherry
+﻿// Copyright (c) 2015-19 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -266,6 +266,25 @@ namespace McSherry.SemanticVersioning
 
         private readonly int _major, _minor, _patch;
         private readonly List<string> _prIds, _metadata;
+        private readonly ParseMetadata _parseInfo;
+
+
+        /// <summary>
+        /// <para>
+        /// Provides metadata about how this <see cref="SemanticVersion"/> was
+        /// parsed or, if this instance wasn't parsed, null.
+        /// </para>
+        /// </summary>
+        internal ParseMetadata ParseInfo => _parseInfo;
+
+        internal SemanticVersion(
+            int major, int minor, int patch,
+            IEnumerable<string> identifiers, IEnumerable<string> metadata,
+            ParseMetadata parseInfo)
+            : this(major, minor, patch, identifiers, metadata)
+        {
+            _parseInfo = parseInfo;
+        }
 
         /// <summary>
         /// <para>

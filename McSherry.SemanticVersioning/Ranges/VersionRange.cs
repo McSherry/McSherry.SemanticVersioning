@@ -56,15 +56,27 @@ namespace McSherry.SemanticVersioning.Ranges
     /// <para>
     /// Version ranges use the <c>node-semver</c> syntax for ranges.
     /// Specifically, ranges are based on the specification as it was
-    /// written for the v5.0.0 release of <c>node-semver</c>.
+    /// written for the v6.0.0 release of <c>node-semver</c>.
     /// </para>
     /// <para>
-    /// Presently, only the basic range syntax is supported.
+    /// The full basic and advanced range syntaxes are supported, but
+    /// there are minor differences in how 'X-ranges' are handled. Unlike
+    /// with <c>node-semver</c>, this class will reject ranges where the
+    /// wildcard (<c>x</c>, <c>X</c>, or <c>*</c> character) is followed
+    /// by another version component or by pre-release identifiers or
+    /// metadata. As <c>node-semver</c> appears to ignore anything that
+    /// follows a wildcard, this has no real impact on functionality.
+    /// </para>
+    /// <para>
+    /// In addition, for backwards compatibility, an empty version range
+    /// will be considered invalid. <c>node-semver</c> treats this as
+    /// equivalent to <c>*</c>.
     /// </para>
     /// </remarks>
     [Serializable]
     [CLSCompliant(true)]
     public sealed partial class VersionRange
+        : VersionRange.IComparator
     {
         // Used as a passthrough method so that the constructor taking a string
         // argument can use constructor chaining to avoid duplicate code.
@@ -81,17 +93,9 @@ namespace McSherry.SemanticVersioning.Ranges
             if (parseResult.Type != ParseResultType.Success)
                 throw parseResult.CreateException();
 
-            // If it was successful, then we want to transform the parser
-            // output into something that we can return to our caller.
-            //
-            // The parser returns [ComparatorToken]s, which represent
-            // individual comparators in a comparator set, but have no
-            // actual implementation. We need to hand these tokens off
-            // to our [Comparator] class, which will provide us with an
-            // [IComparator] instance we can use.
-            return parseResult.ComparatorSets.Select(
-                tokenSet => tokenSet.Select(token => Comparator.Create(token))
-                );
+            // If it was successful, return the comparator sets that the parser
+            // produced from the range string.
+            return parseResult.ComparatorSets;
         }
 
 
@@ -240,47 +244,13 @@ namespace McSherry.SemanticVersioning.Ranges
             }
 
 
-            bool result;
-
-            // If it isn't in the cache, run it against the comparators to
-            // check whether or not it's a match.
-            //
-            // If the version to check against the range has pre-release
-            // identifiers, special comparison rules have to be applied in
-            // order to follow 'node-semver'.
-            //
-            // Where this is the case, a comparator set can only be satisfied
-            // by the comparand version if:
-            //
-            //  a) the comparand shares a major-minor-patch trio with one or
-            //     more of the comparator versions, and
-            //
-            //  b) one of those comparator versions has pre-release identifiers
-            //
-            // If the rules mean it isn't possible for any comparator set to be
-            // satisfied, then there's no sense in checking against them.
-            if (semver.Identifiers.Any() && !_comparators.Any(
-                                                set => set.Any(
-                                                    cmp => cmp.ComparableTo(semver)
-                                                    )))
-            {
-                result = false;
-            }
-            // If special rules do not apply, or if the comparand version can
-            // be compared, check it against the comparators as normal.
-            else
-            {
-                // The [_comparators] variable contains all of the comparator
-                // sets that were parsed from the string, and only one of the
-                // comparator sets has to be satisfied for the range to be
-                // satisfied.
-                result = _comparators.Any(
-                    // Each comparator set has a number of comparators in it,
-                    // and for a comparator set to be satisfied all of the
-                    // comparators in that set must be satisfied.
-                    set => set.All(cmp => cmp.SatisfiedBy(semver))
-                    );
-            }
+            bool result = _comparators
+                // Sets which can be satisfied by the specified version (needed
+                // for correct handling of pre-release versions)
+                .Where(set => set.Any(cmp => cmp.ComparableTo(semver)))
+                // In at least one of the comparator sets, all comparators are
+                // satisfied by the specified version
+                .Any(set => set.All(cmp => cmp.SatisfiedBy(semver)));
 
             // If we have a cache, add the result of the comparison to it.
             lock (this.SynchronizationObject)
@@ -328,6 +298,13 @@ namespace McSherry.SemanticVersioning.Ranges
         public bool SatisfiedBy(IEnumerable<SemanticVersion> semvers)
         {
             return semvers.All(this.SatisfiedBy);
+        }
+
+        bool IComparator.ComparableTo(SemanticVersion comparand)
+        {
+            return _comparators.Any(
+                set => set.Any(cmp => cmp.ComparableTo(comparand))
+                );
         }
     }
 }

@@ -129,6 +129,22 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Determines whether a given character is a wildcard character that
+        /// can be used in a <see cref="Ranges.VersionRange"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="c">
+        /// The character to check.
+        /// </param>
+        /// <returns>
+        /// True if <paramref name="c"/> is a version range wildcard character,
+        /// false if otherwise.
+        /// </returns>
+        public static bool IsRangeWildcard(this char c)
+            => c == 'x' || c == 'X' || c == '*';
+
+        /// <summary>
+        /// <para>
         /// Returns a read-only <see cref="IReadOnlyDictionary{TKey, TValue}"/>
         /// wrapper of the specified <see cref="IDictionary{TKey, TValue}"/>.
         /// </para>
@@ -174,9 +190,18 @@ namespace McSherry.SemanticVersioning
             this SemanticVersion comparator, SemanticVersion comparand
             )
         {
-            var noIdentifiers = !comparand.Identifiers.Any() &&
-                                !comparator.Identifiers.Any();
+            // Comparison rules for 'node-semver' differ from the typical
+            // rules for Semantic Versioning: a pre-release version can
+            // only satisfy a comparator set if at least one comparator in
+            // the set has a matching major-minor-patch trio as well as
+            // also having pre-release identifiers.
 
+            // Therefore, if the comparand has no pre-release identifiers,
+            // there's no question as to whether it can satisfy a range.
+            var noCmpdIdentifiers = !comparand.Identifiers.Any();
+
+            // If the comparand does have identifiers, then we need to check
+            // that the special conditions are met.
             var bothIdentifiers = comparand.Identifiers.Any() &&
                                   comparator.Identifiers.Any();
 
@@ -184,12 +209,7 @@ namespace McSherry.SemanticVersioning
                                 comparand.Minor == comparator.Minor &&
                                 comparand.Patch == comparator.Patch ;
 
-            // Comparison rules for 'node-semver' differ from the typical
-            // rules for Semantic Versioning: a pre-release version can
-            // only satisfy a comparator set if at least one comparator in
-            // the set has a matching major-minor-patch trio as well as
-            // also having pre-release identifiers.
-            return noIdentifiers || (bothIdentifiers && sameTrio);
+            return noCmpdIdentifiers || (bothIdentifiers && sameTrio);
         }
     }
 }

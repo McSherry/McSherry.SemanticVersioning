@@ -23,6 +23,8 @@ using System.Linq;
 
 namespace McSherry.SemanticVersioning.Ranges
 {
+    using ComponentState = SemanticVersion.ComponentState;
+
     // Documentation and attributes are in 'Ranges\VersionRange.cs'
     public sealed partial class VersionRange
     {
@@ -31,7 +33,7 @@ namespace McSherry.SemanticVersioning.Ranges
         /// Represents an implementation of a comparator.
         /// </para>
         /// </summary>
-        private interface IComparator
+        internal interface IComparator
         {
             /*
                 So, why bother with this interface if it's private and
@@ -89,34 +91,65 @@ namespace McSherry.SemanticVersioning.Ranges
 
         /// <summary>
         /// <para>
-        /// Implements comparison using the <see cref="ComparatorToken"/>
-        /// instances produced by the <see cref="Parser"/>.
+        /// Provides the <see cref="Parser"/> with implementations for unary
+        /// operators.
         /// </para>
         /// </summary>
-        private sealed class Comparator : IComparator
+        internal sealed class UnaryComparator : IComparator
         {
             /// <summary>
             /// <para>
-            /// Represents a method implementing a comparator.
+            /// Represents a method implementing a unary comparator.
             /// </para>
             /// </summary>
             /// <param name="comparand">
             /// The <see cref="SemanticVersion"/> that is being compared
-            /// against the version specified in the <see cref="ComparatorToken"/>.
+            /// against the version specified in the range string.
             /// </param>
             /// <param name="comparator">
             /// The <see cref="SemanticVersion"/> that the version being
             /// checked is compared against. This is the version that is
-            /// specified in the <see cref="ComparatorToken"/>.
+            /// extracted from the range string by the parser.
             /// </param>
             /// <returns>
             /// True if the comparator is satisfied, false if otherwise.
             /// </returns>
-            private delegate bool ComparatorImpl(SemanticVersion comparand,
-                                                 SemanticVersion comparator);
+            private delegate bool ComparatorImpl(
+                SemanticVersion comparand,
+                SemanticVersion comparator
+                );
+            /// <summary>
+            /// <para>
+            /// Represents a method capable of generating a delegate which
+            /// implements a unary comparator.
+            /// </para>
+            /// </summary>
+            /// <param name="comparator">
+            /// The <see cref="SemanticVersion"/> that the version being checked
+            /// is compared against. This is the version that is extracted from
+            /// the range string by the parser.
+            /// </param>
+            /// <returns>
+            /// A delegate which implements the comparison.
+            /// </returns>
+            private delegate Predicate<SemanticVersion> ComparatorFactory(
+                SemanticVersion comparator
+                );
 
+            // The 'node-semver' advanced version range syntax includes operators
+            // which decompose to a comparator set in the basic syntax. Here,
+            // simple comparers represent those basic-syntax operators and the
+            // complex comparers the advanced-syntax operators.
+            //
+            // It's probably desirable to have these separate, as otherwise the
+            // advanced-syntax operators will need to create [SemanticVersion]
+            // instances each time they're called. This will be expensive if a
+            // lot of comparisons are made. Doing it this way means the cost is
+            // incurred during parsing (an already expensive operation).
             private static readonly IReadOnlyDictionary<Operator, ComparatorImpl>
-                Comparers;
+                SimpleComparers;
+            private static readonly IReadOnlyDictionary<Operator, ComparatorFactory>
+                ComplexComparers;
 
 
             /*
@@ -158,9 +191,157 @@ namespace McSherry.SemanticVersioning.Ranges
                 return arg >= comparator;
             }
 
-            static Comparator()
+
+            private static Predicate<SemanticVersion> OpCaretFactory(
+                SemanticVersion comparator
+                )
             {
-                Comparers = new Dictionary<Operator, ComparatorImpl>
+                SemanticVersion upper;
+
+                // The caret operator allows changes that don't modify the
+                // leftmost non-zero version component, so we need to identify
+                // which non-zero component is leftmost.
+                if (comparator.Major != 0)
+                {
+                    upper = new SemanticVersion(
+                        major: comparator.Major + 1,
+                        minor: 0,
+                        patch: 0
+                        );
+                }
+                else if (comparator.Minor != 0)
+                {
+                    upper = new SemanticVersion(
+                        major: 0,
+                        minor: comparator.Minor + 1,
+                        patch: 0
+                        );
+                }
+                else
+                {
+                    upper = new SemanticVersion(
+                        major: 0,
+                        minor: 0,
+                        patch: comparator.Patch + 1
+                        );
+                }
+
+                return new Predicate<SemanticVersion>(
+                    (arg) => (arg >= comparator) && (arg < upper)
+                    );
+            }
+
+            private static Predicate<SemanticVersion> OpTildeFactory(
+                SemanticVersion comparator
+                )
+            {
+                SemanticVersion lower, upper;
+
+                // The behaviour of tilde-operator comparators varies depending
+                // on how the provided semantic version was written, so we must
+                // rely on parse metadata to produce the correct bounds.
+                //
+                // If no minor version is specified, the tilde operator allows
+                // minor- and patch-level changes.
+                if (comparator.ParseInfo.MinorState == ComponentState.Omitted)
+                {
+                    lower = new SemanticVersion(
+                        major:       comparator.Major,
+                        minor:       0,
+                        patch:       0,
+                        identifiers: comparator.Identifiers,
+                        metadata:    comparator.Metadata
+                        );
+
+                    upper = new SemanticVersion(
+                        major:       lower.Major + 1,
+                        minor:       0,
+                        patch:       0,
+                        identifiers: lower.Identifiers,
+                        metadata:    lower.Metadata
+                        );
+                }
+                // If one is specified, the tilde operator allows only changes
+                // at the patch level.
+                else
+                {
+                    // We want to maintain a patch version if we have it, or
+                    // reset it to zero if we don't.
+                    var patch = comparator.ParseInfo.PatchState == ComponentState.Omitted
+                        ? 0 
+                        : comparator.Patch;
+
+                    lower = new SemanticVersion(
+                        major:       comparator.Major,
+                        minor:       comparator.Minor,
+                        patch:       patch,
+                        identifiers: comparator.Identifiers,
+                        metadata:    comparator.Metadata
+                        );
+
+                    upper = new SemanticVersion(
+                        major:       lower.Major,
+                        minor:       lower.Minor + 1,
+                        patch:       0,
+                        identifiers: lower.Identifiers,
+                        metadata:    lower.Metadata
+                        );
+                }
+
+                return (sv) => (sv >= lower) && (sv < upper);
+            }
+
+            private static Predicate<SemanticVersion> OpWildcardFactory(
+                SemanticVersion comparator
+                )
+            {
+                SemanticVersion lower, upper;
+
+                // The wildcard operator only accepts changes at the same level
+                // as the wildcard or at a level subordinate it to it, so our
+                // behaviour changes depending on which component is a wildcard.
+                //
+                // A wildcard major version allows changes at the major version
+                // level and below. That's the same as allowing any change, so
+                // this will always return true (barring any non-comparability
+                // due to pre-release identifiers, but we leave handling that
+                // to [VersionRange]).
+                if (comparator.ParseInfo.MajorState == ComponentState.Wildcard)
+                {
+                    return (sv) => true;
+                }
+                else if (comparator.ParseInfo.MinorState == ComponentState.Wildcard)
+                {
+                    // Wildcard parameters should default to zero, so we should
+                    // be safe in assigning this here.
+                    lower = comparator;
+
+                    // Wildcard versions can't have pre-release identifiers, so
+                    // we won't bother copying them over.
+                    upper = new SemanticVersion(
+                        major: lower.Major + 1,
+                        minor: 0,
+                        patch: 0
+                        );
+                }
+                else
+                {
+                    // Same as above, except with patch-level changes
+                    lower = comparator;
+
+                    upper = new SemanticVersion(
+                        major: lower.Major,
+                        minor: lower.Minor + 1,
+                        patch: 0
+                        );
+                }
+
+                return (sv) => (sv >= lower) && (sv < upper);
+            }
+
+            static UnaryComparator()
+            {
+                SimpleComparers = new Dictionary<Operator, ComparatorImpl>
                 {
                     [Operator.Equal]                = OpEqual,
                     [Operator.LessThan]             = OpLess,
@@ -168,39 +349,61 @@ namespace McSherry.SemanticVersioning.Ranges
                     [Operator.LessThanOrEqual]      = OpLTEQ,
                     [Operator.GreaterThanOrEqual]   = OpGTEQ,
                 }.AsReadOnly();
+
+                ComplexComparers = new Dictionary<Operator, ComparatorFactory>
+                {
+                    [Operator.Caret]                = OpCaretFactory,
+                    [Operator.Tilde]                = OpTildeFactory,
+                    [Operator.Wildcard]             = OpWildcardFactory,
+                }.AsReadOnly();
             }
 
             /// <summary>
             /// <para>
             /// Creates a new <see cref="IComparator"/> using the specified
-            /// <see cref="ComparatorToken"/>.
+            /// version and unary operator.
             /// </para>
             /// </summary>
-            /// <param name="cmp">
-            /// The <see cref="ComparatorToken"/> to create an equivalent
-            /// <see cref="IComparator"/> for.
+            /// <param name="op">
+            /// The operator to create an equivalent <see cref="IComparator"/>
+            /// for.
+            /// </param>
+            /// <param name="semver">
+            /// The <see cref="SemanticVersion"/> the operator is associated with.
             /// </param>
             /// <returns>
             /// An <see cref="IComparator"/> instance that implements the
             /// comparison function represented by the specified
-            /// <see cref="ComparatorToken"/>.
+            /// <see cref="Operator"/>.
             /// </returns>
             /// <exception cref="ArgumentException">
-            /// Thrown when <paramref name="cmp"/> has an unrecognised
-            /// <see cref="ComparatorToken.Operator"/> value.
+            /// Thrown when <paramref name="op"/> is not a recognised
+            /// <see cref="Operator"/> value, or is not a unary operator.
             /// </exception>
-            public static IComparator Create(ComparatorToken cmp)
+            public static IComparator Create(Operator op, SemanticVersion semver)
             {
-                if (!Comparers.TryGetValue(cmp.Operator, out var cmpImpl))
+                Predicate<SemanticVersion> impl;
+
+                if (SimpleComparers.TryGetValue(op, out var cmpImpl))
+                {
+                    impl = (sv) => cmpImpl(sv, semver);
+                }
+                else if (ComplexComparers.TryGetValue(op, out var cmpFactory))
+                {
+                    impl = cmpFactory(semver);
+                }
+                else
                 {
                     throw new ArgumentException(
-                        message: "Unrecognised operator.",
-                        paramName: nameof(cmp));
+                        message: $"Unrecognised unary operator (value: {op:N}).",
+                        paramName: nameof(op)
+                        );
                 }
 
-                return new Comparator(sv => cmpImpl(sv, cmp.Version))
+                return new UnaryComparator(impl)
                 {
-                    Version = cmp.Version
+                    Operator = op,
+                    Version = semver
                 };
             }
 
@@ -208,14 +411,14 @@ namespace McSherry.SemanticVersioning.Ranges
 
             /// <summary>
             /// <para>
-            /// Creates a new <see cref="Comparator"/> with the specified
+            /// Creates a new <see cref="UnaryComparator"/> with the specified
             /// function as its comparison function.
             /// </para>
             /// </summary>
             /// <param name="impl">
             /// The function to use as the comparison function.
             /// </param>
-            private Comparator(Predicate<SemanticVersion> impl)
+            private UnaryComparator(Predicate<SemanticVersion> impl)
             {
                 if (impl == null)
                 {
@@ -229,6 +432,19 @@ namespace McSherry.SemanticVersioning.Ranges
                 _cmpFn = impl;
             }
 
+            /// <summary>
+            /// The operator the comparator implements.
+            /// </summary>
+            public Operator Operator
+            {
+                get;
+                private set;
+            }
+            /// <summary>
+            /// <para>
+            /// The version against which the comparator compares.
+            /// </para>
+            /// </summary>
             public SemanticVersion Version
             {
                 get;
@@ -243,6 +459,188 @@ namespace McSherry.SemanticVersioning.Ranges
             bool IComparator.ComparableTo(SemanticVersion comparand)
             {
                 return this.Version.ComparableTo(comparand);
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Provides the parser with implementations for binary operators.
+        /// </para>
+        /// </summary>
+        internal sealed class BinaryComparator : IComparator
+        {
+            /// <summary>
+            /// <para>
+            /// Represents a method capable of generating a delegate which
+            /// implements a binary comparator.
+            /// </para>
+            /// </summary>
+            /// <param name="lhs">
+            /// The <see cref="SemanticVersion"/> which appears on the left
+            /// hand side of the operator.
+            /// </param>
+            /// <param name="rhs">
+            /// The <see cref="SemanticVersion"/> which appears on the right
+            /// hand side of the operator.
+            /// </param>
+            /// <returns></returns>
+            private delegate Predicate<SemanticVersion> Factory(
+                SemanticVersion lhs, SemanticVersion rhs);
+
+            private static readonly IReadOnlyDictionary<Operator, Factory>
+                ComparerFactories;
+
+
+            private static Predicate<SemanticVersion> OpHyphenFactory(
+                SemanticVersion lhs, SemanticVersion rhs)
+            {
+                // Anything omitted in the left-hand version resets to zero.
+                var lower = new SemanticVersion(
+                    major:       lhs.Major,
+                    minor:       lhs.ParseInfo.MinorState == ComponentState.Omitted ? 0 : lhs.Minor,
+                    patch:       lhs.ParseInfo.PatchState == ComponentState.Omitted ? 0 : lhs.Patch,
+                    identifiers: lhs.Identifiers,
+                    metadata:    lhs.Metadata
+                    );
+
+                // In the right-hand version, behaviour depends on which of
+                // the components is omitted.
+                //
+                // If the minor version is omitted, the major is incremented by
+                // one, the others are reset to zero, and it's a less-than
+                // comparison only.
+                if (rhs.ParseInfo.MinorState == ComponentState.Omitted)
+                {
+                    var upper = new SemanticVersion(
+                        major: rhs.Major + 1,
+                        minor: 0,
+                        patch: 0,
+                        identifiers: rhs.Identifiers,
+                        metadata: rhs.Metadata
+                        );
+
+                    return (sv) => (sv >= lower) && (sv < upper);
+                }
+                // If the patch version is omitted it's similar, but the minor
+                // version is incremented by one instead.
+                else if (rhs.ParseInfo.PatchState == ComponentState.Omitted)
+                {
+                    var upper = new SemanticVersion(
+                        major:       rhs.Major,
+                        minor:       rhs.Minor + 1,
+                        patch:       0,
+                        identifiers: rhs.Identifiers,
+                        metadata:    rhs.Metadata
+                        );
+
+                    return (sv) => (sv >= lower) && (sv < upper);
+                }
+                // And if nothing is omitted, then it's a simple inclusive
+                // range comparison against the right-hand version
+                else
+                {
+                    return (sv) => (sv >= lower) && (sv <= rhs);
+                }
+            }
+
+
+            static BinaryComparator()
+            {
+                ComparerFactories = new Dictionary<Operator, Factory>
+                {
+                    [Operator.Hyphen]   = OpHyphenFactory,
+                }.AsReadOnly();
+            }
+
+
+            /// <summary>
+            /// <para>
+            /// Creates a new <see cref="IComparator"/> using the specified
+            /// versions and binary operator.
+            /// </para>
+            /// </summary>
+            /// <param name="op">
+            /// The operator to create an equivalent <see cref="IComparator"/>
+            /// for.
+            /// </param>
+            /// <param name="lhs">
+            /// The <see cref="SemanticVersion"/> that appears on the left-hand
+            /// side of the operator.
+            /// </param>
+            /// <param name="rhs">
+            /// The <see cref="SemanticVersion"/> that appears on the right-hand
+            /// side of the operator.
+            /// </param>
+            /// <returns>
+            /// An <see cref="IComparator"/> that implements the comparison
+            /// function represented by <paramref name="op"/>.
+            /// </returns>
+            /// <exception cref="ArgumentException">
+            /// Thrown when <paramref name="op"/> is not a recognised
+            /// <see cref="Operator"/> value, or is not a binary operator.
+            /// </exception>
+            public static IComparator Create(
+                Operator op, SemanticVersion lhs, SemanticVersion rhs)
+            {
+                if (ComparerFactories.TryGetValue(op, out var fact))
+                {
+                    return new BinaryComparator(fact(lhs, rhs))
+                    {
+                        LeftVersion = lhs,
+                        RightVersion = rhs,
+                    };
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        message: $"Unrecognised binary operator (value: {op:N}).",
+                        paramName: nameof(op)
+                        );
+                }
+            }
+
+
+            private readonly Predicate<SemanticVersion> _cmp;
+
+            private BinaryComparator(Predicate<SemanticVersion> impl)
+            {
+                _cmp = impl;
+            }
+
+
+            /// <summary>
+            /// <para>
+            /// The <see cref="SemanticVersion"/> on the left-hand side of the
+            /// operator.
+            /// </para>
+            /// </summary>
+            public SemanticVersion LeftVersion
+            {
+                get;
+                private set;
+            }
+            /// <summary>
+            /// <para>
+            /// The <see cref="SemanticVersion"/> on the right-hand side of the
+            /// operator.
+            /// </para>
+            /// </summary>
+            public SemanticVersion RightVersion
+            {
+                get;
+                private set;
+            }
+
+
+            bool IComparator.SatisfiedBy(SemanticVersion comparand)
+            {
+                return _cmp(comparand);
+            }
+
+            bool IComparator.ComparableTo(SemanticVersion comparand)
+            {
+                return this.LeftVersion.ComparableTo(comparand) ||
+                       this.RightVersion.ComparableTo(comparand);
             }
         }
     }
