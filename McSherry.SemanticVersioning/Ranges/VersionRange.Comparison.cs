@@ -291,6 +291,13 @@ namespace McSherry.SemanticVersioning.Ranges
                 return (sv) => (sv >= lower) && (sv < upper);
             }
 
+            private static Predicate<SemanticVersion> OpWildcardFactory(
+                SemanticVersion comparator
+                )
+            {
+                throw new NotImplementedException();
+            }
+
             static UnaryComparator()
             {
                 SimpleComparers = new Dictionary<Operator, ComparatorImpl>
@@ -306,6 +313,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 {
                     [Operator.Caret]                = OpCaretFactory,
                     [Operator.Tilde]                = OpTildeFactory,
+                    [Operator.Wildcard]             = OpWildcardFactory,
                 }.AsReadOnly();
             }
 

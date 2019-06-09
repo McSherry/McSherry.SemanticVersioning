@@ -30,6 +30,8 @@ using DD = System.Diagnostics.DebuggerDisplayAttribute;
 namespace McSherry.SemanticVersioning.Ranges
 {
     using ResultSet = IEnumerable<IEnumerable<VersionRange.IComparator>>;
+    using InternalModes = SemanticVersion.InternalModes;
+    using ComponentState = SemanticVersion.ComponentState;
 
     // Documentation and attributes are in 'Ranges\VersionRange.cs'
     public sealed partial class VersionRange
@@ -99,6 +101,13 @@ namespace McSherry.SemanticVersioning.Ranges
             /// </para>
             /// </summary>
             Hyphen,
+            /// <summary>
+            /// <para>
+            /// Checks that only changes of the same level as the wildcard version
+            /// component, or of a subordinate level, are made.
+            /// </para>
+            /// </summary>
+            Wildcard,
         }
 
         /// <summary>
@@ -739,9 +748,8 @@ namespace McSherry.SemanticVersioning.Ranges
                                 // case for simple unary operators.
                                 case Tilde:
                                 {
-                                    tempMode =
-                                        ParseMode.OptionalPatch |
-                                        SemanticVersion.InternalModes.OptionalMinor;
+                                    tempMode = ParseMode.OptionalPatch |
+                                               InternalModes.OptionalMinor;
 
                                 } goto case EqualSign;
 
@@ -1094,6 +1102,13 @@ namespace McSherry.SemanticVersioning.Ranges
                             if (!input.HasValue)
                             {
                                 // Store the comparator and quit parsing
+                                //
+                                // We know that, since we tried to parse a binary
+                                // comparator, no operator was specified. We also
+                                // know that 'X-ranges' don't have an operator
+                                // before them, so in collecting a version we need
+                                // to allow wildcards.
+                                tempMode = InternalModes.AllowWildcard;
 
                                 var sv = CollectVersion(leftVerStr);
 
@@ -1101,6 +1116,15 @@ namespace McSherry.SemanticVersioning.Ranges
 
                                 if (sv != null)
                                 {
+                                    // Check for wildcards in the very so we
+                                    // can update the operator as required.
+                                    if (sv.ParseInfo.MajorState == ComponentState.Wildcard ||
+                                        sv.ParseInfo.MinorState == ComponentState.Wildcard ||
+                                        sv.ParseInfo.PatchState == ComponentState.Wildcard)
+                                    {
+                                        @operator = Operator.Wildcard;
+                                    }
+
                                     CollectUnary(sv);
 
                                     PushState(State.CollectSet);
@@ -1132,9 +1156,8 @@ namespace McSherry.SemanticVersioning.Ranges
 
                                         // Set the temporary parse modes as
                                         // appropriate for the hyphen operator
-                                        tempMode =
-                                            ParseMode.OptionalPatch |
-                                            SemanticVersion.InternalModes.OptionalMinor;
+                                        tempMode = ParseMode.OptionalPatch |
+                                                   InternalModes.OptionalMinor;
 
                                         // Move past the operator, collapse
                                         // whatever whitespace follows, and try
