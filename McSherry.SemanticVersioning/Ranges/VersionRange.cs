@@ -56,10 +56,21 @@ namespace McSherry.SemanticVersioning.Ranges
     /// <para>
     /// Version ranges use the <c>node-semver</c> syntax for ranges.
     /// Specifically, ranges are based on the specification as it was
-    /// written for the v5.0.0 release of <c>node-semver</c>.
+    /// written for the v6.0.0 release of <c>node-semver</c>.
     /// </para>
     /// <para>
-    /// Presently, only the basic range syntax is supported.
+    /// The full basic and advanced range syntaxes are supported, but
+    /// there are minor differences in how 'X-ranges' are handled. Unlike
+    /// with <c>node-semver</c>, this class will reject ranges where the
+    /// wildcard (<c>x</c>, <c>X</c>, or <c>*</c> character) is followed
+    /// by another version component or by pre-release identifiers or
+    /// metadata. As <c>node-semver</c> appears to ignore anything that
+    /// follows a wildcard, this has no real impact on functionality.
+    /// </para>
+    /// <para>
+    /// In addition, for backwards compatibility, an empty version range
+    /// will be considered invalid. <c>node-semver</c> treats this as
+    /// equivalent to <c>*</c>.
     /// </para>
     /// </remarks>
     [Serializable]
