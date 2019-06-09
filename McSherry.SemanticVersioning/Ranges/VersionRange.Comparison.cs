@@ -295,7 +295,48 @@ namespace McSherry.SemanticVersioning.Ranges
                 SemanticVersion comparator
                 )
             {
-                throw new NotImplementedException();
+                SemanticVersion lower, upper;
+
+                // The wildcard operator only accepts changes at the same level
+                // as the wildcard or at a level subordinate it to it, so our
+                // behaviour changes depending on which component is a wildcard.
+                //
+                // A wildcard major version allows changes at the major version
+                // level and below. That's the same as allowing any change, so
+                // this will always return true (barring any non-comparability
+                // due to pre-release identifiers, but we leave handling that
+                // to [VersionRange]).
+                if (comparator.ParseInfo.MajorState == ComponentState.Wildcard)
+                {
+                    return (sv) => true;
+                }
+                else if (comparator.ParseInfo.MinorState == ComponentState.Wildcard)
+                {
+                    // Wildcard parameters should default to zero, so we should
+                    // be safe in assigning this here.
+                    lower = comparator;
+
+                    // Wildcard versions can't have pre-release identifiers, so
+                    // we won't bother copying them over.
+                    upper = new SemanticVersion(
+                        major: lower.Major + 1,
+                        minor: 0,
+                        patch: 0
+                        );
+                }
+                else
+                {
+                    // Same as above, except with patch-level changes
+                    lower = comparator;
+
+                    upper = new SemanticVersion(
+                        major: lower.Major,
+                        minor: lower.Minor + 1,
+                        patch: 0
+                        );
+                }
+
+                return (sv) => (sv >= lower) && (sv < upper);
             }
 
             static UnaryComparator()

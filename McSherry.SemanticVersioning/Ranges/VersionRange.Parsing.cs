@@ -1056,20 +1056,28 @@ namespace McSherry.SemanticVersioning.Ranges
                                         tempMode = tempModeCopy;
                                         var svr = CollectVersion(builder.ToString());
 
-                                        // Add the comparator
-                                        cmpSet.Add(BinaryComparator.Create(
-                                            op:  @operator,
-                                            lhs: svl,
-                                            rhs: svr
-                                            ));
+                                        if (svl == null || svr == null)
+                                        {
+                                            PushState(State.Terminate);
+                                        }
+                                        else
+                                        {
 
-                                        // Reset our state
-                                        @operator = (Operator)(-1);
-                                        leftVerStr = null;
-                                        builder.Clear();
+                                            // Add the comparator
+                                            cmpSet.Add(BinaryComparator.Create(
+                                                op: @operator,
+                                                lhs: svl,
+                                                rhs: svr
+                                                ));
 
-                                        // And do it all again
-                                        PushState(State.Identify);
+                                            // Reset our state
+                                            @operator = (Operator)(-1);
+                                            leftVerStr = null;
+                                            builder.Clear();
+
+                                            // And do it all again
+                                            PushState(State.Identify);
+                                        }
                                     }
                                 }
                                 // And if there are no accumulated characters...
@@ -1116,11 +1124,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                                 if (sv != null)
                                 {
-                                    // Check for wildcards in the very so we
-                                    // can update the operator as required.
-                                    if (sv.ParseInfo.MajorState == ComponentState.Wildcard ||
-                                        sv.ParseInfo.MinorState == ComponentState.Wildcard ||
-                                        sv.ParseInfo.PatchState == ComponentState.Wildcard)
+                                    if (HasWildcard(sv))
                                     {
                                         @operator = Operator.Wildcard;
                                     }
@@ -1174,6 +1178,8 @@ namespace McSherry.SemanticVersioning.Ranges
                                     default:
                                     {
                                         // Try to parse whatever we have
+                                        tempMode = InternalModes.AllowWildcard;
+
                                         var sv = CollectVersion(leftVerStr);
 
                                         // If it's not valid, terminate.
@@ -1186,6 +1192,9 @@ namespace McSherry.SemanticVersioning.Ranges
                                         {
                                             // Turn whatever we have into a
                                             // comparator
+                                            if (HasWildcard(sv))
+                                                @operator = Operator.Wildcard;
+
                                             CollectUnary(sv);
 
                                             // Clear state
@@ -1203,6 +1212,8 @@ namespace McSherry.SemanticVersioning.Ranges
                             // and try to identify whatever the character is
                             else
                             {
+                                tempMode = InternalModes.AllowWildcard;
+
                                 var sv = CollectVersion(leftVerStr);
 
                                 if (sv == null)
@@ -1211,6 +1222,8 @@ namespace McSherry.SemanticVersioning.Ranges
                                 }
                                 else
                                 {
+                                    if (HasWildcard(sv))
+                                        @operator = Operator.Wildcard;
 
                                     CollectUnary(sv);
 
@@ -1302,6 +1315,13 @@ namespace McSherry.SemanticVersioning.Ranges
 
                     // Reset state
                     @operator = (Operator)(-1);
+                }
+
+                bool HasWildcard(SemanticVersion sv)
+                {
+                    return sv.ParseInfo.MajorState == ComponentState.Wildcard ||
+                           sv.ParseInfo.MinorState == ComponentState.Wildcard ||
+                           sv.ParseInfo.PatchState == ComponentState.Wildcard;
                 }
             }
 

@@ -519,13 +519,34 @@ namespace McSherry.SemanticVersioning
             public ParseMetadata(
                 ComponentState major, ComponentState minor, ComponentState patch)
             {
-                // Logically, the patch version cannot be present if the minor
-                // version isn't.
+                // We can't have subordinate versions if a superior version is
+                // a wildcard. It doesn't really make logical sense, and doesn't
+                // appear to be acknowledged by 'node-semver' anyway.
+                if (major == ComponentState.Wildcard &&
+                    (minor != ComponentState.Wildcard || patch != ComponentState.Wildcard))
+                {
+                    throw new ArgumentException(
+                        "A minor or patch component cannot be anything but a " +
+                        "wildcard if the major component is a wildcard."
+                        );
+                }
+                else if (minor == ComponentState.Wildcard && patch != ComponentState.Wildcard)
+                {
+                    throw new ArgumentException(
+                        "A patch component cannot be anything but a wildcard " +
+                        "if the minor component is a wildcard."
+                        );
+                }
+
+                // Similarly, if the minor version is omitted then we can't
+                // logically have a patch version.
                 if (minor == ComponentState.Omitted && patch != ComponentState.Omitted)
+                {
                     throw new ArgumentException(
                         "A patch component cannot be specified as present if " +
                         "a minor component is not also present."
                         );
+                }
 
                 this.MajorState = major;
                 this.MinorState = minor;
@@ -671,27 +692,24 @@ namespace McSherry.SemanticVersioning
                             // The prefix doesn't change the meaning of the
                             // version, so we remove it for the parser
                             input = input.Substring(startIndex: 1);
-                        }
-                        else
-                        {
-                            return ParseResultType.PreTrioInvalidChar;
+
+                            return ParseResultType.Success;
                         }
                     }
+
                     // The [AllowWildcard] mode means that a wildcard character
                     // can take the place of a version component, including the
                     // major version.
-                    else if (InternalModes.Has(mode, InternalModes.AllowWildcard))
+                    if (InternalModes.Has(mode, InternalModes.AllowWildcard))
                     {
                         // Unlike with the 'v' prefix, the wildcard is meaningful
                         // so we won't remove it.
 
-                        if (!input[0].IsRangeWildcard())
-                            return ParseResultType.PreTrioInvalidChar;
+                        if (input[0].IsRangeWildcard())
+                            return ParseResultType.Success;
                     }
-                    else
-                    {
-                        return ParseResultType.PreTrioInvalidChar;
-                    }
+
+                    return ParseResultType.PreTrioInvalidChar;
                 }
 
                 // If we haven't returned yet, it means everything should be
