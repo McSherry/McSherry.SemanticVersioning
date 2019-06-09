@@ -692,32 +692,48 @@ namespace McSherry.SemanticVersioning
         /// </para>
         /// </summary>
         [TestMethod, TestCategory(Category)]
-        public void Parse_Valid_ComponentStates()
+        public void Parse_ComponentStates()
         {
             const ParseMode patch = ParseMode.OptionalPatch;
             const ParseMode both  = patch | InternalModes.OptionalMinor;
+            const ParseMode wcard = InternalModes.AllowWildcard;
 
             const CompSt present = CompSt.Present;
             const CompSt omitted = CompSt.Omitted;
+            const CompSt wildcard = CompSt.Wildcard;
 
             // Tests for valid input
-            (string VID, string Input, ParseMode Mode, (CompSt Minor, CompSt Patch) Expected)[] vectors1 =
+            (
+                string VID, 
+                string Input, 
+                ParseMode Mode, 
+                (CompSt Major, CompSt Minor, CompSt Patch) Expected
+            )[] vectors1 =
             {
-                ("V1.1", "1.0.0",   patch,              (present, present)),
-                ("V1.2", "2.0",     patch,              (present, omitted)),
-                ("V1.3", "3.0.0",   both,               (present, present)),
-                ("V1.4", "4.0",     both,               (present, omitted)),
-                ("V1.5", "5",       both,               (omitted, omitted)),
-                ("V1.6", "5.0",     ParseMode.Lenient,  (present, omitted)),
+                ("V1.1",  "1.0.0",  patch,              (present, present, present)),
+                ("V1.2",  "2.0",    patch,              (present, present, omitted)),
+                ("V1.3",  "3.0.0",  both,               (present, present, present)),
+                ("V1.4",  "4.0",    both,               (present, present, omitted)),
+                ("V1.5",  "5",      both,               (present, omitted, omitted)),
+                ("V1.6",  "5.0",    ParseMode.Lenient,  (present, present, omitted)),
+                ("V1.7",  "6.0.x",  wcard,              (present, present, wildcard)),
+                ("V1.8",  "6.0.X",  wcard,              (present, present, wildcard)),
+                ("V1.9",  "6.0.*",  wcard,              (present, present, wildcard)),
+                ("V1.10", "6.x",    wcard,              (present, wildcard, wildcard)),
+                ("V1.11", "6.X",    wcard,              (present, wildcard, wildcard)),
+                ("V1.12", "6.*",    wcard,              (present, wildcard, wildcard)),
+                ("V1.13", "x",      wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.14", "X",      wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.15", "*",      wcard,              (wildcard, wildcard, wildcard)),
             };
 
             foreach (var vector in vectors1)
             {
-                var output = SemanticVersion.Parse(vector.Input, vector.Mode);
+                var info = SemanticVersion.Parse(vector.Input, vector.Mode).ParseInfo;
 
                 Assert.AreEqual(
                     expected:   vector.Expected,
-                    actual:     (output.ParseInfo.MinorState, output.ParseInfo.PatchState),
+                    actual:     (info.MajorState, info.MinorState, info.PatchState),
                     message:    $"Failure: vector {vector.VID}"
                     );
             }
@@ -728,6 +744,31 @@ namespace McSherry.SemanticVersioning
                 action:     () => SemanticVersion.Parse("5", ParseMode.Lenient),
                 message:    $"Failure: vector V2"
                 );
+
+            // Tests for invalid input which should throw [FormatException]
+            (string VID, string Input, ParseMode mode)[] vectors3 =
+            {
+                ("V3.1",    "1.2.x",    ParseMode.Lenient),
+                ("V3.2",    "1.x",      ParseMode.Lenient),
+                ("V3.3",    "x",        ParseMode.Lenient),
+                ("V3.4",    "1.x.0",    wcard),
+                ("V3.5",    "x.2",      wcard),
+                ("V3.6",    "x.2.3",    wcard),
+
+                // Wildcards with pre-release identifiers make no logical sense,
+                // and don't appear to work in 'node-semver' anyway
+                ("V3.7",    "1.0.x-alpha",  wcard),
+                ("V3.8",    "1.x-beta",     wcard),
+                ("V3.9",    "x-rc",         wcard),
+            };
+
+            foreach (var vector in vectors3)
+            {
+                Assert.ThrowsException<FormatException>(
+                    action:  () => SemanticVersion.Parse(vector.Input, vector.mode),
+                    message: $"Failure: vector {vector.VID}"
+                    );
+            }
         }
 
         /// <summary>

@@ -206,7 +206,7 @@ namespace McSherry.SemanticVersioning
             /// A mask for the bits the internal mode bits occupy.
             /// </para>
             /// </summary>
-            public const ParseMode Mask            = (ParseMode)(0b1111 << 28);
+            public const ParseMode Mask             = (ParseMode)(0b1111 << 28);
 
 
             /// <summary>
@@ -214,7 +214,7 @@ namespace McSherry.SemanticVersioning
             /// The internal parser modes are enabled.
             /// </para>
             /// </summary>
-            public const ParseMode Enabled         = (ParseMode)(0b1000 << 28);
+            public const ParseMode Enabled          = (ParseMode)(0b1000 << 28);
 
             /// <summary>
             /// <para>
@@ -223,7 +223,22 @@ namespace McSherry.SemanticVersioning
             /// <see cref="ParseMode.OptionalPatch"/> is not also specified.
             /// </para>
             /// </summary>
-            public const ParseMode OptionalMinor   = (ParseMode)(0b0001 << 28);
+            public const ParseMode OptionalMinor    = (ParseMode)(0b0001 << 28);
+            /// <summary>
+            /// <para>
+            /// The parser will accept a wildcard in place of the major, minor,
+            /// or patch version component.
+            /// </para>
+            /// </summary>
+            /// <remarks>
+            /// If a wildcard is specified, any subordinate components must be
+            /// omitted for the version to be considered valid. This parse mode
+            /// will allow their omission without <see cref="OptionalMinor"/>
+            /// or <see cref="ParseMode.OptionalPatch"/> being specified, and
+            /// will set their <see cref="ComponentState"/> in
+            /// <see cref="ParseMetadata"/> to <see cref="ComponentState.Wildcard"/>.
+            /// </remarks>
+            public const ParseMode AllowWildcard    = (ParseMode)(0b0010 << 28);
 
 
             /// <summary>

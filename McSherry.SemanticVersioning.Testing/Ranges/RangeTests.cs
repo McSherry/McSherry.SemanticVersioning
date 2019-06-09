@@ -901,6 +901,180 @@ namespace McSherry.SemanticVersioning.Ranges
                     );
             }
         }
+        /// <summary>
+        /// <para>
+        /// Tests wildcards within version ranges, called 'X-ranges' by the
+        /// 'node-semver' specification.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Operator_Wildcard()
+        {
+            // Tests for the case where the patch version is a wildcard
+            var vr1a = new VersionRange("1.2.x");
+            var vr1b = new VersionRange("1.2.X");
+            var vr1c = new VersionRange("1.2.*");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors1 =
+            {
+                ("T1.1", (SemanticVersion)"1.2.0",  true),
+                ("T1.2", (SemanticVersion)"1.2.1",  true),
+                ("T1.3", (SemanticVersion)"1.2.99", true),
+
+                ("F1.1", (SemanticVersion)"1.1.99",         false),
+                ("F1.2", (SemanticVersion)"1.3.0",          false),
+                ("F1.3", (SemanticVersion)"0.2.5",          false),
+                ("F1.4", (SemanticVersion)"2.2.5",          false),
+                ("F1.5", (SemanticVersion)"1.2.6-alpha.2",  false),
+                ("F1.6", (SemanticVersion)"1.3.0-alpha.3",  false),
+            };
+
+            void Test1(string TID, VersionRange vr)
+            {
+                foreach (var vector in vectors1)
+                {
+                    Assert.AreEqual(
+                        expected:   vector.Expected,
+                        actual:     vr.SatisfiedBy(vector.Version),
+                        message:    $"Failure: {TID}, vector {vector.VID}"
+                        );
+                }
+            }
+
+            Test1("Lowercase", vr1a);
+            Test1("Uppercase", vr1b);
+            Test1("Asterisk", vr1c);
+
+
+            // Tests for the case where the minor version is a wildcard
+            var vr2a = new VersionRange("1.x");
+            var vr2b = new VersionRange("1.X");
+            var vr2c = new VersionRange("1.*");
+
+            (string VID, SemanticVersion Version, bool Expected)[] vectors2 =
+            {
+                ("T2.1", (SemanticVersion)"1.0.0",  true),
+                ("T2.2", (SemanticVersion)"1.2.0",  true),
+                ("T2.3", (SemanticVersion)"1.99.0", true),
+                ("T2.4", (SemanticVersion)"1.7.2",  true),
+
+                ("F2.1", (SemanticVersion)"0.9.99",         false),
+                ("F2.2", (SemanticVersion)"2.0.0",          false),
+                ("F2.3", (SemanticVersion)"0.6.4",          false),
+                ("F2.4", (SemanticVersion)"3.1.9",          false),
+                ("F2.5", (SemanticVersion)"1.6.8-alpha.2",  false),
+                ("F2.6", (SemanticVersion)"2.0.0-alpha.3",  false),
+            };
+
+            void Test2(string TID, VersionRange vr)
+            {
+                foreach (var vector in vectors2)
+                {
+                    Assert.AreEqual(
+                        expected:   vector.Expected,
+                        actual:     vr.SatisfiedBy(vector.Version),
+                        message:    $"Failure {TID}, vector {vector.VID}"
+                        );
+                }
+            }
+
+            Test2("Lowercase", vr2a);
+            Test2("Uppercase", vr2b);
+            Test2("Asterisk", vr2c);
+
+
+            // Tests for the case where the major version is a wildcard
+            //
+            // The major version being a wildcard should result in any and
+            // every version, other than those with pre-release identifers, being
+            // accepted. We'll generate a number of random versions and see if
+            // anything falls over.
+            //
+            // If something does fall over, we'll need to add a specific test
+            // for it as we're not guaranteed to get the same value again.
+            var vr3 = new VersionRange("*");
+            var rng = new Random();
+
+            // Anything without pre-release identifiers should be true
+            for (int i = 0; i < 1000; i++)
+            {
+                var sv = new SemanticVersion(
+                    major: rng.Next(),
+                    minor: rng.Next(),
+                    patch: rng.Next()
+                    );
+
+                Assert.IsTrue(
+                    condition:  vr3.SatisfiedBy(sv),
+                    message:    $"Failure: {sv}"
+                    );
+            }
+
+            // Anything with them should be false
+            for (int i = 0; i < 1000; i++)
+            {
+                var sv = new SemanticVersion(
+                    major:       rng.Next(),
+                    minor:       rng.Next(),
+                    patch:       rng.Next(),
+                    identifiers: GetRandomIdentifiers()
+                    );
+
+                Assert.IsFalse(
+                    condition:  vr3.SatisfiedBy(sv),
+                    message:    $"Failure: {sv}"
+                    );
+            }
+
+            IEnumerable<string> GetRandomIdentifiers()
+            {
+                // We're going to generate a random number of identifiers, but
+                // with a reasonable limit so we don't generate stupidly long
+                // strings.
+                //
+                // [Next] with a maximum specified is exclusive.
+                var noIdentifiers = rng.Next(65);
+
+                var sb = new StringBuilder();
+
+                var alphabet = new char[63]
+                {
+                    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+                    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+                    'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
+                    'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
+                    'y', 'z', '-'
+                };
+
+                for (int i = 0; i < noIdentifiers; i++)
+                {
+                    // And then a random length for each identifier, capped to
+                    // what seems like a reasonable maximum
+                    var len = rng.Next(256);
+
+                    // Each character in the identifier being a random ASCII
+                    // character in [0-9A-Za-z-], avoiding leading zeroes.
+                    for (int j = 0; j < len; j++)
+                    {
+                        sb.Append(
+                            alphabet[rng.Next(alphabet.Length)]
+                            );
+                    }
+
+                    string s = sb.ToString();
+
+                    // Trim any leading zeroes
+                    if (len > 1)
+                        s = s.TrimStart('0');
+
+                    yield return s;
+
+                    sb.Clear();
+                }
+            }
+        }
 
         /// <summary>
         /// <para>
