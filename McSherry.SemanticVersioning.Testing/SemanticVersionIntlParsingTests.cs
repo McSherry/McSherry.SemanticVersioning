@@ -729,7 +729,20 @@ namespace McSherry.SemanticVersioning
 
             foreach (var vector in vectors1)
             {
-                var info = SemanticVersion.Parse(vector.Input, vector.Mode).ParseInfo;
+                // Appease the unassigned variable checker
+                ParseMetadata info = null;
+
+                try
+                {
+                    info = SemanticVersion.Parse(vector.Input, vector.Mode).ParseInfo;
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail(
+                        message:    $"Parse failure: vector {vector.VID}",
+                        parameters: ex
+                        );
+                }
 
                 Assert.AreEqual(
                     expected:   vector.Expected,
@@ -760,6 +773,11 @@ namespace McSherry.SemanticVersioning
                 ("V3.7",    "1.0.x-alpha",  wcard),
                 ("V3.8",    "1.x-beta",     wcard),
                 ("V3.9",    "x-rc",         wcard),
+
+                // And although not part of the 'node-semver' specification, it
+                // makes the most sense not to allow multiple wildcards.
+                ("V3.10",   "1.x.x",        wcard),
+                ("V3.11",   "x.x.x",        wcard),
             };
 
             foreach (var vector in vectors3)

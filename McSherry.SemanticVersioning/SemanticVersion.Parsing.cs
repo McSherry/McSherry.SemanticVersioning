@@ -511,22 +511,37 @@ namespace McSherry.SemanticVersioning
         internal class ParseMetadata
         {
             public static ParseMetadata Default { get; } = new ParseMetadata(
+                major: ComponentState.Present,
                 minor: ComponentState.Present,
                 patch: ComponentState.Present
                 );
 
-            public ParseMetadata(ComponentState minor, ComponentState patch)
+            public ParseMetadata(
+                ComponentState major, ComponentState minor, ComponentState patch)
             {
+                // Logically, the patch version cannot be present if the minor
+                // version isn't.
                 if (minor == ComponentState.Omitted && patch != ComponentState.Omitted)
                     throw new ArgumentException(
                         "A patch component cannot be specified as present if " +
                         "a minor component is not also present."
                         );
 
+                this.MajorState = major;
                 this.MinorState = minor;
                 this.PatchState = patch;
             }
 
+            /// <summary>
+            /// <para>
+            /// The state of the <see cref="SemanticVersion.Major"/> component
+            /// in the parsed version string.
+            /// </para>
+            /// </summary>
+            public ComponentState MajorState
+            {
+                get;
+            }
             /// <summary>
             /// <para>
             /// The state of the <see cref="SemanticVersion.Minor"/> component
@@ -643,25 +658,40 @@ namespace McSherry.SemanticVersioning
                 // trimming should give us at least a single character.
                 if (!Helper.IsNumber(input[0]))
                 {
-                    // If the first character isn't a number and we haven't
-                    // been passed the [AllowPrefix] flag, there's no point in
-                    // checking what character it is because it's definitely
-                    // invalid.
+                    // In most cases, if the first character isn't a number it
+                    // will be an invalid character. Depending on [mode], though,
+                    // we may be able to accept other characters.
                     //
-                    // However, if we have been passed the [AllowPrefix] flag
-                    // and the character is neither "v" nor "V", we have to
-                    // return the same result because it's invalid.
-                    if (!mode.HasFlag(ParseMode.AllowPrefix))
-                        return ParseResultType.PreTrioInvalidChar;
-                    else if (input[0] != 'v' && input[0] != 'V')
-                        return ParseResultType.PreTrioInvalidChar;
+                    // The [AllowPrefix] flag indicates we should ignore the
+                    // first character if it is a "v" or "V".
+                    if (mode.HasFlag(ParseMode.AllowPrefix))
+                    {
+                        if (input[0] == 'v' || input[0] == 'V')
+                        {
+                            // The prefix doesn't change the meaning of the
+                            // version, so we remove it for the parser
+                            input = input.Substring(startIndex: 1);
+                        }
+                        else
+                        {
+                            return ParseResultType.PreTrioInvalidChar;
+                        }
+                    }
+                    // The [AllowWildcard] mode means that a wildcard character
+                    // can take the place of a version component, including the
+                    // major version.
+                    else if (InternalModes.Has(mode, InternalModes.AllowWildcard))
+                    {
+                        // Unlike with the 'v' prefix, the wildcard is meaningful
+                        // so we won't remove it.
 
-                    // If we end up here, we know that we've been passed the
-                    // [AllowPrefix] flag and that the first character is a
-                    // "v" or "V". We don't want to pass the first character
-                    // to the parser (because it isn't meaningful), so we need
-                    // to substring the string.
-                    input = input.Substring(startIndex: 1);
+                        if (!input[0].IsRangeWildcard())
+                            return ParseResultType.PreTrioInvalidChar;
+                    }
+                    else
+                    {
+                        return ParseResultType.PreTrioInvalidChar;
+                    }
                 }
 
                 // If we haven't returned yet, it means everything should be
@@ -708,6 +738,7 @@ namespace McSherry.SemanticVersioning
                                     metadata = new List<string>();
 
                 // Values to populate a [ParseMetadata] instance
+                var majorState = ComponentState.Present;
                 var minorState = ComponentState.Present;
                 var patchState = ComponentState.Present;
 
@@ -718,6 +749,8 @@ namespace McSherry.SemanticVersioning
                 // component can be omitted
                 var optionalMinor = optionalPatch &&
                                     InternalModes.Has(mode, InternalModes.OptionalMinor);
+                // Whether a version component can be a wildcard
+                var allowWildcards = InternalModes.Has(mode, InternalModes.AllowWildcard);
 
                 // Get the party started
                 return Parse();
@@ -759,6 +792,7 @@ namespace McSherry.SemanticVersioning
                             identifiers: identifiers,
                             metadata:    metadata,
                             parseInfo:   new ParseMetadata(
+                                major:      majorState,
                                 minor:      minorState,
                                 patch:      patchState
                                 )
@@ -848,6 +882,32 @@ namespace McSherry.SemanticVersioning
                             return ParseResultType.TrioInvalidChar;
                         }
                     }
+                    // If we encountered an invalid character and we're able to
+                    // accept wildcards, we want to check for wildcards.
+                    else if (result == ParseResultType.TrioInvalidChar &&
+                        allowWildcards && input.Value.IsRangeWildcard())
+                    {
+                        majorState = ComponentState.Wildcard;
+                        minorState = ComponentState.Wildcard;
+                        patchState = ComponentState.Wildcard;
+
+                        major = 0;
+                        minor = 0;
+                        patch = 0;
+
+                        // A wildcard can't be followed by any other version
+                        // components, pre-release identifiers, or metadata, so
+                        // if we have a wildcard major version we expect to find
+                        // the end of the string and nothing else.
+                        if (Consume().HasValue)
+                        {
+                            return ParseResultType.TrioInvalidChar;
+                        }
+                        else
+                        {
+                            return ParseResultType.Success;
+                        }
+                    }
                     // If parsing the component wasn't successful, let the error
                     // bubble up to our caller
                     else
@@ -931,6 +991,29 @@ namespace McSherry.SemanticVersioning
                             return ParseResultType.TrioInvalidChar;
                         }
                     }
+                    // As before, if we can accept wildcards and the reason we
+                    // can't parse a component is because of an invalid character,
+                    // we want to check to see if it's a wildcard.
+                    else if (result == ParseResultType.TrioInvalidChar &&
+                        allowWildcards && input.Value.IsRangeWildcard())
+                    {
+                        minorState = ComponentState.Wildcard;
+                        patchState = ComponentState.Wildcard;
+
+                        minor = 0;
+                        patch = 0;
+
+                        // A wildcard can't be followed by anything, so we now
+                        // expect the end of the string.
+                        if (Consume().HasValue)
+                        {
+                            return ParseResultType.TrioInvalidChar;
+                        }
+                        else
+                        {
+                            return ParseResultType.Success;
+                        }
+                    }
                     // If we couldn't successfully parse the component, then
                     // we want to bubble the error up.
                     else
@@ -976,6 +1059,24 @@ namespace McSherry.SemanticVersioning
                         else
                         {
                             return ParseResultType.TrioInvalidChar;
+                        }
+                    }
+                    // See whether failure was because we found a wildcard.
+                    else if (result == ParseResultType.TrioInvalidChar &&
+                        allowWildcards && input.Value.IsRangeWildcard())
+                    {
+                        patchState = ComponentState.Wildcard;
+
+                        patch = 0;
+
+                        // We expect the end of the string.
+                        if (Consume().HasValue)
+                        {
+                            return ParseResultType.TrioInvalidChar;
+                        }
+                        else
+                        {
+                            return ParseResultType.Success;
                         }
                     }
                     // If parsing was unsuccessful, let the result bubble up.

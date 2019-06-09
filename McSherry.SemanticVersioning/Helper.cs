@@ -129,6 +129,22 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Determines whether a given character is a wildcard character that
+        /// can be used in a <see cref="Ranges.VersionRange"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="c">
+        /// The character to check.
+        /// </param>
+        /// <returns>
+        /// True if <paramref name="c"/> is a version range wildcard character,
+        /// false if otherwise.
+        /// </returns>
+        public static bool IsRangeWildcard(this char c)
+            => c == 'x' || c == 'X' || c == '*';
+
+        /// <summary>
+        /// <para>
         /// Returns a read-only <see cref="IReadOnlyDictionary{TKey, TValue}"/>
         /// wrapper of the specified <see cref="IDictionary{TKey, TValue}"/>.
         /// </para>
