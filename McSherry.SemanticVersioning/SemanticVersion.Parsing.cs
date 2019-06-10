@@ -64,6 +64,23 @@ namespace McSherry.SemanticVersioning
         /// </para>
         /// </summary>
         OptionalPatch   = 1 << 1,
+        /// <summary>
+        /// <para>
+        /// The parser will, if it encounters an error, attempt to return a valid
+        /// <see cref="SemanticVersion"/> instance instead of an error.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The effect of other <see cref="ParseMode"/>s must be considered
+        /// when specifying <see cref="Greedy"/>. For example, <c>1.2</c> will
+        /// produce the expected result with both <see cref="Greedy"/> and
+        /// <see cref="OptionalPatch"/>, but <c>v1.2</c> with <see cref="Greedy"/>
+        /// will result in failure unless <see cref="AllowPrefix"/> is also
+        /// specified.
+        /// </para>
+        /// </remarks>
+        Greedy          = 1 << 2,
     }
 
     // Documentation/attributes/interfaces/etc are in the main

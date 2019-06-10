@@ -14,7 +14,8 @@ semantic versions.
 ## Features
 
 - Full support for Semantic Versioning ([2.0.0][7]) and Monotonic Versioning ([1.2][8])
-- Practically full support for [`node-semver`][9] version ranges (up to v6.0.0)[**\***][10]
+- Practically full support[**\***][10] for [`node-semver`][9] version ranges (up to v6.0.0)
+- Provides parsing, comparison, and formatting
 - Flexible and configurable parsing to suit nearly any application
 - Targets .NET Framework 4.5 and 4.6, .NET Core 1.0, and .NET Standard 1.0
 
