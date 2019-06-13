@@ -528,7 +528,8 @@ namespace McSherry.SemanticVersioning
         internal class ParseMetadata
         {
             public ParseMetadata(
-                ComponentState major, ComponentState minor, ComponentState patch)
+                ComponentState major, ComponentState minor, ComponentState patch,
+                IEnumerator<char> enumerator)
             {
                 // We can't have subordinate versions if a superior version is
                 // a wildcard. It doesn't really make logical sense, and doesn't
@@ -562,6 +563,8 @@ namespace McSherry.SemanticVersioning
                 this.MajorState = major;
                 this.MinorState = minor;
                 this.PatchState = patch;
+
+                this.Enumerator = enumerator;
             }
 
             /// <summary>
@@ -591,6 +594,17 @@ namespace McSherry.SemanticVersioning
             /// </para>
             /// </summary>
             public ComponentState PatchState
+            {
+                get;
+            }
+
+            /// <summary>
+            /// <para>
+            /// The enumerator used internally by the parser, which finishes on
+            /// the last character in the version string.
+            /// </para>
+            /// </summary>
+            public IEnumerator<char> Enumerator
             {
                 get;
             }
@@ -828,7 +842,8 @@ namespace McSherry.SemanticVersioning
                             parseInfo:   new ParseMetadata(
                                 major:      majorState,
                                 minor:      minorState,
-                                patch:      patchState
+                                patch:      patchState,
+                                enumerator: input == null ? null : chars
                                 )
                             ));
                     }
@@ -1464,6 +1479,86 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Converts a version string to a <see cref="SemanticVersion"/>, taking
+        /// into account a set of flags.
+        /// </para>
+        /// </summary>
+        /// <param name="version">
+        /// The version string to be converted to a <see cref="SemanticVersion"/>.
+        /// </param>
+        /// <param name="mode">
+        /// A set of flags that augment how the version string is parsed.
+        /// </param>
+        /// <param name="enumerator">
+        /// An enumerator over <paramref name="version"/>, positioned after the
+        /// last character of the <see cref="SemanticVersion"/> parsed from
+        /// <paramref name="version"/>, or null if the parser reached the end
+        /// of the string.
+        /// </param>
+        /// <returns>
+        /// A <see cref="SemanticVersion"/> equivalent to the provided version
+        /// string.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="version"/> is null or empty.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a component in the version string was expected but not
+        /// found (for example, a missing minor or patch version).
+        /// </exception>
+        /// <exception cref="FormatException">
+        /// Thrown when an invalid character or character sequence is encountered.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// Thrown when an attempt to convert the major, minor, or patch version
+        /// into an <see cref="int"/> resulted in an overflow.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// The parameter <paramref name="enumerator"/> exposes the enumerator
+        /// used internally by the parser to walk <paramref name="version"/>. Its
+        /// intended use is where <see cref="ParseMode.Greedy"/> is specified in
+        /// <paramref name="mode"/>, where it enables the caller to implement
+        /// further parsing (for example, if the caller has a meaningful way to
+        /// convert a <see cref="Version"/> to a <see cref="SemanticVersion"/>).
+        /// </para>
+        /// <para>
+        /// On success, the value of <paramref name="enumerator"/> depends on
+        /// whether the end of <paramref name="version"/> was reached. If it was,
+        /// <paramref name="enumerator"/> will be null. Otherwise, it will have
+        /// a value and its <see cref="IEnumerator{T}.Current"/> property will
+        /// be positioned after the last character of <paramref name="version"/>
+        /// that the parser processed. If <see cref="ParseMode.Greedy"/> is
+        /// specified and <c>1.0.0.0</c> is provided as input, the returned
+        /// enumerator will be on the third <c>.</c>.
+        /// </para>
+        /// <para>
+        /// As part of pre-processing before parsing, leading and trailing
+        /// whitespace is stripped. Anything returned in <paramref name="enumerator"/>
+        /// will, accordingly, not include leading or trailing whitespace.
+        /// </para>
+        /// <para>
+        /// On failure, the value of <paramref name="enumerator"/> is undefined.
+        /// </para>
+        /// </remarks>
+        public static SemanticVersion Parse(
+            string version, ParseMode mode, out IEnumerator<char> enumerator)
+        {
+            var result = Parser.Parse(version, mode);
+
+            // If the parsing was successful, return the created version.
+            if (result.Type == ParseResultType.Success)
+            {
+                enumerator = result.Version.ParseInfo.Enumerator;
+
+                return result.Version;
+            }
+
+            // If it wasn't, create and throw the appropriate exception.
+            throw result.CreateException();
+        }
+        /// <summary>
+        /// <para>
         /// Converts a version string to a <see cref="SemanticVersion"/>,
         /// taking into account a set of flags.
         /// </para>
@@ -1494,14 +1589,7 @@ namespace McSherry.SemanticVersioning
         /// </exception>
         public static SemanticVersion Parse(string version, ParseMode mode)
         {
-            var result = Parser.Parse(version, mode);
-
-            // If the parsing was successful, return the created version.
-            if (result.Type == ParseResultType.Success)
-                return result.Version;
-
-            // If it wasn't, create and throw the appropriate exception.
-            throw result.CreateException();
+            return Parse(version, mode, out var _);
         }
         /// <summary>
         /// <para>
@@ -1542,6 +1630,54 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
+        /// Attempts to convert a version string to a <see cref="SemanticVersion"/>,
+        /// taking into account a set of flags.
+        /// </para>
+        /// </summary>
+        /// <param name="version">
+        /// The version string to be converted to a <see cref="SemanticVersion"/>.
+        /// </param>
+        /// <param name="mode">
+        /// A set of flags that augment how the version string is parsed.
+        /// </param>
+        /// <param name="semver">
+        /// When the method returns, this parameter is either set to the created
+        /// <see cref="SemanticVersion"/> (if parsing was successful), or is given
+        /// an undefined value (if parsing was unsuccessful).
+        /// </param>
+        /// <param name="enumerator">
+        /// On success, either null (if the parser reached the end of <paramref name="version"/>)
+        /// or an <see cref="IEnumerator{T}"/> positioned after the last character of the
+        /// <see cref="SemanticVersion"/> parsed from <paramref name="version"/>. On
+        /// failure, undefined.
+        /// </param>
+        /// <returns>
+        /// True if parsing succeeded, false if otherwise.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// For information about <paramref name="enumerator"/>, see the
+        /// remarks for <see cref="Parse(string, ParseMode, out IEnumerator{char})"/>.
+        /// </para>
+        /// </remarks>
+        public static bool TryParse(
+            string version, ParseMode mode, out SemanticVersion semver,
+            out IEnumerator<char> enumerator)
+        {
+            var result = Parser.Parse(version, mode);
+
+            // We don't need to perform any checks here. Either we had
+            // a success and [Version] has a value, or we didn't and it's
+            // null.
+            semver = result.Version;
+            enumerator = result.Version?.ParseInfo.Enumerator;
+
+            // Only [ParseResultType.Success] indicates a successful parsing
+            // and the producing of a [SemanticVersion] instance.
+            return result.Type == ParseResultType.Success;
+        }
+        /// <summary>
+        /// <para>
         /// Attempts to convert a version string to a 
         /// <see cref="SemanticVersion"/>, taking into account a set of flags.
         /// </para>
@@ -1560,19 +1696,10 @@ namespace McSherry.SemanticVersioning
         /// <returns>
         /// True if parsing succeeded, false if otherwise.
         /// </returns>
-        public static bool TryParse(string version, ParseMode mode,
-                                    out SemanticVersion semver)
+        public static bool TryParse(
+            string version, ParseMode mode, out SemanticVersion semver)
         {
-            var result = Parser.Parse(version, mode);
-            
-            // We don't need to perform any checks here. Either we had
-            // a success and [Version] has a value, or we didn't and it's
-            // null.
-            semver = result.Version;
-
-            // Only [ParseResultType.Success] indicates a successful parsing
-            // and the producing of a [SemanticVersion] instance.
-            return result.Type == ParseResultType.Success;
+            return TryParse(version, mode, out semver, out var _);
         }
         /// <summary>
         /// <para>

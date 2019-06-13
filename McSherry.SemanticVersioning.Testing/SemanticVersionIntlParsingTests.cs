@@ -564,6 +564,79 @@ namespace McSherry.SemanticVersioning
         }
         /// <summary>
         /// <para>
+        /// Tests that the <see cref="Parse(string, ParseMode, out IEnumerator{char})"/>
+        /// and <see cref="TryParse(string, ParseMode, out SemanticVersion, out IEnumerator{char})"/>
+        /// methods return a <see cref="IEnumerator{T}"/> as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_OutputsIEnumerator()
+        {
+            // Overloads of [Parse] and [TryParse] are provided which expose
+            // the [IEnumerator<T>] used internally by the parser. This should
+            // allow callers to implement their own parsers on top of the one
+            // we provide.
+
+            const ParseMode lenient = ParseMode.Lenient;
+            const ParseMode greedy = ParseMode.Greedy;
+
+            (string VID, string Input, string Expected, ParseMode Mode)[] vectors1 =
+            {
+                ("V1.1",     "1.0.0",   null,   lenient),
+                ("V1.2",     "1.0",     null,   lenient),
+                ("V1.3",     "1.0.0  ", null,   lenient),
+                ("V1.4",     "1.0   ",  null,   lenient),
+                ("V1.5",     "1.0.0 !", " !",   greedy),
+                ("V1.6",     "1.0 SDF", " SDF", greedy),
+                ("V1.7",     "1.0.0.0", ".0",   greedy),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                IEnumerator<char> parse = null, tryParse = null;
+
+                // Catch any exception so we can provide a meaningful error
+                try
+                {
+                    Parse(vector.Input, vector.Mode, out parse);
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail($"[Parse] failure, {vector.VID}:\n\n{ex}");
+                }
+
+                // And, similarly...
+                if (!TryParse(vector.Input, vector.Mode, out var _, out tryParse))
+                {
+                    Assert.Fail($"[TryParse] failure, vector {vector.VID}");
+                }
+
+
+                Test1("Parse", vector.VID, vector.Expected, parse);
+                Test1("TryParse", vector.VID, vector.Expected, tryParse);
+            }
+
+            void Test1(string TID, string VID, string expected, IEnumerator<char> actual)
+            {
+                // A null enumerator means the end of the string, which we're
+                // representing as a null vector value for convenience.
+                if (actual == null && expected == null)
+                    return;
+
+                // Otherwise, we have to enumerate and compare.
+                var sb = new System.Text.StringBuilder();
+
+                do { sb.Append(actual.Current); } while (actual.MoveNext());
+
+                Assert.AreEqual(
+                    expected:   expected,
+                    actual:     sb.ToString(),
+                    message:    $"Failure {TID}, vector {VID}"
+                    );
+            }
+        }
+        /// <summary>
+        /// <para>
         /// Tests that parsing with the <see cref="ParseMode.OptionalPatch"/>
         /// flag works as expected.
         /// </para>
