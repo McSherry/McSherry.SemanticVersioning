@@ -527,12 +527,6 @@ namespace McSherry.SemanticVersioning
         [Serializable]
         internal class ParseMetadata
         {
-            public static ParseMetadata Default { get; } = new ParseMetadata(
-                major: ComponentState.Present,
-                minor: ComponentState.Present,
-                patch: ComponentState.Present
-                );
-
             public ParseMetadata(
                 ComponentState major, ComponentState minor, ComponentState patch)
             {
@@ -599,19 +593,6 @@ namespace McSherry.SemanticVersioning
             public ComponentState PatchState
             {
                 get;
-            }
-
-            /// <summary>
-            /// <para>
-            /// Determines whether the instance contains only default values.
-            /// </para>
-            /// </summary>
-            /// <returns></returns>
-            public bool IsDefault()
-            {
-                return this.MinorState == Default.MinorState &&
-                       this.PatchState == Default.PatchState
-                       ;
             }
         }
 
