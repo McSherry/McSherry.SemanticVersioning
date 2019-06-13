@@ -23,7 +23,7 @@ using System.Collections.Generic;
 
 namespace McSherry.SemanticVersioning.Internals.Shims
 {
-#if USE_SHIMS
+#if COMMON_SHIMS
     /// <summary>
     /// <para>
     /// Provides methods for working with read-only lists under .NET Standard.

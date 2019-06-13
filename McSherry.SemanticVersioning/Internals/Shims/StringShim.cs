@@ -22,7 +22,7 @@ using System.Collections.Generic;
 
 namespace McSherry.SemanticVersioning.Internals.Shims
 {
-#if USE_SHIMS
+#if COMMON_SHIMS
     /// <summary>
     /// <para>
     /// Provides shims that make <see cref="string"/> work as expected.

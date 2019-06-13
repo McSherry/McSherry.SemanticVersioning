@@ -21,7 +21,7 @@ using System;
 
 namespace McSherry.SemanticVersioning.Internals.Shims
 {
-#if USE_SHIMS
+#if COMMON_SHIMS
     /// <summary>
     /// <para>
     /// A shim to allow .NET Standard configurations to build.

@@ -764,9 +764,27 @@ namespace McSherry.SemanticVersioning
                 var builder = new StringBuilder();
                 char? input = null;
 
-                // Negative values will cause an exception if we pass them
-                // to the [SemanticVersion] constructor.
-                int major = -1, minor = -1, patch = -1;
+                var greedy = mode.HasFlag(ParseMode.Greedy);
+
+                int major, minor, patch;
+
+                // If we're greedily parsing, we want them to start off with
+                // valid values so we can return without repetitive assignments
+                if (greedy)
+                {
+                    major = 0;
+                    minor = 0;
+                    patch = 0;
+                }
+                // Otherwise, we'll use negative values to make sure we don't
+                // accidentally try to finish before setting everything up
+                else
+                {
+                    major = -1;
+                    minor = -1;
+                    patch = -1;
+                }
+
                 // Null values will too, as well as causing an NRE if we try
                 // to use them before we've given them a proper value.
                 ICollection<string> identifiers = new List<string>(),
@@ -871,7 +889,7 @@ namespace McSherry.SemanticVersioning
                             // If we haven't been so configured, error.
                             if (!optionalMinor)
                             {
-                                return ParseResultType.TrioItemMissing;
+                                return GreedyOpportunity(ParseResultType.TrioItemMissing);
                             }
                             else
                             {
@@ -914,7 +932,7 @@ namespace McSherry.SemanticVersioning
                         // Anything else is a character we don't expect.
                         else
                         {
-                            return ParseResultType.TrioInvalidChar;
+                            return GreedyOpportunity(ParseResultType.TrioInvalidChar);
                         }
                     }
                     // If we encountered an invalid character and we're able to
@@ -983,7 +1001,7 @@ namespace McSherry.SemanticVersioning
                             // If we haven't been so configured, error.
                             if (!optionalPatch)
                             {
-                                return ParseResultType.TrioItemMissing;
+                                return GreedyOpportunity(ParseResultType.TrioItemMissing);
                             }
                             else
                             {
@@ -1023,8 +1041,21 @@ namespace McSherry.SemanticVersioning
                         // We don't recognise any other characters.
                         else
                         {
-                            return ParseResultType.TrioInvalidChar;
+                            return GreedyOpportunity(ParseResultType.TrioInvalidChar);
                         }
+                    }
+                    // If we're parsing greedily, a missing minor version isn't
+                    // an error. This check isn't required in [ParseMajor] as
+                    // the major component is the minimum needed for success if
+                    // parsing greedily.
+                    //
+                    // We can't blanket apply this to everything other than
+                    // success because, for example, we still want overflow
+                    // errors to propagate up.
+                    else if (result == ParseResultType.TrioItemMissing ||
+                             result == ParseResultType.TrioItemLeadingZero)
+                    {
+                        return GreedyOpportunity(result);
                     }
                     // As before, if we can accept wildcards and the reason we
                     // can't parse a component is because of an invalid character,
@@ -1093,8 +1124,16 @@ namespace McSherry.SemanticVersioning
                         // character, which is an error.
                         else
                         {
-                            return ParseResultType.TrioInvalidChar;
+                            return GreedyOpportunity(ParseResultType.TrioInvalidChar);
                         }
+                    }
+                    // As with [ParseMinor], if we're greedily parsing we can
+                    // successfully terminate without this version component or
+                    // if this component has a leading zero.
+                    else if (result == ParseResultType.TrioItemMissing ||
+                             result == ParseResultType.TrioItemLeadingZero)
+                    {
+                        return GreedyOpportunity(result);
                     }
                     // See whether failure was because we found a wildcard.
                     else if (result == ParseResultType.TrioInvalidChar &&
@@ -1138,12 +1177,16 @@ namespace McSherry.SemanticVersioning
                     //
                     // If what caused us to stop accumulating isn't the end of
                     // the string or a separator, it's an invalid character.
+                    //
+                    // However, if we're parsing greedily, we want to try and
+                    // convert whatever we have (if anything) into a number, and
+                    // so we don't want to return here.
                     if (input.HasValue && input != ComponentSeparator &&
-                        input != IdentifierStart && input != MetadataStart)
+                        input != IdentifierStart && input != MetadataStart &&
+                        !greedy)
                     {
                         return ParseResultType.TrioInvalidChar;
                     }
-
                     
 
                     // If we didn't accumulate anything, we don't have a version
@@ -1191,13 +1234,34 @@ namespace McSherry.SemanticVersioning
                     }
 
                     // If we didn't accumulate anything, then the metadata item
-                    // is missing. Error.
+                    // is missing. This is an error unless we're parsing greedily.
                     if (builder.Length == 0)
-                        return ParseResultType.IdentifierMissing;
+                        return GreedyOpportunity(ParseResultType.IdentifierMissing);
 
-                    // If what we did accumulate isn't a valid identifier, error.
+                    // If what we did accumulate isn't a valid identifier, we
+                    // normally want to error. However, if we're parsing greedily,
+                    // we want to take whatever *is* valid.
                     if (!Helper.IsValidIdentifier(builder.ToString()))
-                        return ParseResultType.IdentifierInvalid;
+                    {
+                        if (greedy)
+                        {
+                            // We may have accumulated an invalid character, so
+                            // we want to remove it from the builder's contents.
+                            GreedilyTruncateToItem(builder);
+
+                            // Recheck what we have. It must be at least one
+                            // character long, and pre-release identifiers can't
+                            // start with a leading zero.
+                            if (builder.Length == 0)
+                                return ParseResultType.IdentifierMissing;
+                            else if (builder.Length > 1 && builder[0] == '0')
+                                return ParseResultType.IdentifierInvalid;
+                        }
+                        else
+                        {
+                            return ParseResultType.IdentifierInvalid;
+                        }
+                    }
 
                     // If we get here, we know we have a valid identifier. Store
                     // it and clear stored state.
@@ -1253,11 +1317,32 @@ namespace McSherry.SemanticVersioning
                     // Accumulating nothing means the metadata item is missing,
                     // which isn't valid.
                     if (builder.Length == 0)
-                        return ParseResultType.MetadataMissing;
+                        return GreedyOpportunity(ParseResultType.MetadataMissing);
 
                     // If we have accumulated something, it has to be valid.
+                    //
+                    // However, if we're parsing greedily we can successfully
+                    // end parsing here.
                     if (!Helper.IsValidMetadata(builder.ToString()))
-                        return ParseResultType.MetadataInvalid;
+                    {
+                        if (greedy)
+                        {
+                            // As with pre-release identifiers, cut the contents
+                            // of the [StringBuilder] to only the valid characters.
+                            GreedilyTruncateToItem(builder);
+
+                            // We only need to check length to make sure we have
+                            // some characters. The requirements for a valid
+                            // metadata item are looser than for pre-release
+                            // identifiers.
+                            if (builder.Length == 0)
+                                return ParseResultType.MetadataMissing;
+                        }
+                        else
+                        {
+                            return ParseResultType.MetadataInvalid;
+                        }
+                    }
 
                     // If it is valid, store it and clear stored state.
                     metadata.Add(builder.ToString());
@@ -1280,6 +1365,38 @@ namespace McSherry.SemanticVersioning
 
                         return ParseMetadata();
                     }
+                }
+
+                // Indicates success if greedy mode is enabled, else passes on
+                // the provided result type
+                ParseResultType GreedyOpportunity(ParseResultType result)
+                {
+                    if (!greedy)
+                        return result;
+
+                    return ParseResultType.Success;
+                }
+
+                // Truncates a [StringBuilder] so that its contents are a valid
+                // metadata item, or so that its length is zero
+                void GreedilyTruncateToItem(StringBuilder sb)
+                {
+                    var builderCopy = sb.ToString();
+                    int validLen = 0;
+
+                    // Count contiguous valid characters
+                    foreach (char c in builderCopy)
+                    {
+                        // Keep valids
+                        if (Helper.IsMetadataChar(c))
+                            validLen++;
+                        // Terminate on first invalid
+                        else
+                            break;
+                    }
+
+                    // Truncate
+                    sb.Length = validLen;
                 }
             }
 
@@ -1344,8 +1461,11 @@ namespace McSherry.SemanticVersioning
                         // We don't want to store if any internal modes are
                         // passed, as these might leak out to an external caller
                         // who won't be expecting them or able to handle them.
+                        //
+                        // Similarly, we don't cache greedily-parsed versions, as
+                        // these are expected to include invalid input. 
                         if (result.Type == ParseResultType.Success &&
-                            !InternalModes.HasAny(mode))
+                            !(InternalModes.HasAny(mode) || mode.HasFlag(ParseMode.Greedy)))
                             MemoizationAgent?.Add(input, result.Version);
                     }
                     // The item was in our cache. Our result is what we've
