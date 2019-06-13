@@ -46,10 +46,10 @@ namespace McSherry.SemanticVersioning
         /// <summary>
         /// <para>
         /// The opposite of <see cref="Strict"/>, with all parser flags
-        /// set.
+        /// set but <see cref="Greedy"/>.
         /// </para>
         /// </summary>
-        Lenient         = ~0,
+        Lenient         = ~0 ^ Greedy,
 
         /// <summary>
         /// <para>
