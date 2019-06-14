@@ -113,20 +113,28 @@ inherited.
 
 ## Static Methods
 
+- [**Parse(String, ParseMode, out IEnumerator(char))**][A23]  
+  Converts a string to a [SemanticVersion][7], taking into account a set
+  of flags.
 - **[Parse(String, ParseMode)][23]**  
   Converts a version string to a [SemanticVersion][7], taking into account
   a set of flags.
 - **[Parse(String)][24]**  
   Converts a version string to a [SemanticVersion][7], only accepting the
   format given in the [Semantic Versioning specification][2].
+- [**TryParse(String, ParseMode, out SemanticVersion, out IEnumerator(char))**][24A]  
+  Attempts to convert a version string to a [SemanticVersion][7], taking
+  into account a set of flags.
 - **[TryParse(String, ParseMode, out SemanticVersion)][25]**  
   Attempts to convert a version string to a [SemanticVersion][7], taking
   into account a set of flags.
 - **[TryParse(String, out SemanticVersion)][26]**  
   Attempts to convert a version string to a [SemanticVersion][7].
 
+[A23]: ./Parse(String,ParseMode,IEnumerator(T)).md
 [23]: ./Parse(String,ParseMode).md
 [24]: ./Parse(String).md
+[24A]: ./TryParse(String,ParseMode,SemanticVersion,IEnumerator(T)).md
 [25]: ./TryParse(String,ParseMode,SemanticVersion).md
 [26]: ./TryParse(String,SemanticVersion).md
 
