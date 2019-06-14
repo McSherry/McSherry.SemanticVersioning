@@ -24,7 +24,7 @@ may be configured to use.
   specification compliance.
   
 - **`Lenient`**  
-  The opposite of `Strict`, with all parser flags set.
+  The opposite of `Strict`, with all parser flags set but `Greedy`.
   
 - **`AllowPrefix`**  
   The parser will accept a version prefixed with `v` or `V`.
@@ -33,4 +33,12 @@ may be configured to use.
   The parser will accept versions with the [SemanticVersion.Patch][3]
   version component omitted.
   
+- **`Greedy`**  
+  The parser will, if it encounters an error, attempt to return a
+  valid [SemanticVersion][2] instance instead of an error.
+  
+  **Remarks:** The effect of other `ParseMode`s must be considered when
+  specifying `Greedy`. For example, `1.2` will produce the expected result
+  with both `Greedy` and `OptionalPatch`, but `v1.2` with `Greedy` will
+  result in failure unless `AllowPrefix` is also specified.
 [3]: ./SemanticVersion/Patch.md

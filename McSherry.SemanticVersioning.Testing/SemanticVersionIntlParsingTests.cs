@@ -564,6 +564,79 @@ namespace McSherry.SemanticVersioning
         }
         /// <summary>
         /// <para>
+        /// Tests that the <see cref="Parse(string, ParseMode, out IEnumerator{char})"/>
+        /// and <see cref="TryParse(string, ParseMode, out SemanticVersion, out IEnumerator{char})"/>
+        /// methods return a <see cref="IEnumerator{T}"/> as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_OutputsIEnumerator()
+        {
+            // Overloads of [Parse] and [TryParse] are provided which expose
+            // the [IEnumerator<T>] used internally by the parser. This should
+            // allow callers to implement their own parsers on top of the one
+            // we provide.
+
+            const ParseMode lenient = ParseMode.Lenient;
+            const ParseMode greedy = ParseMode.Greedy;
+
+            (string VID, string Input, string Expected, ParseMode Mode)[] vectors1 =
+            {
+                ("V1.1",     "1.0.0",   null,   lenient),
+                ("V1.2",     "1.0",     null,   lenient),
+                ("V1.3",     "1.0.0  ", null,   lenient),
+                ("V1.4",     "1.0   ",  null,   lenient),
+                ("V1.5",     "1.0.0 !", " !",   greedy),
+                ("V1.6",     "1.0 SDF", " SDF", greedy),
+                ("V1.7",     "1.0.0.0", ".0",   greedy),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                IEnumerator<char> parse = null, tryParse = null;
+
+                // Catch any exception so we can provide a meaningful error
+                try
+                {
+                    Parse(vector.Input, vector.Mode, out parse);
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail($"[Parse] failure, {vector.VID}:\n\n{ex}");
+                }
+
+                // And, similarly...
+                if (!TryParse(vector.Input, vector.Mode, out var _, out tryParse))
+                {
+                    Assert.Fail($"[TryParse] failure, vector {vector.VID}");
+                }
+
+
+                Test1("Parse", vector.VID, vector.Expected, parse);
+                Test1("TryParse", vector.VID, vector.Expected, tryParse);
+            }
+
+            void Test1(string TID, string VID, string expected, IEnumerator<char> actual)
+            {
+                // A null enumerator means the end of the string, which we're
+                // representing as a null vector value for convenience.
+                if (actual == null && expected == null)
+                    return;
+
+                // Otherwise, we have to enumerate and compare.
+                var sb = new System.Text.StringBuilder();
+
+                do { sb.Append(actual.Current); } while (actual.MoveNext());
+
+                Assert.AreEqual(
+                    expected:   expected,
+                    actual:     sb.ToString(),
+                    message:    $"Failure {TID}, vector {VID}"
+                    );
+            }
+        }
+        /// <summary>
+        /// <para>
         /// Tests that parsing with the <see cref="ParseMode.OptionalPatch"/>
         /// flag works as expected.
         /// </para>
@@ -785,6 +858,132 @@ namespace McSherry.SemanticVersioning
                 Assert.ThrowsException<FormatException>(
                     action:  () => SemanticVersion.Parse(vector.Input, vector.mode),
                     message: $"Failure: vector {vector.VID}"
+                    );
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Tests that greedy parsing works as expected.
+        /// </para>
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_Greedy()
+        {
+            // The parser, when in "greedy" mode, will attempt to parse as much
+            // as it can. When it encounters an error, it will take whatever it
+            // has and try to make that into a valid version.
+            //
+            // If a valid version can be made, it's returned. Otherwise, whatever
+            // error encountered is allowed to propagate upwards.
+
+
+            // Tests that should produce valid output in greedy mode
+            const ParseMode greedy = ParseMode.Greedy;
+            const ParseMode prefix = ParseMode.AllowPrefix;
+            const ParseMode patch  = ParseMode.OptionalPatch;
+
+            (string VID, string Input, SemanticVersion Output, ParseMode Mode)[] vectors1 =
+            {
+                ("V1.1",    "1",            (SemanticVersion)"1.0.0",       greedy),
+                ("V1.2",    "1.",           (SemanticVersion)"1.0.0",       greedy),
+                ("V1.3",    "1    ",        (SemanticVersion)"1.0.0",       greedy),
+                ("V1.4",    "1jhgw",        (SemanticVersion)"1.0.0",       greedy),
+                ("V1.5",    "1.5",          (SemanticVersion)"1.5.0",       greedy),
+                ("V1.6",    "1.5oiugbew",   (SemanticVersion)"1.5.0",       greedy),
+                ("V1.7",    "1.5-",         (SemanticVersion)"1.5.0",       greedy),
+                ("V1.8",    "1.5-abc",      (SemanticVersion)"1.5.0",       greedy),
+                ("V1.9",    "1.5-abc.",     (SemanticVersion)"1.5.0-abc",   greedy | patch),
+                ("V1.10",   "1.5-abc!!£R",  (SemanticVersion)"1.5.0-abc",   greedy | patch),
+                ("V1.11",   "1.5+",         (SemanticVersion)"1.5.0",       greedy),
+                ("V1.12",   "1.5+abc",      (SemanticVersion)"1.5.0",       greedy),
+                ("V1.13",   "1.5+abc.",     (SemanticVersion)"1.5.0+abc",   greedy | patch),
+                ("V1.14",   "1.5+abc!%$£",  (SemanticVersion)"1.5.0+abc",   greedy | patch),
+                ("V1.15",   "1.5.",         (SemanticVersion)"1.5.0",       greedy),
+                ("V1.16",   "1.5.0-",       (SemanticVersion)"1.5.0",       greedy),
+                ("V1.17",   "1.5.0-abc.",   (SemanticVersion)"1.5.0-abc",   greedy),
+                ("V1.18",   "1.5.0-abc&^(", (SemanticVersion)"1.5.0-abc",   greedy),
+                ("V1.19",   "1.5.0+",       (SemanticVersion)"1.5.0",       greedy),
+                ("V1.20",   "1.5.0+abc.",   (SemanticVersion)"1.5.0+abc",   greedy),
+                ("V1.21",   "1.5.0+ab&($%", (SemanticVersion)"1.5.0+ab",    greedy),
+                ("V1.22",   "v1",           (SemanticVersion)"1.0.0",       greedy | prefix),
+                ("V1.23",   "1..1",         (SemanticVersion)"1.0.0",       greedy),
+                ("V1.24",   "1.1.-abc",     (SemanticVersion)"1.1.0",       greedy),
+                ("V1.25",   "1.5.0-ab..cd", (SemanticVersion)"1.5.0-ab",    greedy),
+                ("V1.26",   "1.5.0+ab..cd", (SemanticVersion)"1.5.0+ab",    greedy),
+                ("V1.27",   "1.5-ab..cd",   (SemanticVersion)"1.5.0-ab",    greedy | patch),
+                ("V1.28",   "1.5+ab..cd",   (SemanticVersion)"1.5.0+ab",    greedy | patch),
+                ("V1.29",   "1.05",         (SemanticVersion)"1.0.0",       greedy),
+                ("V1.30",   "1.05.0",       (SemanticVersion)"1.0.0",       greedy),
+                ("V1.31",   "1.1.05",       (SemanticVersion)"1.1.0",       greedy),
+            };
+
+            foreach (var vector in vectors1)
+            {
+                SemanticVersion sv = null;
+
+                try
+                {
+                    sv = SemanticVersion.Parse(vector.Input, vector.Mode);
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail($"Parse failure, vector {vector.VID}:\n\n{ex}");
+                }
+
+                Assert.AreEqual(
+                    expected:   vector.Output,
+                    actual:     sv,
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests that should provoke a [FormatException] in greedy mode with
+            // no other flags being specified
+            (string VID, string Input)[] vectors2 =
+            {
+                ("V2.1",    "v1"),
+                ("V2.2",    "v1."),
+                ("V2.3",    "v1.5"),
+                ("V2.4",    "v1.5"),
+                ("V2.5",    "v1.5.0"),
+                ("V2.6",    "v1.5.0-"),
+                ("V2.7",    "i1"),
+                ("V2.8",    "i1."),
+                ("V2.9",    "i1.5"),
+                ("V2.10",   "i1.5."),
+                ("V2.11",   "i1.5.0"),
+                ("V2.12",   "i1.5.0-"),
+                ("V2.13",   ".1.0"),
+                ("V2.14",   "01"),
+                ("V2.15",   "01.0"),
+                ("V2.16",   "01.0.0"),
+            };
+
+            foreach (var vector in vectors2)
+            {
+                Assert.ThrowsException<FormatException>(
+                    action:     () => SemanticVersion.Parse(vector.Input, greedy),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
+
+
+            // Tests that should provoke an [OverflowException]
+            (string VID, string Input)[] vectors3 =
+            {
+                ("V3.1",    "2147483648"),
+                ("V3.2",    "10000000000"),
+                ("V3.3",    "1.2147483648"),
+                ("V3.4",    "1.1.2147483648"),
+            };
+
+            foreach (var vector in vectors3)
+            {
+                Assert.ThrowsException<OverflowException>(
+                    action:     () => SemanticVersion.Parse(vector.Input, greedy),
+                    message:    $"Failure: vector {vector.VID}"
                     );
             }
         }

@@ -32,16 +32,26 @@ namespace McSherry.SemanticVersioning
     /// </summary>
     internal static class Helper
     {
-        private static readonly Regex _metaRegex;
-
-        static Helper()
+        /// <summary>
+        /// <para>
+        /// Determines whether a specified character is valid in a metadata item
+        /// or pre-release identifier.
+        /// </para>
+        /// </summary>
+        /// <param name="c">
+        /// The character to check.
+        /// </param>
+        /// <returns>
+        /// True if <paramref name="c"/> is valid in a metadata item or pre-release
+        /// identifier, false if otherwise.
+        /// </returns>
+        public static bool IsMetadataChar(char c)
         {
-            // We're going to save ourselves some trouble and just use a
-            // regular expression to check each individual build metadata
-            // item.
-            _metaRegex = new Regex("^[0-9A-Za-z-]+$");
+            return (c == 0x2D) ||               // '-'
+                   (c >= 0x30 && c <= 0x39) ||  // 0-9
+                   (c >= 0x41 && c <= 0x5A) ||  // A-Z
+                   (c >= 0x61 && c <= 0x7A);    // a-z
         }
-
         /// <summary>
         /// <para>
         /// Checks whether a provided <see cref="string"/> is a valid
@@ -90,17 +100,18 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static bool IsValidMetadata(string metadata)
         {
-            // Metadata items cannot be empty, and cannot contain
-            // whitespace.
-            if (String.IsNullOrWhiteSpace(metadata))
+            // An empty or null string cannot be valid.
+            if (metadata == null || metadata.Length == 0)
                 return false;
 
-            // A metadata item may only contain characters that are
-            // alphanumeric or the hyphen character.
-            if (!_metaRegex.IsMatch(metadata))
-                return false;
+            // LINQ's [All] and [Any] aren't available in .NET Core 1.0 or
+            // .NET Standard 1.0.
+            foreach (var c in metadata)
+            {
+                if (!IsMetadataChar(c))
+                    return false;
+            }
 
-            // It's passed the tests, so it's a valid metadata item.
             return true;
         }
 
