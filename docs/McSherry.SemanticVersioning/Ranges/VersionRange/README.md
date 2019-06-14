@@ -22,6 +22,17 @@ inherited.
   
 [2]: ./ctor(String).md
 
+## Instance Properties
+
+- [**MemoizationAgent**][2A]  
+  The cache used to memoize the results of [VersionRange][2B] satisfaction
+  methods.
+- [**SynchronizationObject**][2C]  
+  The object used in synchronising accesses to the [MemoizationAgent][2A].
+
+[2A]: ./MemoizationAgent.md
+[2B]:./
+[2C]: ./SynchronizationObject.md
 
 ## Instance Methods
 
@@ -43,7 +54,6 @@ inherited.
   Parses a version range from a string.
 - **[TryParse(String, out VersionRange)][7]**  
   Attempts to parse a version range from a string.
-  
 [6]: ./Parse(String).md
 [7]: ./TryParse(String,VersionRange).md
 
