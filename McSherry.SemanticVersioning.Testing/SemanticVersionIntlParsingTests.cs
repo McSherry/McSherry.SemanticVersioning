@@ -78,28 +78,31 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void Normalisation_WhiteSpace()
         {
-            string control  = "1.2.3",          // No whitespace
-                   ws0      = "\t   1.2.3",     // Leading whitespace
-                   ws1      = "1.2.3\t   ",     // Trailing whitespace
-                   ws2      = "\t 1.2.3\t ";    // Leading and trailing
+            const string Seed = "1.2.3";
 
-            // We need to test both the return value, which indicates whether
-            // we were successful, and the value of the string after we passed
-            // it in, which should have been modified.
-            Assert.AreEqual(ParseResultType.Success,
-                            Normalise(ref ws0, ParseMode.Strict),
-                            "Bad return (0).");
-            Assert.AreEqual(control, ws0, "Normalisation failure (0).");
+            (string VID, string Input)[] vectors =
+            {
+                ("V1.1", $"\t   {Seed}"),   // Leading whitespace
+                ("V1.2", $"{Seed}\t   "),   // Trailing whitespace
+                ("V1.3", $"\t {Seed}\t "),  // Leading and trailing
+            };
 
-            Assert.AreEqual(ParseResultType.Success, 
-                            Normalise(ref ws1, ParseMode.Strict),
-                            "Bad return (1).");
-            Assert.AreEqual(control, ws1, "Normalisation failure (1).");
+            foreach (var vector in vectors)
+            {
+                string normalised = vector.Input;
 
-            Assert.AreEqual(ParseResultType.Success, 
-                            Normalise(ref ws2, ParseMode.Strict),
-                            "Bad return (2).");
-            Assert.AreEqual(control, ws2, "Normalisation failure (2).");
+                Assert.AreEqual(
+                    expected:   ParseResultType.Success,
+                    actual:     Normalise(ref normalised, ParseMode.Strict),
+                    message:    $"Failure: Bad return, {vector.VID}"
+                    );
+
+                Assert.AreEqual(
+                    expected:   Seed,
+                    actual:     normalised,
+                    message:    $"Failure: Normalisation, {vector.VID}"
+                    );
+            }
         }
         /// <summary>
         /// <para>
@@ -111,34 +114,31 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void Normalisation_BadInput()
         {
-            string bis0     = null,         // Null value
-                   bis1     = "",           // Empty
-                   bis2     = " \t  ",      // Entirely whitespace
-                   // These two are only invalid in [ParseMode.Strict].
-                   bis3     = "v1.2.3",     // Invalid character
-                   bis4     = "V1.2.3",     // Invalid character
-                   // This is always invalid.
-                   bis5     = "€1.2.3";     // Invalid character
+            const ParseResultType NullString = ParseResultType.NullString;
+            const ParseResultType PreTrioInvalidChar = ParseResultType.PreTrioInvalidChar;
 
+            const ParseMode Strict = ParseMode.Strict;
 
-            Assert.AreEqual(ParseResultType.NullString,
-                            Normalise(ref bis0, ParseMode.Strict),
-                            "Bad status (0).");
-            Assert.AreEqual(ParseResultType.NullString,
-                            Normalise(ref bis1, ParseMode.Strict),
-                            "Bad status (1).");
-            Assert.AreEqual(ParseResultType.NullString,
-                            Normalise(ref bis2, ParseMode.Strict),
-                            "Bad status (2).");
-            Assert.AreEqual(ParseResultType.PreTrioInvalidChar,
-                            Normalise(ref bis3, ParseMode.Strict),
-                            "Bad status (3).");
-            Assert.AreEqual(ParseResultType.PreTrioInvalidChar,
-                            Normalise(ref bis4, ParseMode.Strict),
-                            "Bad status (4).");
-            Assert.AreEqual(ParseResultType.PreTrioInvalidChar,
-                            Normalise(ref bis5, ParseMode.Strict),
-                            "Bad status (5).");
+            (string VID, string Input, ParseResultType Expected, ParseMode Mode)[] vectors =
+            {
+                ("V1.1",    null,           NullString,         Strict),
+                ("V1.2",    String.Empty,   NullString,         Strict),
+                ("V1.3",    " \t  ",        NullString,         Strict),
+                ("V1.4",    "v1.2.3",       PreTrioInvalidChar, Strict),
+                ("V1.5",    "V1.2.3",       PreTrioInvalidChar, Strict),
+                ("V1.6",    "€1.2.3",       PreTrioInvalidChar, Strict),
+            };
+
+            foreach (var vector in vectors)
+            {
+                var input = vector.Input;
+
+                Assert.AreEqual(
+                    expected:   vector.Expected,
+                    actual:     Normalise(ref input, vector.Mode),
+                    message:    $"Failure: vector {vector.VID}"
+                    );
+            }
         }
         /// <summary>
         /// <para>
@@ -149,36 +149,37 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void Normalisation_AllowPrefix()
         {
-            string control  = "1.2.3",
-                   ap0      = "v1.2.3",
-                   ap1      = "V1.2.3",
-                   ap2      = "€1.2.3",
-                   ap3      = control;
+            const ParseResultType Success = ParseResultType.Success;
+            const ParseResultType PreTrioInvalidChar = ParseResultType.PreTrioInvalidChar;
 
-            // Normalisation should strip the leading "v" from this.
-            Assert.AreEqual(ParseResultType.Success,
-                            Normalise(ref ap0, ParseMode.AllowPrefix),
-                            "Bad status (0).");
-            Assert.AreEqual(control, ap0, "Normalisation failure (0).");
+            (string VID, string Input, ParseResultType OutputType, string OutputString)[] vectors =
+            {
+                ("V1.1",    "1.2.3",    Success,            "1.2.3"),
+                ("V1.2",    "v1.2.3",   Success,            "1.2.3"),
+                ("V1.3",    "V1.2.3",   Success,            "1.2.3"),
+                ("V1.4",    "€1.2.3",   PreTrioInvalidChar, null),
+            };
 
-            // Normalisation should strip the leading "V" from this.
-            Assert.AreEqual(ParseResultType.Success,
-                            Normalise(ref ap1, ParseMode.AllowPrefix),
-                            "Bad status (1).");
-            Assert.AreEqual(control, ap1, "Normalisation failure (1).");
+            foreach (var vector in vectors)
+            {
+                string input = vector.Input;
 
-            // There's an invalid character, so [Normalise] should return
-            // an error result instead of one indicating success.
-            Assert.AreEqual(ParseResultType.PreTrioInvalidChar,
-                            Normalise(ref ap2, ParseMode.AllowPrefix),
-                            "Bad status (2).");
+                Assert.AreEqual(
+                    expected:   vector.OutputType,
+                    actual:     Normalise(ref input, ParseMode.AllowPrefix),
+                    message:    $"Failure: Bad status, vector {vector.VID}"
+                    );
 
-            // And, of course, normalisation shouldn't touch version strings
-            // that don't need anything done to them.
-            Assert.AreEqual(ParseResultType.Success,
-                            Normalise(ref ap3, ParseMode.AllowPrefix),
-                            "Bad status (3).");
-            Assert.AreEqual(control, ap3, "Normalisation failure (3).");
+                // If we're not expecting an error...
+                if (vector.OutputString != null)
+                {
+                    Assert.AreEqual(
+                        expected:   vector.OutputString,
+                        actual:     input,
+                        message:    $"Failure: Normalisation, vector {vector.VID}"
+                        );
+                }
+            }
         }
 
         /// <summary>
