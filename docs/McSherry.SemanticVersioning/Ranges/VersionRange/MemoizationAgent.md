@@ -1,7 +1,7 @@
 # `VersionRange.MemoizationAgent` property
 
 ```c#
-public IDictionary<SemanticVersion, bool> MemoizationAgent { get; }
+public IDictionary<SemanticVersion, bool> MemoizationAgent { get; set; }
 ```
 
 **Namespace:** [McSherry.SemanticVersioning.Ranges][1]  
