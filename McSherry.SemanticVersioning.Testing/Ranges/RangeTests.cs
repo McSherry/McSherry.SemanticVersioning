@@ -1081,7 +1081,14 @@ namespace McSherry.SemanticVersioning.Ranges
 
                     // Trim any leading zeroes
                     if (len > 1)
+                    {
                         s = s.TrimStart('0');
+
+                        // It's possible that we could generate a string of
+                        // only '0' characters, which would be invalid
+                        if (s.Length == 0)
+                            continue;
+                    }
 
                     yield return s;
 
