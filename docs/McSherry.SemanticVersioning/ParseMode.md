@@ -41,4 +41,5 @@ may be configured to use.
   specifying `Greedy`. For example, `1.2` will produce the expected result
   with both `Greedy` and `OptionalPatch`, but `v1.2` with `Greedy` will
   result in failure unless `AllowPrefix` is also specified.
+  
 [3]: ./SemanticVersion/Patch.md

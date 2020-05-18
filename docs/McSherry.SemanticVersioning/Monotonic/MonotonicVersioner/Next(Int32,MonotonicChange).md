@@ -47,3 +47,5 @@ and compatibility numbers are incremented.
   
 - **`System.ArgumentException`**  
   _`line`_ is not a current line of compatibility.
+  
+[3]: ../../SemanticVersion

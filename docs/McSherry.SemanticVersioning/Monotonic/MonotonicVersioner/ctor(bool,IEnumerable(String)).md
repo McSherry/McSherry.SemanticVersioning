@@ -41,3 +41,6 @@ The Monotonic Versioning Manifesto 1.2 does not specify whether the
 [`Compatiblity`][3] component of versions are to start at one or zero.
 It is assumed that either is valid as neither is specifically
 recommended nor prohibited.
+
+[2]: ./
+[3]: ./Compatibility.md

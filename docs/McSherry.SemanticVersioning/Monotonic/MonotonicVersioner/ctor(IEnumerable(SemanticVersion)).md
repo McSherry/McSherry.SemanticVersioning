@@ -14,6 +14,8 @@ public MonotonicVersioner(
 Creates a new [`MonotonicVersioner`][2] with the specified
 version number history.
 
+[2]: ./
+
 ### Parameters
 
 - **`chronology`**  
@@ -37,3 +39,6 @@ version number history.
     - Not provide a contiguous sequence of [`Release`][4] numbers;
     - Not contain a [`Compatibility`][3] starting at either zero or one;
     - Be empty.
+    
+[3]: ./Compatibility.md
+[4]: ./Release.md

@@ -1,7 +1,6 @@
 # `McSherry.SemanticVersioning` namespace
 
-The `McSherry.SemanticVersioning` namespace is the root namespace for `libSemVer.NET`. It
-contains everything relevant to working with semantic versions.
+The `McSherry.SemanticVersioning` namespace is the root namespace for the library. It contains everything relevant to working with semantic versions.
 
 
 ## Classes

@@ -6,7 +6,7 @@ public SemanticVersion Next(
     MonotonicChange change,
     IEnumerable<string> metadata
     )
-```</string>
+```
 
 **Namespace:** [McSherry.SemanticVersioning.Monotonic][1]  
 **Minimum Version:** 1.2.0
@@ -55,3 +55,5 @@ and compatibility numbers are incremented.
 - **`System.ArgumentException`**  
   One or more items within _`metadata`_ is not a valid metadata string.  
   _`line`_ is not a current line of compatibility.
+  
+[3]: ../../SemanticVersion
