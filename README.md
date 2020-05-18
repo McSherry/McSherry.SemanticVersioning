@@ -105,4 +105,4 @@ and the [markdown documentation][4]).
 
 The project is licensed under the MIT licence.
 
-Copyright &copy; 2015-19 Liam McSherry.
+Copyright &copy; 2015-20 Liam McSherry.
