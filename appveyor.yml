@@ -45,4 +45,4 @@ test_script:
 # Only parsing benchmarks are run as they can complete relatively quickly. Others
 # can be run as and when required as they take significantly longer.
 after_test:
-    - ps: dotnet benchmark .\McSherry.SemanticVersioning.Benchmarking\bin\Release\netcoreapp2.1\McSherry.SemanticVersioning.Benchmarking.dll --filter *ParsingBenchmarks.*
+    - ps: dotnet benchmark .\McSherry.SemanticVersioning.Benchmarking\bin\Release\netcoreapp2.1\McSherry.SemanticVersioning.Benchmarking.dll --filter *ParsingBenchmarks.* SemanticVersionFormatBenchmarks
