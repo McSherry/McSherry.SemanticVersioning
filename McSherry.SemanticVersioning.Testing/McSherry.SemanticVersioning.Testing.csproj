@@ -3,8 +3,8 @@
     <PropertyGroup>
         <AssemblyName>McSherry.SemanticVersioning.Testing</AssemblyName>
         <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
-        <Copyright>2015-17 (c) Liam McSherry</Copyright>
-        
+        <Copyright>2015-20 (c) Liam McSherry</Copyright>
+            
         <TargetFrameworks>
             net45;
             net46;

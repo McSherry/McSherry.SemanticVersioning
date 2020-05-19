@@ -284,10 +284,32 @@ namespace McSherry.SemanticVersioning
         [DataRow("Build Date: d0", "Build 20150925.f8f2cb1aate: 20150925")]
         [DataRow("M.m.p ({{Alpha Release}} r1)", "1.7.0 (Alpha Release 2)")]
         [DataRow("M.m.p (Alpha Release r1)", "1.7.0 (Al0ha alpha.2elease 2)")]
+        [DataRow("   G ", "   " + Str_AllComponents + " ")]
+        [DataRow("{ M.mpp }", "{ 1.7 }")]
+        [DataRow("{ M.mpp }}", "{ 1.7 }}")]
         [DataTestMethod]
         public void Custom_MultipleSpecifiers(string specifiers, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)Str_AllComponents).ToString(specifiers));
+        }
+
+        [DataRow("M.m {{unterminated verbatim")]
+        [DataTestMethod]
+        public void Custom_VerbatimErrors(string specifiers)
+        {
+            Assert.ThrowsException<FormatException>(
+                () => ((SemanticVersion)Str_AllComponents).ToString(specifiers)
+                );
+        }
+
+        [DataRow("r4294967296")]
+        [DataRow("d4294967296")]
+        [DataTestMethod]
+        public void Custom_IntParseOverflow(string specifiers)
+        {
+            Assert.ThrowsException<FormatException>(
+                () => ((SemanticVersion)Str_AllComponents).ToString(specifiers)
+                );
         }
     }
 }
