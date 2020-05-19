@@ -175,7 +175,7 @@ namespace McSherry.SemanticVersioning
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("RR"));
         }
 
-        [DataRow(Str_AllComponents, "alpha-2")]
+        [DataRow(Str_AllComponents, "alpha.2")]
         [DataRow(Str_Prerelease, "rc.1")]
         [DataRow(Str_Metadata, "")]
         [DataRow(Str_Basic_NoPatch, "")]
@@ -283,7 +283,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("{{Build Date:}} d0", "Build Date: 20150925")]
         [DataRow("Build Date: d0", "Build 20150925.f8f2cb1aate: 20150925")]
         [DataRow("M.m.p ({{Alpha Release}} r1)", "1.7.0 (Alpha Release 2)")]
-        [DataRow("M.m.p (Alpha Release r1)", "1.7.0 (Alpha alpha.2elease 2)")]
+        [DataRow("M.m.p (Alpha Release r1)", "1.7.0 (Al0ha alpha.2elease 2)")]
         [DataTestMethod]
         public void Custom_MultipleSpecifiers(string specifiers, string output)
         {
