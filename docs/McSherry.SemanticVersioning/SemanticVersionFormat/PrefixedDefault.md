@@ -1,6 +1,7 @@
 # `SemanticVersionFormat.PrefixedDefault` property
 
 ```c#
+[Obsolete]
 public static string PrefixedDefault => "g"
 ```
 
@@ -19,4 +20,7 @@ a letter `v`.
 For details on how this option formats a semantic version, see
 [Default][2].
 
+This format specifier is deprecated in favour of custom format strings. See [SemanticVersion.ToString][3] for further information.
+
 [2]: ./Default.md
+[3]: ../SemanticVersion/IFormattable.ToString(String,IFormatProvider).md

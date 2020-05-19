@@ -20,13 +20,13 @@ class's implementation of `IFormattable`.
 
 - **[Default][3]**  
   The default way to format a semantic version.
-- **[PrefixedDefault][4]**  
+- (Deprecated) **[PrefixedDefault][4]**  
   The default way to format a semantic version, prefixed with a
   letter `v`.
 - **[Concise][5]**  
   A way to concisely format a semantic version. Omits metadata and
   only includes the [Patch][6] version if it is non-zero.
-- **[PrefixedConcise][7]**  
+- (Deprecated) **[PrefixedConcise][7]**  
   A concise way to format a semantic version, prefixed with a
   letter `v`.
   

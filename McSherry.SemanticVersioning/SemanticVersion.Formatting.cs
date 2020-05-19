@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-20 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,8 @@ namespace McSherry.SemanticVersioning
     [CLSCompliant(true)]
     public static class SemanticVersionFormat
     {
+#pragma warning disable 618
+
         /// <summary>
         /// <para>
         /// The default way to format a semantic version.
@@ -54,6 +56,7 @@ namespace McSherry.SemanticVersioning
         /// see <see cref="Default"/>.
         /// </para>
         /// </remarks>
+        [Obsolete("Use custom format strings instead.", error: false)]
         public static string PrefixedDefault    => "g";
 
         /// <summary>
@@ -76,6 +79,7 @@ namespace McSherry.SemanticVersioning
         /// <see cref="Concise"/>.
         /// </para>
         /// </remarks>
+        [Obsolete("Use custom format strings instead.", error: false)]
         public static string PrefixedConcise    => "c";
 
         /// <summary>
@@ -91,7 +95,10 @@ namespace McSherry.SemanticVersioning
         /// with a letter "v". Aliases <see cref="PrefixedConcise"/>.
         /// </para>
         /// </summary>
+        [Obsolete("Use custom format strings instead.", error: false)]
         public static string PrefixedMonotonic  => PrefixedConcise;
+
+#pragma warning restore 618
     }
 
     // Documentation/attributes/interfaces/etc are in the main
@@ -204,6 +211,8 @@ namespace McSherry.SemanticVersioning
                 //              for [ToString(string, IFormatProvider] on the
                 //              [SemanticVersion] class.
 
+#pragma warning disable 618
+
                 Fmtrs = new Dictionary<string, FmtRoutine>
                 {
                     [SVF.Default]           = Default,
@@ -212,6 +221,9 @@ namespace McSherry.SemanticVersioning
                     [SVF.Concise]           = Concise,
                     [SVF.PrefixedConcise]   = (sv) => $"v{Concise(sv)}",
                 }.AsReadOnly();
+
+#pragma warning restore 618
+
             }
 
             /// <summary>

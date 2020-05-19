@@ -1,6 +1,7 @@
 # `SemanticVersionFormat.PrefixedConcise` property
 
 ```c#
+[Obsolete]
 public static string PrefixedConcise => "c"
 ```
 
@@ -19,4 +20,7 @@ letter `v`.
 For details on how this option formats a semantic version, see
 [Concise][2].
 
+This format specifier is deprecated in favour of custom format strings. See [SemanticVersion.ToString][3] for further information.
+
 [2]: ./Concise.md
+[3]: ../SemanticVersion/IFormattable.ToString(String,IFormatProvider).md

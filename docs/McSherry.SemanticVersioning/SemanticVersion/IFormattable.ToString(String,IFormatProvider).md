@@ -47,34 +47,40 @@ formatted as specified.
   
 ## Remarks
 
-The format of a Semantic Version is not dependent on culture
-information, and so the value of _`provider`_ is ignored.
+The format of a Semantic Version is not dependent on culture information, and so the value of _`provider`_ is ignored.
 
-The value of _`format`_ should contain one of the below-listed
-format specifiers. Custom format patterns are not supported. If
-_`format`_ is null, the default format specifier, `G`, is used
-in its place.
+The parameter _`format`_ should be a string containing a custom format pattern as set out below. If it is `null` or an empty string, the general format specifier `G` is used. In _`format`_, any character which is not a format specifier (including whitespace) is included verbatim in the resulting formatted string.
 
-The list of recognised format specifiers is given in the below.
+The formatter will ignore any characters placed between double braces. For example, `G` will be interpreted as the general format specifier while `{{G}}` will be included as the literal character "G".
 
-- **`c`**  
-  **Description:** Prefixed concise format. Identical to the
-  concise format (`C`), except prefixed with a lowercase `v`.  
-  **Examples:** `v1.8`, `v1.15.1`, `v2.1-beta.3`
-  
-- **`C`**  
-  **Description:** Concise format. Omits metadata items, and only
-  includes the [Patch][3] version if it is non-zero.
-  **Examples:** `1.8`, `1.15.1`, `2.1-beta.3`
-  
-- **`g`**  
-  **Description:** Prefixed default format. Identical to the
-  default format (`G`), except prefixed with a lowercase `v`.
-  **Examples:** `v1.7.0-alpha.2+20150925.f8f2cb1a`, `v1.2.5`,
-  `v2.0.1-rc.1`
-  
-- **`G`**  
-  **Description:** The default format, as given by the Semantic
-  Versioning 2.0.0 specification.  
-  **Examples:** `1.7.0-alpha.2+20150925.f8f2cb1a`, `1.2.5`,
-  `2.0.1-rc.1`
+### Standard format specifiers
+
+The following single-character standard format specifiers can be used as shorthand for longer custom format patterns. In formatting a Semantic Version, they are expanded in place to the custom format patterns given in the table.
+
+| Specifier | Expansion  | Description                                                  | Example                            |
+| --------- | ---------- | ------------------------------------------------------------ | ---------------------------------- |
+| `G`       | `M.m.pRD`  | The general format specifier. Includes all version components and, if present, all pre-release identifiers and metadata items. | `1.7.0-alpha.2+20150925.f8f2cb1a`  |
+| `g`       | `vM.m.pRD` | (Deprecated) The prefixed general format specifier. Identical to the general format specifier, except prefixed with `v`. | `v1.7.0-alpha.2+20150925.f8f2cb1a` |
+| `C`       | `M.mppR`   | The concise format specifier. Only includes the patch component if it is non-zero and never includes metadata items. | `1.7-alpha.2`, `2.0.3-rc.1`        |
+| `c`       | `vM.mppR`  | (Deprecated) The prefixed concise format specifier. Identical to the concise format specifier, except prefixed with `v`. | `v1.7-alpha.2`, `v2.0.3-rc.1`      |
+
+### Custom format specifiers
+
+The custom format specifiers shown in the table below allow inserting individual parts of a Semantic Version into the string.
+
+| Format specifier | Description                                                  | Example                |
+| ---------------- | ------------------------------------------------------------ | ---------------------- |
+| `M`              | Major version. Includes the major version component.         | `1`                    |
+| `m`              | Minor version. Includes the minor version component.         | `7`                    |
+| `p`              | Patch version. Includes the patch version component.         | `0`                    |
+| `pp`             | Optional patch version. Includes the patch version component with a separator character only if the component is non-zero. Otherwise includes nothing. | `.3`                   |
+| `R`              | Prefixed pre-release identifier group. If the version has pre-release identifiers, includes all identifiers prefixed with a hyphen and with separator characters. Otherwise includes nothing. | `-alpha.2`             |
+| `r`              | Standalone pre-release identifier group. If the version has pre-release identifiers, includes all identifiers with separator characters. Otherwise includes nothing. | `alpha.2`              |
+| `r0`, `r1`       | Indexed pre-release identifier. Includes the pre-release identifier with the specified zero-based index. An out-of-bounds index produces an error. | `alpha`, `2`           |
+| `rr`             | Reserved. Use produces an error.                             | N/A                    |
+| `D`              | Prefixed metadata item group. If the version has metadata items, includes all items prefixed with a plus sign and with separator characters. Otherwise includes nothing. | `+20150925.f8f2cb1a`   |
+| `d`              | Standalone metadata item group. If the version has metadata items, includes all items with separator characters. Otherwise includes nothing. | `20150925.f8f2cb1a`    |
+| `d0`, `d1`       | Indexed metadata item. Includes the metadata item with the specified zero-based index. An out-of-bounds index produces an error. | `20150925`, `f8f2cb1a` |
+| `dd`             | Reserved. Use produces an error.                             | N/A                    |
+
+In future, new meaning may be given to repetitions or different cases of the specifiers given above (such as `RR`,  `P`, or `PP`). These specifiers should not be used but will not produce an error.
