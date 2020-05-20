@@ -26,8 +26,6 @@ using McSherry.SemanticVersioning.Internals.Shims;
 
 namespace McSherry.SemanticVersioning
 {
-    using SVF = SemanticVersionFormat;
-
     /// <summary>
     /// <para>
     /// Lists the format identifiers accepted by the 
@@ -55,7 +53,14 @@ namespace McSherry.SemanticVersioning
         /// <remarks>
         /// <para>
         /// For details on how this option formats a semantic version,
-        /// see <see cref="Default"/>.
+        /// see <see cref="Default"/>. Standard format specifiers that include a
+        /// prefix have been deprecated in favour of using custom format patterns,
+        /// which can include any prefix desired.
+        /// </para>
+        /// <para>
+        /// See remarks for <see cref="SemanticVersion"/>'s implementation of
+        /// <see cref="IFormattable.ToString(string, IFormatProvider)"/> for
+        /// further information.
         /// </para>
         /// </remarks>
         [Obsolete("Use custom format strings instead.", error: false)]
@@ -78,7 +83,14 @@ namespace McSherry.SemanticVersioning
         /// <remarks>
         /// <para>
         /// For details on how this option formats a semantic version, see
-        /// <see cref="Concise"/>.
+        /// <see cref="Concise"/>. Standard format specifiers that include a
+        /// prefix have been deprecated in favour of using custom format patterns,
+        /// which can include any prefix desired.
+        /// </para>
+        /// <para>
+        /// See remarks for <see cref="SemanticVersion"/>'s implementation of
+        /// <see cref="IFormattable.ToString(string, IFormatProvider)"/> for
+        /// further information.
         /// </para>
         /// </remarks>
         [Obsolete("Use custom format strings instead.", error: false)]
@@ -86,17 +98,32 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
-        /// The format used for monotonic version strings. Aliases
-        /// <see cref="Concise"/>.
+        /// The format used for monotonic version strings.
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// This property aliases <see cref="Concise"/>.
+        /// </remarks>
+        [Obsolete("Use 'Concise' instead.", error: false)]
         public static string Monotonic          => Concise;
         /// <summary>
         /// <para>
         /// The format used for monotonic version strings, prefixed
-        /// with a letter "v". Aliases <see cref="PrefixedConcise"/>.
+        /// with a letter "v". 
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property aliases <see cref="PrefixedConcise"/>. Standard format
+        /// specifiers that include a prefix have been deprecated in favour of
+        /// using custom format patterns, which can include any prefix desired.
+        /// </para>
+        /// <para>
+        /// See remarks for <see cref="SemanticVersion"/>'s implementation of
+        /// <see cref="IFormattable.ToString(string, IFormatProvider)"/> for
+        /// further information.
+        /// </para>
+        /// </remarks>
         [Obsolete("Use custom format strings instead.", error: false)]
         public static string PrefixedMonotonic  => PrefixedConcise;
 
@@ -145,7 +172,7 @@ namespace McSherry.SemanticVersioning
                 // We'll probably be passed the general format specifier most of
                 // the time, so we can return that format without getting into
                 // parsing the format string.
-                if (String.IsNullOrEmpty(format) || format == SVF.Default)
+                if (String.IsNullOrEmpty(format) || format == SemanticVersionFormat.Default)
                 {
                     // The basics are always present
                     sb.AppendFormat("{0}.{1}.{2}", semver.Major, semver.Minor, semver.Patch);
@@ -525,7 +552,7 @@ namespace McSherry.SemanticVersioning
         /// </para>
         /// </summary>
         /// <param name="format">
-        /// The format to use, or null for the default format.
+        /// The format pattern to use, or null for the general format.
         /// </param>
         /// <param name="provider">
         /// The format provider to use, or null for the default provider. 
@@ -536,86 +563,9 @@ namespace McSherry.SemanticVersioning
         /// formatted as specified.
         /// </returns>
         /// <exception cref="FormatException">
-        /// Thrown when the format specifier given in <paramref name="format"/>
+        /// Thrown when the format pattern given in <paramref name="format"/>
         /// is not recognised or is invalid.
         /// </exception>
-        /// <remarks>
-        /// <para>
-        /// The format of a Semantic Version is not dependent on culture
-        /// information, and so the value of <paramref name="provider"/>
-        /// is ignored.
-        /// </para>
-        /// <para>
-        /// The value of <paramref name="format"/> should contain one of
-        /// the below-listed format specifiers. Custom format patterns
-        /// are not supported. If <paramref name="format"/> is null, the
-        /// default format specifier, "G", is used in its place.
-        /// </para>
-        /// <para>
-        /// The list of recognised format specifiers is given in the
-        /// below table.
-        /// </para>
-        /// <list type="table">
-        ///     <listheader>
-        ///         <term>Format Specifier</term>
-        ///         <term>Description</term>
-        ///         <term>Example</term>
-        ///     </listheader>
-        /// 
-        ///     <item>
-        ///         <term><c>"c"</c></term>
-        ///         <term>
-        ///             Prefixed concise format. Identical
-        ///             to the concise format (<c>"C"</c>),
-        ///             except prefixed with a lowercase "v".
-        ///         </term>
-        ///         <term>
-        ///             <para>v1.8</para>
-        ///             <para>v1.15.1</para>
-        ///             <para>v2.1-beta.3</para>
-        ///         </term>
-        ///     </item>
-        ///     <item>
-        ///         <term><c>"C"</c></term>
-        ///         <term>
-        ///             Concise format. Omits metadata items,
-        ///             and only includes the <see cref="Patch"/>
-        ///             version if it is non-zero.
-        ///         </term>
-        ///         <term>
-        ///             <para>1.8</para>
-        ///             <para>1.15.1</para>
-        ///             <para>2.1-beta.3</para>
-        ///         </term>
-        ///     </item>
-        /// 
-        ///     <item>
-        ///         <term><c>"g"</c></term>
-        ///         <term>
-        ///             Prefixed default format. Identical to
-        ///             the default format (<c>"G"</c>), except
-        ///             prefixed with a lowercase "v".
-        ///         </term>
-        ///         <term>
-        ///             <para>v1.7.0-alpha.2+20150925.f8f2cb1a</para>
-        ///             <para>v1.2.5</para>
-        ///             <para>v2.0.1-rc.1</para>
-        ///         </term>
-        ///     </item>
-        ///     <item>
-        ///         <term><c>"G"</c>, <c>null</c></term>
-        ///         <term>
-        ///             The default format, as given by the
-        ///             Semantic Versioning 2.0.0 specification.
-        ///         </term>
-        ///         <term>
-        ///             <para>1.7.0-alpha.2+20150925.f8f2cb1a</para>
-        ///             <para>1.2.5</para>
-        ///             <para>2.0.1-rc.1</para>
-        ///         </term>
-        ///     </item>
-        /// </list>
-        /// </remarks>
         string IFormattable.ToString(string format, IFormatProvider provider)
         {
             return Formatter.Format(this, format);
@@ -627,14 +577,14 @@ namespace McSherry.SemanticVersioning
         /// </para>
         /// </summary>
         /// <param name="format">
-        /// The format to use, or null for the default format.
+        /// The format pattern to use, or null for the general format.
         /// </param>
         /// <returns>
         /// A string representation of the current <see cref="SemanticVersion"/>,
         /// formatted as specified.
         /// </returns>
         /// <exception cref="FormatException">
-        /// Thrown when the format specifier given in <paramref name="format"/>
+        /// Thrown when the format pattern given in <paramref name="format"/>
         /// is not recognised or is invalid.
         /// </exception>
         /// <remarks>
