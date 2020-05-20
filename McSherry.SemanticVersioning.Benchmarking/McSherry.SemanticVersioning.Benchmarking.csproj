@@ -2,16 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\McSherry.SemanticVersioning\McSherry.SemanticVersioning.csproj" />
+      <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+      
+      <ProjectReference Include="..\McSherry.SemanticVersioning\McSherry.SemanticVersioning.csproj" />
   </ItemGroup>
 
 </Project>
