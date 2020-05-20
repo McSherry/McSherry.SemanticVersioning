@@ -8,8 +8,9 @@
         <Version>1.3.0</Version>
         <PackageId>McSherry.SemanticVersioning</PackageId>
         <Authors>Liam McSherry</Authors>
-        <Copyright>2015-19 © Liam McSherry</Copyright>
+        <Copyright>2015-20 © Liam McSherry</Copyright>
         <PackageProjectUrl>https://github.com/McSherry/McSherry.SemanticVersioning</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/McSherry/McSherry.SemanticVersioning</RepositoryUrl>
         <PackageLicenseUrl>https://github.com/McSherry/McSherry.SemanticVersioning/blob/v1.3.0/LICENCE.txt</PackageLicenseUrl>
         <Description>A comprehensive library for working with Semantic Versions (2.0.0), version ranges (node-semver v6.0.0), and Monotonic Versions (1.2).</Description>
         <PackageTags>semantic;sem;version;ver;versioning;semantic versioning;semver;2.0.0;monotonic;mo;mover;monotonic versioning;library;lib</PackageTags>
