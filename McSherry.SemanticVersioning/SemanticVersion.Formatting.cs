@@ -153,21 +153,19 @@ namespace McSherry.SemanticVersioning
                     // If there are pre-release identifiers, they're next
                     if (semver.Identifiers.Count > 0)
                     {
-                        sb.Append($"-{semver.Identifiers[0]}");
+                        sb.AppendFormat("-{0}", semver.Identifiers[0]);
 
-                        semver.Identifiers
-                            .Skip(1)
-                            .Aggregate(sb, (_, i) => sb.AppendFormat(".{0}", i));
+                        for (int i = 1; i < semver.Identifiers.Count; i++)
+                            sb.AppendFormat(".{0}", semver.Identifiers[i]);
                     }
 
                     // And the same with metadata items
                     if (semver.Metadata.Count > 0)
                     {
-                        sb.Append($"+{semver.Metadata[0]}");
+                        sb.AppendFormat("+{0}", semver.Metadata[0]);
 
-                        semver.Metadata
-                            .Skip(1)
-                            .Aggregate(sb, (_, i) => sb.AppendFormat(".{0}", i));
+                        for (int i = 1; i < semver.Metadata.Count; i++)
+                            sb.AppendFormat(".{0}", semver.Metadata[i]);
                     }
 
                     return sb.ToString();
