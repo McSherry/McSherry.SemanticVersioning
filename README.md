@@ -1,7 +1,7 @@
 # Semantic Versioning for .NET [![Build Status][5]][6]
 
 [5]: https://ci.appveyor.com/api/projects/status/2cwcupcpk6ja90i4?branch=master
-[6]: https://ci.appveyor.com/project/McSherry/libsemver-net
+[6]: https://ci.appveyor.com/project/McSherry/mcsherry-semanticversioning
 
 `McSherry.SemanticVersioning` is a comprehensive library for working with
 [Semantic Versions][1]. It takes care of parsing, comparing, formatting, and filtering
@@ -17,7 +17,7 @@ semantic versions.
 - Practically full support[**\***][10] for [`node-semver`][9] version ranges (up to v6.0.0)
 - Provides parsing, comparison, and formatting
 - Flexible and configurable parsing to suit nearly any application
-- Targets .NET Framework 4.5 and 4.6, .NET Core 1.0, and .NET Standard 1.0
+- Targets .NET Framework 4.5 and 4.6, .NET Core 1.0, 2.1, and 3.1, and .NET Standard 1.0
 
 [7]: <https://semver.org/spec/v2.0.0.html>
 [8]: <http://blog.appliedcompscilab.com/monotonic_versioning_manifesto/>

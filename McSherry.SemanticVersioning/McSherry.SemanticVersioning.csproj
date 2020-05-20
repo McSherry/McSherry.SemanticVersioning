@@ -56,7 +56,9 @@
             net45;
             net46;
             netstandard1.0;
-            netcoreapp1.0
+            netcoreapp1.0;
+            netcoreapp2.1;
+            netcoreapp3.1
         </TargetFrameworks>
         <OutputType>Library</OutputType>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
