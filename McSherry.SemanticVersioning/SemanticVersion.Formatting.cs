@@ -18,9 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using McSherry.SemanticVersioning.Internals.Shims;
 
 namespace McSherry.SemanticVersioning
 {
@@ -113,118 +115,13 @@ namespace McSherry.SemanticVersioning
         /// </summary>
         private static class Formatter
         {
-            private delegate string FmtRoutine(SemanticVersion semver);
-            private static readonly IReadOnlyDictionary<string, FmtRoutine> Fmtrs;
+            // If we encounter a standard format specifier when parsing a custom
+            // format pattern, we'll expand it to these patterns.
+            private const string FMT_GENERAL        = "M.m.pRRDD";
+            private const string FMT_GENERAL_PREFIX = "vG";
+            private const string FMT_CONCISE        = "M.mppRR";
+            private const string FMT_CONCISE_PREFIX = "vC";
 
-            private static string Default(SemanticVersion semver)
-            {
-                var sb = new StringBuilder();
-
-                // The three numeric version components are always 
-                // present, so we can add them to the builder without
-                // any checks.
-                sb.Append($"{semver.Major}.{semver.Minor}.{semver.Patch}");
-
-                // Pre-release identifiers always come before metadata,
-                // but we need to make sure there are identifiers to add
-                // first.
-                if (semver.Identifiers.Any())
-                {
-                    // Identifiers are separated from the three-part 
-                    // version by a hyphen character.
-                    sb.Append('-');
-
-                    // Identifiers are separated from each other by
-                    // periods.
-                    //
-                    // We concatenate them in this way to avoid an
-                    // extra step at the end. If we concatenated using
-                    // the format string [$"{id}."], we'd need to get
-                    // rid of an extra period at the end.
-                    semver.Identifiers.Skip(1).Aggregate(
-                        seed: sb.Append(semver.Identifiers.First()),
-                        func: (bdr, id) => bdr.Append($".{id}"));
-                }
-
-                // Like with the pre-release identifiers, we want to make sure
-                // there is metadata to add before we attempt to add it.
-                if (semver.Metadata.Any())
-                {
-                    // Metadata is separated from the three-part version/pre-
-                    // -release identifiers by a plus character.
-                    sb.Append('+');
-
-                    // Identifiers are separated from each other by
-                    // periods.
-                    //
-                    // We concatenate them in this way to avoid an
-                    // extra step at the end. If we concatenated using
-                    // the format string [$"{id}."], we'd need to get
-                    // rid of an extra period at the end.
-                    semver.Metadata.Skip(1).Aggregate(
-                        seed: sb.Append(semver.Metadata.First()),
-                        func: (bdr, md) => bdr.Append($".{md}"));
-                }
-
-                return sb.ToString();
-            }
-
-            private static string Concise(SemanticVersion semver)
-            {
-                var sb = new StringBuilder();
-                
-                // Major-Minor is always included.
-                sb.Append($"{semver.Major}.{semver.Minor}");
-
-                // The patch version must be greater than zero
-                // to be included.
-                if (semver.Patch > 0)
-                    sb.Append($".{semver.Patch}");
-
-                // If there are any identifiers, include them in
-                // the version.
-                if (semver.Identifiers.Any())
-                {
-                    // Identifiers are separated from the maj/min
-                    // by a hyphen.
-                    sb.Append("-");
-
-                    // Identifiers are separated from each other by
-                    // periods.
-                    //
-                    // We concatenate them in this way to avoid an
-                    // extra step at the end. If we concatenated using
-                    // the format string [$"{id}."], we'd need to get
-                    // rid of an extra period at the end.
-                    semver.Identifiers.Skip(1).Aggregate(
-                        seed: sb.Append(semver.Identifiers.First()),
-                        func: (bdr, id) => bdr.Append($".{id}"));
-                }
-
-                return sb.ToString();
-            }
-
-            static Formatter()
-            {
-                // REMEMBER:    When updating the formatters, add a property to
-                //              [SemVerFormat] and information in the doc comments
-                //              for [ToString(string, IFormatProvider] on the
-                //              [SemanticVersion] class.
-
-#pragma warning disable 618
-
-                Fmtrs = new Dictionary<string, FmtRoutine>
-                {
-                    [SVF.Default]           = Default,
-                    [SVF.PrefixedDefault]   = (sv) => $"v{Default(sv)}",
-
-                    [SVF.Concise]           = Concise,
-                    [SVF.PrefixedConcise]   = (sv) => $"v{Concise(sv)}",
-                }.AsReadOnly();
-
-#pragma warning restore 618
-
-            }
 
             /// <summary>
             /// <para>
@@ -242,19 +139,380 @@ namespace McSherry.SemanticVersioning
             /// <returns></returns>
             public static string Format(SemanticVersion semver, string format)
             {
-                // Null should be treated as equivalent to the default format.
-                if (format == null)
-                    format = SVF.Default;
+                var sb = new StringBuilder();
 
-                // Attempt to retrieve the formatter from our collection of
-                // formatters and, if we can retrieve it, call it and return
-                // what it produces.
-                if (Fmtrs.TryGetValue(format, out var fmt))
-                    return fmt(semver);
 
-                // If we couldn't retrieve a formatter, throw an exception.
-                throw new FormatException(
-                    $@"Unrecognised format specifier ""{format}"".");
+                // We'll probably be passed the general format specifier most of
+                // the time, so we can return that format without getting into
+                // parsing the format string.
+                if (String.IsNullOrEmpty(format) || format == SVF.Default)
+                {
+                    // The basics are always present
+                    sb.AppendFormat("{0}.{1}.{2}", semver.Major, semver.Minor, semver.Patch);
+
+                    // If there are pre-release identifiers, they're next
+                    if (semver.Identifiers.Count > 0)
+                    {
+                        sb.Append($"-{semver.Identifiers[0]}");
+
+                        semver.Identifiers
+                            .Skip(1)
+                            .Aggregate(sb, (_, i) => sb.AppendFormat(".{0}", i));
+                    }
+
+                    // And the same with metadata items
+                    if (semver.Metadata.Count > 0)
+                    {
+                        sb.Append($"+{semver.Metadata[0]}");
+
+                        semver.Metadata
+                            .Skip(1)
+                            .Aggregate(sb, (_, i) => sb.AppendFormat(".{0}", i));
+                    }
+
+                    return sb.ToString();
+                }
+                
+
+                IEnumerator<char> iter = null;
+                char? current = null;
+                int pos = -1;
+
+                // If it isn't the general format specifier, we need to interpret
+                // the pattern and build the string as we go.
+                RecurseOver(format);
+
+
+                return sb.ToString();
+
+
+                // Recursively parses the custom format pattern, adding to the
+                // contents of the [StringBuilder] as it proceeds.
+                void RecurseOver(string str)
+                {
+                    var storedIter = iter;
+                    var storedCurrent = current;
+                    var storedPos = pos;
+
+                    iter = str.GetEnumerator();
+                    iter.MoveNext();
+
+                    current = iter.Current;
+
+                    while (current.HasValue)
+                        Evaluate();
+
+                    iter = storedIter;
+                    current = storedCurrent;
+                    pos = storedPos;
+                }
+
+                // Evaluates the current input character
+                void Evaluate()
+                {
+                    // 'M' is for the major version component
+                    if (Take('M'))
+                        Major();
+
+                    // 'm' is for the minor version component
+                    else if (Take('m'))
+                        Minor();
+
+                    // 'p' is for the patch version component, however...
+                    else if (Take('p'))
+                    {
+                        // If we have 'pp', we only include the patch component
+                        // in the formatted string if it's non-zero.
+                        if (Take('p'))
+                        {
+                            if (semver.Patch != 0)
+                            {
+                                sb.Append('.');
+                                Patch();
+                            }
+                        }
+                        // But, if we have just 'p', we always include it.
+                        else
+                        {
+                            Patch();
+                        }
+                    }
+
+                    // 'R' is for standalone identifiers, but 'RR' means we
+                    // have to prefix them with the hyphen separator.
+                    else if (Take('R'))
+                    {
+                        // If we have identifiers, they'll be included.
+                        if (semver.Identifiers.Count > 0)
+                        {
+                            // If the specifier is 'RR', we have to include the
+                            // hyphen separator before the identifiers.
+                            if (Take('R'))
+                                sb.Append('-');
+
+                            Identifiers();
+                        }
+                        // If we don't have identifiers, we consume a following 'R'
+                        // if it's present and proceed without including anything.
+                        else
+                        {
+                            Take('R');
+                        }
+                    }
+
+                    // A character 'r' can either be the first part of an indexed
+                    // pre-release identifier specifier 'r#', or the first part of
+                    // the reserved specifier 'rr'.
+                    else if (Take('r'))
+                    {
+                        if (Take('r'))
+                            Error(@"Format specifier ""rr"" is reserved and must not be used.");
+
+                        else
+                        {
+                            var intBdr = new StringBuilder();
+
+                            // A single 'r' followed by numbers is an index into
+                            // the pre-release identifiers, which we have to turn
+                            // into a number and use to find the correct identifier.
+                            if (TakeNumerals(intBdr))
+                            {
+                                // If we can parse it, then we include the identifier
+                                // at the specified index.
+                                if (Int32.TryParse(intBdr.ToString(), out var idx))
+                                {
+                                    if (idx >= semver.Identifiers.Count)
+                                        Error("Pre-release identifier index out of bounds.");
+
+                                    sb.Append(semver.Identifiers[idx]);
+                                }
+                                else
+                                    Error("Could not convert index to Int32.");
+                            }
+                            // If the single 'r' isn't followed by numbers, then we
+                            // store it and whatever came after it.
+                            else
+                            {
+                                sb.Append('r');
+                                Store();
+                            }
+                        }
+                    }
+
+                    // The 'D' and 'DD' specifiers are for standalone and prefixed
+                    // metadata item groups, like with 'R' and 'RR'.
+                    else if (Take('D'))
+                    {
+                        // As with 'R' and 'RR', we include nothing if there are
+                        // no metadata items.
+                        if (semver.Metadata.Count > 0)
+                        {
+                            // Including the separator for 'DD'.
+                            if (Take('D'))
+                                sb.Append('+');
+
+                            Metadata();
+                        }
+                        // And consuming the second 'D' without doing anything
+                        // if we don't have any metadata items.
+                        else
+                        {
+                            Take('D');
+                        }
+                    }
+
+                    // As with 'r', 'd' can be followed by a number or another 'd',
+                    // and it's handled in exactly the same way.
+                    else if (Take('d'))
+                    {
+                        if (Take('d'))
+                            Error(@"Format specifier ""dd"" is reserved and must not be used.");
+
+                        else
+                        {
+                            var intBdr = new StringBuilder();
+
+                            if (TakeNumerals(intBdr))
+                            {
+                                if (Int32.TryParse(intBdr.ToString(), out var idx))
+                                {
+                                    if (idx >= semver.Metadata.Count)
+                                        Error("Metadata item index index out of bounds.");
+
+                                    sb.Append(semver.Metadata[idx]);
+                                }
+                                else
+                                    Error("Could not convert index to Int32.");
+                            }
+                            else
+                            {
+                                sb.Append('d');
+                                Store();
+                            }
+                        }
+                    }
+
+                    // The 'G' specifier expands to the general format
+                    else if (Take('G'))
+                        RecurseOver(FMT_GENERAL);
+
+                    // While 'g' is the same, but prefixed.
+                    else if (Take('g'))
+                        RecurseOver(FMT_GENERAL_PREFIX);
+
+                    // The 'C' specifier is for the concise format, where patch
+                    // and metadata components can be excluded.
+                    else if (Take('C'))
+                        RecurseOver(FMT_CONCISE);
+
+                    // And, as above, 'c' is the prefixed form of 'C'.
+                    else if (Take('c'))
+                        RecurseOver(FMT_CONCISE_PREFIX);
+
+                    // To aid in formatting, we allow our caller to specify that
+                    // portions of the custom format pattern should be included
+                    // verbatim by surrounding them by double braces.
+                    else if (Take('{'))
+                    {
+                        // If we get two braces, then we need to continue until
+                        // we find the two closing braces.
+                        if (Take('{'))
+                        {
+                            TakeUntilBraces();
+
+
+                            void TakeUntilBraces()
+                            {
+                                // If we reach the end of the string without a closing
+                                // brace pair, that's an error.
+                                if (!current.HasValue)
+                                    Error("Verbatim block not terminated.");
+
+                                // If we find a single closing brace, we need
+                                // to check for a second.
+                                if (Take('}'))
+                                {
+                                    // If we don't get the second brace, we need
+                                    // to store this character and try again.
+                                    if (!Take('}'))
+                                    {
+                                        Store();
+                                        TakeUntilBraces();
+                                    }
+
+                                    // Otherwise, store and recurse.
+                                }
+
+                                // If it's something else, then we'll store it verbatim
+                                // and continue looking.
+                                else
+                                {
+                                    Store();
+                                    TakeUntilBraces();
+                                }
+                            }
+                        }
+                        // Otherwise, we store a single brace and move on.
+                        else
+                        {
+                            sb.Append('{');
+                        }
+                    }
+
+                    // If we don't have any particular logic for this character,
+                    // include it in the final string as-is.
+                    else
+                        Store();
+                }
+
+                // Consumes an input character if it equals the argument, returning
+                // true when a character has been consumed.
+                bool Take(char c)
+                {
+                    if (current == c)
+                    {
+                        Consume();
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                
+                // Unconditionally consumes an input character and stores it in
+                // the [StringBuilder].
+                void Store()
+                {
+                    sb.Append(current.Value);
+                    Consume();
+                }
+                
+                // Unconditionally consumes an input character.
+                void Consume()
+                {
+                    current = iter.MoveNext() ? iter.Current : default(char?);
+                    pos++;
+                }
+                
+                // Produces an error with the specified message.
+                void Error(string message)
+                {
+                    throw new FormatException(
+                        $"Invalid format string (at position {pos}): {message}"
+                        );
+                }
+
+                // Consumes input characters while they are numeric, storing them
+                // in the provided [StringBuilder]. Returns true if any characters
+                // were consumed.
+                bool TakeNumerals(StringBuilder builder)
+                {
+                    // If we reach the end of the input, our success depends on
+                    // whether we consumed any input.
+                    if (!current.HasValue)
+                        return builder.Length > 0;
+
+                    // If this isn't the end, we continue while we're consuming
+                    // numeric characters only.
+                    else if ('0' <= current.Value && current.Value <= '9')
+                    {
+                        builder.Append(current.Value);
+                        Consume();
+
+                        TakeNumerals(builder);
+
+                        return true;
+                    }
+
+                    // And, as soon as we reach a non-numeric, we end.
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                void Major() => sb.Append(semver.Major);
+                void Minor() => sb.Append(semver.Minor);
+                void Patch() => sb.Append(semver.Patch);
+                void Identifiers()
+                {
+                    // The custom format pattern parser should ensure we never
+                    // come here when it would be invalid.
+
+                    sb.Append(semver.Identifiers[0]);
+
+                    foreach (var id in semver.Identifiers.Skip(1))
+                        sb.AppendFormat(".{0}", id);
+                }
+                void Metadata()
+                {
+                    sb.Append(semver.Metadata[0]);
+
+                    foreach (var md in semver.Metadata.Skip(1))
+                        sb.AppendFormat(".{0}", md);
+                }
             }
         }
 
@@ -362,7 +620,7 @@ namespace McSherry.SemanticVersioning
         /// </remarks>
         string IFormattable.ToString(string format, IFormatProvider provider)
         {
-            return this.ToString(format);
+            return Formatter.Format(this, format);
         }
         /// <summary>
         /// <para>
