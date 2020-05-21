@@ -736,6 +736,40 @@ namespace McSherry.SemanticVersioning
             return semver > this;
         }
 
+        // Deconstructors to enable tuple use in for-each loops
+        /// <summary>
+        /// Deconstructs the current version.
+        /// </summary>
+        /// <param name="major">
+        /// The <see cref="Major"/> component of the current version.
+        /// </param>
+        /// <param name="minor">
+        /// The <see cref="Minor"/> component of the current version.
+        /// </param>
+        /// <param name="patch">
+        /// The <see cref="Patch"/> component of the current version.
+        /// </param>
+        public void Deconstruct(out int major, out int minor, out int patch)
+        {
+            major = this.Major;
+            minor = this.Minor;
+            patch = this.Patch;
+        }
+        /// <summary>
+        /// Deconstructs the current version.
+        /// </summary>
+        /// <param name="major">
+        /// The <see cref="Major"/> component of the current version.
+        /// </param>
+        /// <param name="minor">
+        /// The <see cref="Minor"/> component of the current version.
+        /// </param>
+        public void Deconstruct(out int major, out int minor)
+        {
+            major = this.Major;
+            minor = this.Minor;
+        }
+
         // object Overrides
         /// <summary>
         /// <para>

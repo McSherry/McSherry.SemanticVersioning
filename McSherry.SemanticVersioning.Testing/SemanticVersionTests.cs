@@ -57,6 +57,15 @@ namespace McSherry.SemanticVersioning
                 "?",                        // 10
             };
 
+        public static IEnumerable<SemanticVersion> VariousValidVersions
+        {
+            get
+            {
+                yield return (SemanticVersion)"1.7.0-alpha.2+20150925.f8f2cb1a";
+                yield return (SemanticVersion)"2.0.1-rc.1";
+            }
+        }
+
         /// <summary>
         /// <para>
         /// Tests that validation of build metadata items is working
@@ -951,6 +960,40 @@ namespace McSherry.SemanticVersioning
                                "Incorrect compatibility (30).");
             }
 #endregion
+        }
+
+        /// <summary>
+        /// Tests the deconstructor for the full major-minor-patch version trio.
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Deconstruct_Trio()
+        {
+            var iter = VariousValidVersions.GetEnumerator();
+
+            foreach (var (maj, min, pat) in VariousValidVersions)
+            {
+                iter.MoveNext();
+
+                Assert.AreEqual(maj, iter.Current.Major);
+                Assert.AreEqual(min, iter.Current.Minor);
+                Assert.AreEqual(pat, iter.Current.Patch);
+            }
+        }
+        /// <summary>
+        /// Tests the deconstructor for the major-minor version pair.
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Deconstruct_Pair()
+        {
+            var iter = VariousValidVersions.GetEnumerator();
+
+            foreach (var (maj, min) in VariousValidVersions)
+            {
+                iter.MoveNext();
+
+                Assert.AreEqual(maj, iter.Current.Major);
+                Assert.AreEqual(min, iter.Current.Minor);
+            }
         }
     }
 }
