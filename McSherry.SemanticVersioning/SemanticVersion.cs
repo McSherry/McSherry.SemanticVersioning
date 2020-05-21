@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 
 using McSherry.SemanticVersioning.Internals;
 using McSherry.SemanticVersioning.Internals.Shims;
@@ -266,6 +267,7 @@ namespace McSherry.SemanticVersioning
 
         private readonly int _major, _minor, _patch;
         private readonly List<string> _prIds, _metadata;
+        [OptionalField]
         private readonly ParseMetadata _parseInfo;
 
 
