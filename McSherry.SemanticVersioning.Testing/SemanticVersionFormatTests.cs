@@ -69,7 +69,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, Str_Metadata)]
         [DataRow(Str_Basic_NoPatch, Str_Basic_NoPatch)]
         [DataRow(Str_Basic_Patch, Str_Basic_Patch)]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Standard_General(string version, string output)
         {
             var v = (SemanticVersion)version;
@@ -85,7 +85,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "v" + Str_Metadata)]
         [DataRow(Str_Basic_NoPatch, "v" + Str_Basic_NoPatch)]
         [DataRow(Str_Basic_Patch, "v" + Str_Basic_Patch)]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Standard_PrefixedGeneral(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("g"));
@@ -96,7 +96,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "1.7")]
         [DataRow(Str_Basic_NoPatch, "1.7")]
         [DataRow(Str_Basic_Patch, "2.0.1")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Standard_Concise(string version, string output)
         {
             var v = (SemanticVersion)version;
@@ -109,7 +109,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "v1.7")]
         [DataRow(Str_Basic_NoPatch, "v1.7")]
         [DataRow(Str_Basic_Patch, "v2.0.1")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Standard_PrefixedConcise(string version, string output)
         {
             var v = (SemanticVersion)version;
@@ -125,7 +125,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "1")]
         [DataRow(Str_Basic_NoPatch, "1")]
         [DataRow(Str_Basic_Patch, "2")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_Major(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("M"));
@@ -136,7 +136,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "7")]
         [DataRow(Str_Basic_NoPatch, "7")]
         [DataRow(Str_Basic_Patch, "0")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_Minor(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("m"));
@@ -147,7 +147,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "0")]
         [DataRow(Str_Basic_NoPatch, "0")]
         [DataRow(Str_Basic_Patch, "1")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_Patch(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("p"));
@@ -158,7 +158,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "")]
         [DataRow(Str_Basic_NoPatch, "")]
         [DataRow(Str_Basic_Patch, ".1")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_OptionalPatch(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("pp"));
@@ -169,7 +169,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "")]
         [DataRow(Str_Basic_NoPatch, "")]
         [DataRow(Str_Basic_Patch, "")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_PrefixedPrereleaseGroup(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("RR"));
@@ -180,7 +180,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "")]
         [DataRow(Str_Basic_NoPatch, "")]
         [DataRow(Str_Basic_Patch, "")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_StandalonePrereleaseGroup(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("R"));
@@ -190,7 +190,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_AllComponents, 1, "2")]
         [DataRow(Str_Prerelease, 0, "rc")]
         [DataRow(Str_Prerelease, 1, "1")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_IndexedPrereleaseID_Success(string version, int index, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString($"r{index}"));
@@ -200,7 +200,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_AllComponents, 3)]
         [DataRow(Str_Prerelease, 2)]
         [DataRow(Str_Prerelease, 3)]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_IndexedPrereleaseID_Failure(string version, int index)
         {
             Assert.ThrowsException<FormatException>(
@@ -213,7 +213,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata)]
         [DataRow(Str_Basic_NoPatch)]
         [DataRow(Str_Basic_Patch)]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_Reserved_rr(string version)
         {
             Assert.ThrowsException<FormatException>(
@@ -226,7 +226,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "20150925.f8f2cb1a")]
         [DataRow(Str_Basic_NoPatch, "")]
         [DataRow(Str_Basic_Patch, "")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_StandaloneMetadataGroup(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("D"));
@@ -237,7 +237,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata, "+20150925.f8f2cb1a")]
         [DataRow(Str_Basic_NoPatch, "")]
         [DataRow(Str_Basic_Patch, "")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_PrefixedMetadataGroup(string version, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString("DD"));
@@ -247,7 +247,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_AllComponents, 1, "f8f2cb1a")]
         [DataRow(Str_Metadata, 0, "20150925")]
         [DataRow(Str_Metadata, 1, "f8f2cb1a")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_IndexedMetadata_Success(string version, int index, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)version).ToString($"d{index}"));
@@ -257,7 +257,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_AllComponents, 3)]
         [DataRow(Str_Metadata, 2)]
         [DataRow(Str_Metadata, 3)]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_IndexedMetadata_Failure(string version, int index)
         {
             Assert.ThrowsException<FormatException>(
@@ -270,7 +270,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(Str_Metadata)]
         [DataRow(Str_Basic_NoPatch)]
         [DataRow(Str_Basic_Patch)]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_Reserved_dd(string version)
         {
             Assert.ThrowsException<FormatException>(
@@ -287,14 +287,14 @@ namespace McSherry.SemanticVersioning
         [DataRow("   G ", "   " + Str_AllComponents + " ")]
         [DataRow("{ M.mpp }", "{ 1.7 }")]
         [DataRow("{ M.mpp }}", "{ 1.7 }}")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_MultipleSpecifiers(string specifiers, string output)
         {
             Assert.AreEqual(output, ((SemanticVersion)Str_AllComponents).ToString(specifiers));
         }
 
         [DataRow("M.m {{unterminated verbatim")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_VerbatimErrors(string specifiers)
         {
             Assert.ThrowsException<FormatException>(
@@ -304,7 +304,7 @@ namespace McSherry.SemanticVersioning
 
         [DataRow("r4294967296")]
         [DataRow("d4294967296")]
-        [DataTestMethod]
+        [DataTestMethod, TestCategory(Category)]
         public void Custom_IntParseOverflow(string specifiers)
         {
             Assert.ThrowsException<FormatException>(
