@@ -198,12 +198,12 @@ namespace McSherry.SemanticVersioning.Ranges
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Assign <c>null</c> to disable memoization. The value of this
-        /// property is <c>null</c> by default.
+        /// Assign <see langword="null"/> to disable memoization. The value of this
+        /// property is <see langword="null"/> by default.
         /// </para>
         /// <para>
         /// Accesses by <see cref="VersionRange"/> to the memoization agent
-        /// are surrounded by <c>lock (<see cref="SynchronizationObject"/>)</c>.
+        /// are surrounded by <c><see langword="lock"/> (<see cref="SynchronizationObject"/>)</c>.
         /// </para>
         /// </remarks>
         public IDictionary<SemanticVersion, bool> MemoizationAgent

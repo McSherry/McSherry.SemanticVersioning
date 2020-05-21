@@ -54,9 +54,9 @@ namespace McSherry.SemanticVersioning.Internals
         /// The string against which <paramref name="subject"/> is compared.
         /// </param>
         /// <returns>
-        /// Returns <c>true</c> if <paramref name="subject"/> is greater than
-        /// <paramref name="against"/>, <c>null</c> if the two are equal, and
-        /// <c>false</c> if <paramref name="subject"/> is lesser.
+        /// Returns <see langword="true"/> if <paramref name="subject"/> is greater
+        /// than <paramref name="against"/>, <see langword="null"/> if the two are
+        /// equal, and <see langword="false"/> if <paramref name="subject"/> is lesser.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown if either the parameter is null.

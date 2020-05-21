@@ -1737,12 +1737,12 @@ namespace McSherry.SemanticVersioning
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Assign <c>null</c> to disable memoization. The value of this
-        /// property is <c>null</c> by default.
+        /// Assign <see langword="null"/> to disable memoization. The value of this
+        /// property is <see langword="null"/> by default.
         /// </para>
         /// <para>
         /// Accesses by the parser to the memoization agent are surrounded
-        /// by <c>lock (MemoizationAgent)</c>.
+        /// by <c><see langword="lock"/> (MemoizationAgent)</c>.
         /// </para>
         /// </remarks>
         public static IDictionary<string, SemanticVersion> MemoizationAgent
