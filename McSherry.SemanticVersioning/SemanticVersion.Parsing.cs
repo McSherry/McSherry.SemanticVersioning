@@ -46,7 +46,7 @@ namespace McSherry.SemanticVersioning
         /// <summary>
         /// <para>
         /// The opposite of <see cref="Strict"/>, with all parser flags
-        /// set but <see cref="Greedy"/>.
+        /// set except <see cref="Greedy"/>.
         /// </para>
         /// </summary>
         Lenient         = ~0 ^ Greedy,
@@ -74,10 +74,9 @@ namespace McSherry.SemanticVersioning
         /// <para>
         /// The effect of other <see cref="ParseMode"/>s must be considered
         /// when specifying <see cref="Greedy"/>. For example, <c>1.2</c> will
-        /// produce the expected result with both <see cref="Greedy"/> and
-        /// <see cref="OptionalPatch"/>, but <c>v1.2</c> with <see cref="Greedy"/>
-        /// will result in failure unless <see cref="AllowPrefix"/> is also
-        /// specified.
+        /// produce the expected result with either or both of <see cref="Greedy"/>
+        /// and <see cref="OptionalPatch"/>, but <c>v1.2</c> with <see cref="Greedy"/>
+        /// will result in failure unless <see cref="AllowPrefix"/> is also specified.
         /// </para>
         /// </remarks>
         Greedy          = 1 << 2,
@@ -1468,7 +1467,6 @@ namespace McSherry.SemanticVersioning
                     // retrieved from our cache.
                     else
                     {
-                        // We know that 
                         result = new ParseResult(cacheResult);
                     }
                 }
