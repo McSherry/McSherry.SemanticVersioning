@@ -79,6 +79,10 @@ inherited.
 - **[CompatibleWith(SemanticVersion)][15]**  
   Determines whether the specified [SemanticVersion][7] is
   backwards-compatible with the current version.
+- **[Deconstruct(out Int32, out Int32, out Int32)][A14]**
+  Deconstructs the current version.
+- **[Deconstruct(out Int32, out Int32)][B14]**
+  Deconstructs the current version.
 - **[Equals(Object)][16]**  
   Determines whether the specified object is equal to the current
   object.
