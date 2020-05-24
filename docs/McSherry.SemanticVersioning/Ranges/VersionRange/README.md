@@ -44,6 +44,7 @@ inherited.
   specified [SemanticVersion][4] instances.
 - **[`IComparable<SemanticVersion>` CompareTo(SemanticVersion)][5A]**
   Determines whether the specified [SemanticVersion][4] is outside the bounds of the current version range.
+  
 [3]: ./SatisfiedBy(SemanticVersion).md
 [4]: ../SemanticVersion
 [5]: ./SatisfiedBy(SemanticVersion).md

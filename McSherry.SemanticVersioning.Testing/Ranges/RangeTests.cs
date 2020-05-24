@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-19 Liam McSherry
+﻿// Copyright (c) 2015-20 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -1429,6 +1429,96 @@ namespace McSherry.SemanticVersioning.Ranges
             Assert.IsFalse(rs1);
             Assert.AreEqual(rs1, dict[sv1]);
             Assert.AreEqual(2, dict.Count);
+        }
+
+
+        // When adding to [CompareTo] test vectors, remember to add the vector and
+        // its corresponding versions to all tests to ensure consistency.
+        //
+        // TODO: Add more tests with multiple comparators
+        // TODO: Add tests with multiple comparator sets
+        // TODO: Add tests with pre-release versions
+
+        [DataRow("1.7.0",           "1.7.1; 1.8; 2.0.1")]
+        [DataRow("=1.7.0",          "1.7.1; 1.8; 2.0.1")]
+        [DataRow("<1.7.0",          "1.7; 1.7.1; 1.8; 2.0.1")]
+        [DataRow("<=1.7.0",         "1.7.1; 1.8; 2.0.1")]
+        [DataRow(">1.7.0 <2.0.1",   "2.0.2; 2.1; 3.9.10")]
+        [DataRow(">1.7.0 <1.7.8",   "1.7.9; 2.0.1; 2.1; 3.9.10")]
+        [DataRow("1.7.0 - 2.0.1",   "2.0.2; 2.1")]
+        [DataRow("1.7 - 2.0.1",     "2.0.2; 2.1")]
+        [DataRow("1.7.x",           "1.8; 2.0.1")]
+        [DataRow("1.x",             "2.0.1; 4.9.10")]
+        [DataRow("~1.7.0",          "1.8; 2.0.1")]
+        [DataRow("~1.7",            "2.0.1; 4.9.10")]
+        [DataRow("~1",              "2.0; 2.0.1")]
+        [DataRow("^1.7.0",          "2.0; 2.0.1")]
+        [DataRow("^0.7.0",          "0.8; 1.7.0; 2.0.1")]
+        [DataRow("^0.0.1",          "0.7; 1.7; 2.0.1")]
+        [DataTestMethod, TestCategory(Category)]
+        public void CompareTo_Greater(string range, string versions)
+        {
+            var r = new VersionRange(range);
+            var v = versions.Split(';').Select(vs => (SemanticVersion)vs.Trim());
+
+            foreach (var ver in v)
+                Assert.IsTrue(r.CompareTo(ver) > 0, $"Version: {ver}");
+        }
+
+        [DataRow("1.7.0",           "1.7")]
+        [DataRow("=1.7.0",          "1.7")]
+        [DataRow("<1.7.0",          "1.6.10; 0.9.0")]
+        [DataRow("<=1.7.0",         "1.7; 1.6.10; 0.9.0")]
+        [DataRow(">1.7.0 <2.0.1",   "1.7.1; 1.8; 2.0")]
+        [DataRow(">1.7.0 <1.7.8",   "1.7.1; 1.7.8")]
+        [DataRow("1.7.0 - 2.0.1",   "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
+        [DataRow("1.7 - 2.0.1",     "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
+        [DataRow("1.7.x",           "1.7.0; 1.7.1; 1.7.10")]
+        [DataRow("1.x",             "1.0; 1.3; 1.7; 1.9.3")]
+        [DataRow("x",               "0.1; 1.1; 1.7.5; 2.0.1; 999.999.999")]
+        [DataRow("~1.7.0",          "1.7; 1.7.3; 1.7.999")]
+        [DataRow("~1.7",            "1.7; 1.7.3; 1.7.999")]
+        [DataRow("~1",              "1.0; 1.1; 1.7.3; 1.7.999; 1.8; 1.999.999")]
+        [DataRow("^1.7.0",          "1.7; 1.7.3; 1.8; 1.999.999")]
+        [DataRow("^0.7.0",          "0.7; 0.7.3; 0.7.999")]
+        [DataRow("^0.0.1",          "0.0.1")]
+        [DataTestMethod, TestCategory(Category)]
+        public void CompareTo_Zero(string range, string versions)
+        {
+            var r = new VersionRange(range);
+            var v = versions.Split(';').Select(vs => (SemanticVersion)vs.Trim());
+
+            foreach (var ver in v)
+                Assert.IsTrue(r.CompareTo(ver) == 0, $"Version: {ver}");
+        }
+        
+        [DataRow("1.7.0",           "1.6.999; 1.5; 0.9")]
+        [DataRow("=1.7.0",          "1.6.999; 1.5; 0.9")]
+        [DataRow(">1.7.0 <2.0.1",   "1.6.999; 1.5; 0.9")]
+        [DataRow(">1.7.0 <1.7.8",   "1.6.999; 1.5; 0.9")]
+        [DataRow(">1.7.1 <1.7.8",   "1.7; 1.6.999; 1.5; 0.9")]
+        [DataRow("1.7.0 - 2.0.1",   "1.6.999; 1.5; 0.9")]
+        [DataRow("1.7.1 - 2.0.1",   "1.7; 1.6.999; 1.5; 0.9")]
+        [DataRow("1.7 - 2.0.1",     "1.6.999; 1.5; 0.9")]
+        [DataRow("1.7.x",           "1.6.999; 1.5; 0.9")]
+        [DataRow("1.x",             "0.9; 0.3.3")]
+        [DataRow("~1.7.0",          "1.6.999; 1.5; 0.9")]
+        [DataRow("~1.7.1",          "1.7; 1.6.999; 1.5; 0.9")]
+        [DataRow("~1.7",            "1.6.999; 1.5; 0.9")]
+        [DataRow("~1",              "0.9; 0.6.2")]
+        [DataRow("^1.7.0",          "1.6.999; 1.5; 0.9")]
+        [DataRow("^1.7.1",          "1.7; 1.6.999; 1.5; 0.9")]
+        [DataRow("^0.7.0",          "0.6; 0.2.1")]
+        [DataRow("^0.7.3",          "0.7.2; 0.6; 0.2.1")]
+        [DataRow("^0.0.1",          "0.0.0")]
+        [DataTestMethod, TestCategory(Category)]
+        public void CompareTo_Lesser(string range, string versions)
+        {
+            var r = new VersionRange(range);
+            var v = versions.Split(';').Select(vs => (SemanticVersion)vs.Trim());
+
+            foreach (var ver in v)
+                Assert.IsTrue(r.CompareTo(ver) < 0, $"Version: {ver}");
         }
     }
 }
