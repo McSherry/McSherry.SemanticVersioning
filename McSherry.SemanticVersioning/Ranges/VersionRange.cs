@@ -20,7 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Runtime.CompilerServices;
 using McSherry.SemanticVersioning.Internals.Shims;
 
 namespace McSherry.SemanticVersioning.Ranges
@@ -76,7 +76,7 @@ namespace McSherry.SemanticVersioning.Ranges
     [Serializable]
     [CLSCompliant(true)]
     public sealed partial class VersionRange
-        : VersionRange.IComparator
+        : VersionRange.IComparator, IComparable<SemanticVersion>
     {
         // Used as a passthrough method so that the constructor taking a string
         // argument can use constructor chaining to avoid duplicate code.
@@ -298,6 +298,34 @@ namespace McSherry.SemanticVersioning.Ranges
         public bool SatisfiedBy(IEnumerable<SemanticVersion> semvers)
         {
             return semvers.All(this.SatisfiedBy);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="SemanticVersion"/> is
+        /// outside the bounds of the current version range.
+        /// </summary>
+        /// <param name="semver">
+        /// The <see cref="SemanticVersion"/> to compare to the current version
+        /// range.
+        /// </param>
+        /// <returns>
+        /// <para>
+        /// If <paramref name="semver"/> has higher precedence than all versions
+        /// that satisfy the current version range, an integer greater than zero.
+        /// </para>
+        /// <para>
+        /// If <paramref name="semver"/> has lower precedence than all versions
+        /// that satisfy the current version range, an integer less than zero.
+        /// </para>
+        /// <para>
+        /// If <paramref name="semver"/> satisfies the current version range, if it
+        /// is neither greater than nor less than all versions that satisfy the
+        /// current version range, or if it is <see langword="null"/>, zero.
+        /// </para>
+        /// </returns>
+        public int CompareTo(SemanticVersion semver)
+        {
+            throw new NotImplementedException();
         }
 
         bool IComparator.ComparableTo(SemanticVersion comparand)
