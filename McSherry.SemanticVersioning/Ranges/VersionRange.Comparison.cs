@@ -35,29 +35,6 @@ namespace McSherry.SemanticVersioning.Ranges
         /// </summary>
         internal interface IComparator
         {
-            /*
-                So, why bother with this interface if it's private and
-                we've only got one class implementing it, and that class
-                is little more than a shell?
-
-                Answer: future proofing.
-
-                Currently, we only support the basic features of version
-                ranges specified by the 'node-semver' docs, but in future
-                we're likely to support the advanced features, and the
-                advanced features all decompose into a set of the basic
-                features.
-
-                By having this interface here from the start, we don't need
-                to do a large amount of rework, we just need to make the
-                [VersionRange] class implement the interface, we need to 
-                add the appropriate [Operator] values for the advanced features,
-                and we then make [Comparator.Create] return [VersionRange]s
-                for advanced features, and that's that. It'll also be entirely
-                transparent to the [VersionRange] consuming it, which is a big
-                plus.
-            */
-
             /// <summary>
             /// <para>
             /// Determines whether the comparator is satisfied
