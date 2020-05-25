@@ -325,7 +325,94 @@ namespace McSherry.SemanticVersioning.Ranges
         /// </returns>
         public int CompareTo(SemanticVersion semver)
         {
-            throw new NotImplementedException();
+            //const int GREATER = +1;
+            const int EQUAL   =  0;
+            //const int LESSER  = -1;
+
+            // To determine relative precedence, we have to determine whether
+            // the provided version is either greater or less than all versions
+            // that the current range accepts.
+            //
+            // To start with, we know that neither can be true if any of the
+            // comparator sets we have is satisfied by the current version, as
+            // that means it falls within their range.
+            if (_comparators.Any(set => set.All(cmp => cmp.SatisfiedBy(semver))))
+                return EQUAL;
+
+            // Once we know that none of the comparator sets are satisfied, we
+            // need to verify that the version is greater or lesser than all of
+            // the sets individually, with the same relation for all sets. 
+            //
+            // Version ranges can be noncontiguous, e.g. '>1.7 <1.8 || 2.0.0' is
+            // not satisfied by 'v1.9.2', but it clearly isn't greater than the
+            // maximum the range matches (which is '2.0.0') and nor is it less
+            // than the minimum version matched by the range ('1.7.1'). If the
+            // result--greater or lesser--is the same for all sets, then we know
+            // it doesn't fall into a gap in a noncontiguous range.
+            //
+            // As we do for comparators in each set, here we take the first set
+            // as a seed and verify that all others match.
+            var setSeed = CompareToSet(_comparators.First());
+
+            // And, in the same manner as for comparators, if all the results
+            // match we're able to return the seed.
+            if (_comparators.Skip(1).All(set => CompareToSet(set) == setSeed))
+                return setSeed;
+            // And if they don't, it's neither greater nor lesser than the range.
+            else
+                return EQUAL;
+
+
+            int CompareToSet(IEnumerable<IComparator> set)
+            {
+                // We take the first comparator in the set as a seed, and we'll
+                // compare all subsequent comparators against this. It doesn't
+                // matter which we start with, this is just easiest.
+                var cmpSeed = CompareToComparator(set.First());
+
+                // If all subsequent comparators match, we can return the seed.
+                if (set.Skip(1).All(cmp => CompareToComparator(cmp) == cmpSeed))
+                    return cmpSeed;
+                // Otherwise, we have to indicate it's neither greater nor lesser.
+                else
+                    return EQUAL;
+            }
+
+            int CompareToComparator(IComparator cmp)
+            {
+                if (cmp is UnaryComparator U)
+                {
+                    switch (U.Operator)
+                    {
+                        // An equality comparator only matches one version, so we
+                        // can compare against that one version to find precedence.
+                        case Operator.Equal: return U.Version.CompareTo(semver);
+                    }
+                }
+
+                else if (cmp is BinaryComparator B)
+                {
+
+                }
+
+                // If we've been provided a [VersionRange], we can simply
+                // recurse over it without any other thought.
+                else if (cmp is VersionRange R)
+                {
+                    return R.CompareTo(semver);
+                }
+
+                // As these implementations are all internal, any other type
+                // being passed in means we've made a mistake somewhere.
+                else
+                {
+                    throw new ArgumentException(
+                        "Internal error: unrecognised comparator type."
+                        );
+                }
+
+                throw new NotImplementedException();
+            }
         }
 
         bool IComparator.ComparableTo(SemanticVersion comparand)
