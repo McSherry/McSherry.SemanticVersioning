@@ -1434,10 +1434,6 @@ namespace McSherry.SemanticVersioning.Ranges
 
         // When adding to [CompareTo] test vectors, remember to add the vector and
         // its corresponding versions to all tests to ensure consistency.
-        //
-        // TODO: Add more tests with multiple comparators
-        // TODO: Add tests with multiple comparator sets
-        // TODO: Add tests with pre-release versions
 
         [DataRow("1.7.0",           "1.7.1; 1.8; 2.0.1")]
         [DataRow("=1.7.0",          "1.7.1; 1.8; 2.0.1")]
@@ -1465,23 +1461,25 @@ namespace McSherry.SemanticVersioning.Ranges
                 Assert.IsTrue(r.CompareTo(ver) > 0, $"Version: {ver}");
         }
 
-        [DataRow("1.7.0",           "1.7")]
-        [DataRow("=1.7.0",          "1.7")]
-        [DataRow("<1.7.0",          "1.6.10; 0.9.0")]
-        [DataRow("<=1.7.0",         "1.7; 1.6.10; 0.9.0")]
-        [DataRow(">1.7.0 <2.0.1",   "1.7.1; 1.8; 2.0")]
-        [DataRow(">1.7.0 <1.7.8",   "1.7.1; 1.7.8")]
-        [DataRow("1.7.0 - 2.0.1",   "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
-        [DataRow("1.7 - 2.0.1",     "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
-        [DataRow("1.7.x",           "1.7.0; 1.7.1; 1.7.10")]
-        [DataRow("1.x",             "1.0; 1.3; 1.7; 1.9.3")]
-        [DataRow("x",               "0.1; 1.1; 1.7.5; 2.0.1; 999.999.999")]
-        [DataRow("~1.7.0",          "1.7; 1.7.3; 1.7.999")]
-        [DataRow("~1.7",            "1.7; 1.7.3; 1.7.999")]
-        [DataRow("~1",              "1.0; 1.1; 1.7.3; 1.7.999; 1.8; 1.999.999")]
-        [DataRow("^1.7.0",          "1.7; 1.7.3; 1.8; 1.999.999")]
-        [DataRow("^0.7.0",          "0.7; 0.7.3; 0.7.999")]
-        [DataRow("^0.0.1",          "0.0.1")]
+        [DataRow("1.7.0",               "1.7")]
+        [DataRow("=1.7.0",              "1.7")]
+        [DataRow("<1.7.0",              "1.6.10; 0.9.0")]
+        [DataRow("<=1.7.0",             "1.7; 1.6.10; 0.9.0")]
+        [DataRow("<1.7.3 >1.7.5",       "1.7.3; 1.7.4; 1.7.5")]
+        [DataRow(">1.7.0 <2.0.1",       "1.7.1; 1.8; 2.0")]
+        [DataRow(">1.7.0 || <2.0.1",    "2.0.2; 2.1; 3.9.10")]
+        [DataRow(">1.7.0 <1.7.8",       "1.7.1; 1.7.8")]
+        [DataRow("1.7.0 - 2.0.1",       "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
+        [DataRow("1.7 - 2.0.1",         "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
+        [DataRow("1.7.x",               "1.7.0; 1.7.1; 1.7.10")]
+        [DataRow("1.x",                 "1.0; 1.3; 1.7; 1.9.3")]
+        [DataRow("x",                   "0.1; 1.1; 1.7.5; 2.0.1; 999.999.999")]
+        [DataRow("~1.7.0",              "1.7; 1.7.3; 1.7.999")]
+        [DataRow("~1.7",                "1.7; 1.7.3; 1.7.999")]
+        [DataRow("~1",                  "1.0; 1.1; 1.7.3; 1.7.999; 1.8; 1.999.999")]
+        [DataRow("^1.7.0",              "1.7; 1.7.3; 1.8; 1.999.999")]
+        [DataRow("^0.7.0",              "0.7; 0.7.3; 0.7.999")]
+        [DataRow("^0.0.1",              "0.0.1")]
         [DataTestMethod, TestCategory(Category)]
         public void CompareTo_Zero(string range, string versions)
         {
