@@ -415,6 +415,7 @@ namespace McSherry.SemanticVersioning.Ranges
             }
         }
 
+
         bool IComparator.ComparableTo(SemanticVersion comparand)
         {
             return _comparators.Any(
