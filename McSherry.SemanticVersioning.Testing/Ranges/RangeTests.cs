@@ -1459,7 +1459,11 @@ namespace McSherry.SemanticVersioning.Ranges
             var v = versions.Split(';').Select(vs => (SemanticVersion)vs.Trim());
 
             foreach (var ver in v)
-                Assert.IsTrue(r.CompareTo(ver) > 0, $"Version: {ver}");
+            {
+                var res = r.CompareTo(ver);
+                
+                Assert.IsTrue(res > 0, $"Version: {ver}, Result: {res}");
+            }
         }
 
         [DataRow("1.7.0",               "1.7")]
@@ -1469,7 +1473,7 @@ namespace McSherry.SemanticVersioning.Ranges
         [DataRow("<1.7.3 >1.7.5",       "1.7.3; 1.7.4; 1.7.5")]
         [DataRow(">1.7.0 <2.0.1",       "1.7.1; 1.8; 2.0")]
         [DataRow(">1.7.0 || <2.0.1",    "2.0.2; 2.1; 3.9.10")]
-        [DataRow(">1.7.0 <1.7.8",       "1.7.1; 1.7.8")]
+        [DataRow(">1.7.0 <1.7.8",       "1.7.1; 1.7.7")]
         [DataRow(">1.7 <1.8 || ~2.0",   "1.7.0; 1.7.999; 1.8.1; 1.9.10; 2.0.5")]
         [DataRow("1.7.0 - 2.0.1",       "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
         [DataRow("1.7 - 2.0.1",         "1.7; 1.7.1; 1.8; 2.0; 2.0.1")]
@@ -1489,7 +1493,11 @@ namespace McSherry.SemanticVersioning.Ranges
             var v = versions.Split(';').Select(vs => (SemanticVersion)vs.Trim());
 
             foreach (var ver in v)
-                Assert.IsTrue(r.CompareTo(ver) == 0, $"Version: {ver}");
+            {
+                var res = r.CompareTo(ver);
+
+                Assert.IsTrue(res == 0, $"Version: {ver}, Result: {res}");
+            }
         }
         
         [DataRow("1.7.0",           "1.6.999; 1.5; 0.9")]
@@ -1519,7 +1527,11 @@ namespace McSherry.SemanticVersioning.Ranges
             var v = versions.Split(';').Select(vs => (SemanticVersion)vs.Trim());
 
             foreach (var ver in v)
-                Assert.IsTrue(r.CompareTo(ver) < 0, $"Version: {ver}");
+            {
+                var res = r.CompareTo(ver);
+
+                Assert.IsTrue(res < 0, $"Version: {ver}, Result: {res}");
+            }
         }
     }
 }

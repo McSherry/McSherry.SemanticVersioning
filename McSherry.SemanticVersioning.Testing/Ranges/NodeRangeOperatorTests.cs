@@ -99,10 +99,12 @@ namespace McSherry.SemanticVersioning.Ranges
             var r = new VersionRange(range);
             var v = (SemanticVersion)version;
 
-            Assert.IsTrue(r.CompareTo(v) > 0);
+            var res = r.CompareTo(v);
+
+            Assert.IsTrue(res > 0, $"Result: {res}");
         }
 
-        [DataRow("~1.2.1",          "1.2.1")]
+        [DataRow("~1.2.2",          "1.2.1")]
         [DataRow("~0.6.1-1",        "0.6.1-0")]
         [DataRow("1.0.0 - 2.0.0",   "0.0.1")]
         [DataRow("1.0.0-beta.2",    "1.0.0-beta.1")]
@@ -159,7 +161,9 @@ namespace McSherry.SemanticVersioning.Ranges
             var r = new VersionRange(range);
             var v = (SemanticVersion)version;
 
-            Assert.IsTrue(r.CompareTo(v) < 0);
+            var res = r.CompareTo(v);
+
+            Assert.IsTrue(res < 0, $"Result: {res}");
         }
 
         [DataRow("~0.6.1-1",            "0.6.1-1")]
@@ -238,7 +242,9 @@ namespace McSherry.SemanticVersioning.Ranges
             var r = new VersionRange(range);
             var v = (SemanticVersion)version;
 
-            Assert.IsTrue(r.CompareTo(v) == 0);
+            var res = r.CompareTo(v);
+
+            Assert.IsTrue(res == 0, $"Result: {res}");
         }
     }
 }

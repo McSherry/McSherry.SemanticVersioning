@@ -365,53 +365,53 @@ namespace McSherry.SemanticVersioning.Ranges
 
             int CompareToSet(IEnumerable<IComparator> set)
             {
-                // We take the first comparator in the set as a seed, and we'll
-                // compare all subsequent comparators against this. It doesn't
-                // matter which we start with, this is just easiest.
-                var cmpSeed = CompareToComparator(set.First());
+                // A set will likely have multiple comparators setting its bounds,
+                // which means that some comparators will match. If all comparators
+                // but one matches, we can use the mismatch as our final result.
+                var lastMismatch = 0;
 
-                // If all subsequent comparators match, we can return the seed.
-                if (set.Skip(1).All(cmp => CompareToComparator(cmp) == cmpSeed))
-                    return cmpSeed;
-                // Otherwise, we have to indicate it's neither greater nor lesser.
-                else
-                    return EQUAL;
-            }
-
-            int CompareToComparator(IComparator cmp)
-            {
-                if (cmp is UnaryComparator U)
+                foreach (var cmp in set)
                 {
-                    switch (U.Operator)
+                    var curr = cmp.CompareTo(semver);
+
+                    // If we haven't yet found a mismatch, then we can store it
+                    // and carry on until we run out of comparators or find another.
+                    if (lastMismatch == 0)
                     {
-                        // An equality comparator only matches one version, so we
-                        // can compare against that one version to find precedence.
-                        case Operator.Equal: return U.Version.CompareTo(semver);
+                        lastMismatch = curr;
+                    }
+                    // If we have found a mismatch but the current comparison is a
+                    // satisfaction, there's no conflict and we can carry on.
+                    //
+                    // Alternatively, a mismatch of the same type could indicate a
+                    // meaningless but still valid range (e.g. '<1.1 <1.2' would
+                    // produce two 'greater than' results for '1.3').
+                    else if (curr == 0 || lastMismatch == curr)
+                    {
+                        continue;
+                    }
+                    // However, if we've found a mismatch of a different type, we
+                    // have a noncontiguous range where the provided version falls
+                    // within one of the range's gaps.
+                    else
+                    {
+                        return EQUAL;
                     }
                 }
 
-                else if (cmp is BinaryComparator B)
-                {
+                return lastMismatch;
 
-                }
+                // We take the first comparator in the set as a seed, and we'll
+                // compare all subsequent comparators against this. It doesn't
+                // matter which we start with, this is just easiest.
+                //var cmpSeed = set.First().CompareTo(semver);
 
-                // If we've been provided a [VersionRange], we can simply
-                // recurse over it without any other thought.
-                else if (cmp is VersionRange R)
-                {
-                    return R.CompareTo(semver);
-                }
-
-                // As these implementations are all internal, any other type
-                // being passed in means we've made a mistake somewhere.
-                else
-                {
-                    throw new ArgumentException(
-                        "Internal error: unrecognised comparator type."
-                        );
-                }
-
-                throw new NotImplementedException();
+                //// If all subsequent comparators match, we can return the seed.
+                //if (set.Skip(1).All(cmp => cmp.CompareTo(semver) == cmpSeed))
+                //    return cmpSeed;
+                //// Otherwise, we have to indicate it's neither greater nor lesser.
+                //else
+                //    return EQUAL;
             }
         }
 

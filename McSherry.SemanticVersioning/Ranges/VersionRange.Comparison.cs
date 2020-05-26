@@ -92,8 +92,13 @@ namespace McSherry.SemanticVersioning.Ranges
 
             public int CompareTo(SemanticVersion semver)
             {
-                return this.MinimumVersion.CompareTo(semver) +
-                       this.MaximumVersion.CompareTo(semver);
+                var sum = semver.CompareTo(this.MinimumVersion) +
+                          semver.CompareTo(this.MaximumVersion);
+
+                // If the sum of the two comparisons is less than two, irrespective
+                // of sign, then at least one equality existed, which means that
+                // the provided version falls within the represented range.
+                return Math.Abs(sum) < 2 ? 0 : sum;
             }
 
             public abstract bool ComparableTo(SemanticVersion comparand);
@@ -338,13 +343,19 @@ namespace McSherry.SemanticVersioning.Ranges
                         satisfiedBy: sv => sv < semver,
                         compareTo: sv =>
                         {
-                            var cmp = semver.CompareTo(sv);
+                            var cmp = sv.CompareTo(semver);
 
                             // If the version provided is less than the version
                             // in the comparator, then it matches the comparator
                             // and so cannot be less than all versions that the
                             // comparator matches.
-                            return cmp < 0 ? 0 : cmp;
+                            //return cmp < 0 ? 0 : -1;
+
+                            // In a less-than comparison, the operated-on version
+                            // is the minimum value that cannot be accepted. If the
+                            // comparand version is equal or greater, then it is
+                            // higher than all the versions matched.
+                            return cmp == -1 ? 0 : 1;
                         },
                         comparableTo: semver.ComparableTo
                         );
@@ -357,9 +368,9 @@ namespace McSherry.SemanticVersioning.Ranges
                         satisfiedBy: sv => sv > semver,
                         compareTo: sv =>
                         {
-                            var cmp = semver.CompareTo(sv);
+                            var cmp = sv.CompareTo(semver);
 
-                            return cmp > 0 ? 0 : cmp;
+                            return cmp == 1 ? 0 : -1;
                         },
                         comparableTo: semver.ComparableTo
                         );
