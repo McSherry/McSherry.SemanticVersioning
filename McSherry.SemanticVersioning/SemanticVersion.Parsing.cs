@@ -144,6 +144,11 @@ namespace McSherry.SemanticVersioning
             /// </para>
             /// </summary>
             TrioItemOverflow,
+            /// <summary>
+            /// One of the major, minor, or patch version components was
+            /// encountered when none was expected.
+            /// </summary>
+            TrioItemUnexpected,
 
             /// <summary>
             /// <para>
@@ -434,6 +439,7 @@ namespace McSherry.SemanticVersioning
                     case ParseResultType.PreTrioInvalidChar:
                     case ParseResultType.TrioInvalidChar:
                     case ParseResultType.TrioItemLeadingZero:
+                    case ParseResultType.TrioItemUnexpected:
                     case ParseResultType.IdentifierInvalid:
                     case ParseResultType.MetadataInvalid:
                     return new FormatException(message: msg);
@@ -489,6 +495,10 @@ namespace McSherry.SemanticVersioning
                     return "One or more of the major, minor, or patch " +
                            "versions represented a number greater than the " +
                            "supported maximum.";
+
+                    case ParseResultType.TrioItemUnexpected:
+                    return "One or more of the major, minor, or patch " +
+                           "versions was present when none or a wildcard was expected.";
 
                     case ParseResultType.IdentifierMissing:
                     return "A pre-release identifier was not found where one " +
@@ -943,13 +953,22 @@ namespace McSherry.SemanticVersioning
                         minor = 0;
                         patch = 0;
 
-                        // A wildcard can't be followed by any other version
-                        // components, pre-release identifiers, or metadata, so
-                        // if we have a wildcard major version we expect to find
-                        // the end of the string and nothing else.
+                        // We allow redundant wildcards (e.g. 'x.x.x'), so if the
+                        // major component is followed by a component separator
+                        // we'll try to parse a minor version.
                         if (Consume().HasValue)
                         {
-                            return ParseResultType.TrioInvalidChar;
+                            if (input.Value == ComponentSeparator)
+                            {
+                                // Move past the separator
+                                Consume();
+
+                                return ParseMinor();
+                            }
+                            else
+                            {
+                                return ParseResultType.TrioInvalidChar;
+                            }
                         }
                         else
                         {
@@ -974,9 +993,15 @@ namespace McSherry.SemanticVersioning
 
                     if (result == ParseResultType.Success)
                     {
+                        // If we parsed a number and the major version was a
+                        // wildcard, that's invalid.
+                        if (majorState == ComponentState.Wildcard)
+                        {
+                            return ParseResultType.TrioItemUnexpected;
+                        }
                         // A component separator means the patch version is
                         // present, so we can proceed to parse it.
-                        if (input == ComponentSeparator)
+                        else if (input == ComponentSeparator)
                         {
                             // Move past the separator.
                             Consume();
@@ -1064,11 +1089,22 @@ namespace McSherry.SemanticVersioning
                         minor = 0;
                         patch = 0;
 
-                        // A wildcard can't be followed by anything, so we now
-                        // expect the end of the string.
+                        // We allow redundant wildcards (e.g. 'x.x.x'), so if
+                        // the minor component is followed by a component separator
+                        // we'll allow parsing a patch version to be attempted.
                         if (Consume().HasValue)
                         {
-                            return ParseResultType.TrioInvalidChar;
+                            if (input.Value == ComponentSeparator)
+                            {
+                                // Move past the separator
+                                Consume();
+
+                                return ParsePatch();
+                            }
+                            else
+                            {
+                                return ParseResultType.TrioInvalidChar;
+                            }
                         }
                         else
                         {
@@ -1094,8 +1130,16 @@ namespace McSherry.SemanticVersioning
                         // it is possible for pre-release identifiers or
                         // metadata to follow.
                         //
+                        // If we parsed a number and the previous component was
+                        // a wildcard, that's invalid. We don't have to check the
+                        // major version because we can't get here unless we know
+                        // it and the minor version are valid.
+                        if (minorState == ComponentState.Wildcard)
+                        {
+                            return ParseResultType.TrioItemUnexpected;
+                        }
                         // If we reach the end of the string, we're all done.
-                        if (!input.HasValue)
+                        else if (!input.HasValue)
                         {
                             return ParseResultType.Success;
                         }
