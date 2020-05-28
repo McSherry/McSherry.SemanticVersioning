@@ -799,6 +799,19 @@ namespace McSherry.SemanticVersioning
                 ("V1.13", "x",      wcard,              (wildcard, wildcard, wildcard)),
                 ("V1.14", "X",      wcard,              (wildcard, wildcard, wildcard)),
                 ("V1.15", "*",      wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.16", "x.x.x",  wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.17", "x.x",    wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.19", "*.*.*",  wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.18", "*.*",    wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.20", "X.X.X",  wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.21", "X.X",    wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.22", "x.X.*",  wcard,              (wildcard, wildcard, wildcard)),
+                ("V1.23", "7.X.X",  wcard,              (present, wildcard, wildcard)),
+                ("V1.24", "7.x.x",  wcard,              (present, wildcard, wildcard)),
+                ("V1.25", "7.*.*",  wcard,              (present, wildcard, wildcard)),
+                ("V1.26", "7.x.X",  wcard,              (present, wildcard, wildcard)),
+                ("V1.27", "7.*.X",  wcard,              (present, wildcard, wildcard)),
+                ("V1.28", "7.X.*",  wcard,              (present, wildcard, wildcard)),
             };
 
             foreach (var vector in vectors1)
@@ -841,12 +854,23 @@ namespace McSherry.SemanticVersioning
                 ("V3.4",    "1.x.0",    wcard),
                 ("V3.5",    "x.2",      wcard),
                 ("V3.6",    "x.2.3",    wcard),
+                ("V3.7",    "*.*.15",   wcard),
 
-                // Wildcards with pre-release identifiers make no logical sense,
-                // and don't appear to work in 'node-semver' anyway
-                ("V3.7",    "1.0.x-alpha",  wcard),
-                ("V3.8",    "1.x-beta",     wcard),
-                ("V3.9",    "x-rc",         wcard),
+                // Wildcards with pre-release identifiers or build metadata make
+                // no logical sense, and don't appear to work in 'node-semver' anyway
+                ("V3.8",    "1.0.x-alpha",  wcard),
+                ("V3.9",    "1.x-beta",     wcard),
+                ("V3.10",   "1.x.x-beta",   wcard),
+                ("V3.11",   "x.x.x-rc",     wcard),
+                ("V3.12",   "X.X-rc",       wcard),
+                ("V3.13",   "*-rc",         wcard),
+
+                ("V3.14",   "1.0.x+alpha",  wcard),
+                ("V3.15",   "1.x+beta",     wcard),
+                ("V3.16",   "1.x.x+beta",   wcard),
+                ("V3.17",   "x.x.x+rc",     wcard),
+                ("V3.18",   "X.X+rc",       wcard),
+                ("V3.19",   "*+rc",         wcard),
             };
 
             foreach (var vector in vectors3)
