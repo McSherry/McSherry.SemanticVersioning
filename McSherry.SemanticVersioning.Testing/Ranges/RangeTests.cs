@@ -950,6 +950,9 @@ namespace McSherry.SemanticVersioning.Ranges
             var vr2a = new VersionRange("1.x");
             var vr2b = new VersionRange("1.X");
             var vr2c = new VersionRange("1.*");
+            var vr2d = new VersionRange("1.*.*");
+            var vr2e = new VersionRange("1.x.x");
+            var vr2f = new VersionRange("1.X.X");
 
             (string VID, SemanticVersion Version, bool Expected)[] vectors2 =
             {
@@ -981,6 +984,9 @@ namespace McSherry.SemanticVersioning.Ranges
             Test2("Lowercase", vr2a);
             Test2("Uppercase", vr2b);
             Test2("Asterisk", vr2c);
+            Test2("Asterisk, redundant", vr2d);
+            Test2("Lowercase, redundant", vr2e);
+            Test2("Uppercase, redundant", vr2f);
 
 
             // Tests for the case where the major version is a wildcard
@@ -992,7 +998,16 @@ namespace McSherry.SemanticVersioning.Ranges
             //
             // If something does fall over, we'll need to add a specific test
             // for it as we're not guaranteed to get the same value again.
-            var vr3 = new VersionRange("*");
+
+            var vr3 = new (string Name, VersionRange Range)[]
+            {
+                ("Asterisk, one", new VersionRange("*")),
+                ("Lowercase, one", new VersionRange("x")),
+                ("Uppercase, one", new VersionRange("X")),
+                ("Asterisk, two", new VersionRange("*.*")),
+                ("Lowercase, three", new VersionRange("x.x.x")),
+            };
+
             var rng = new Random();
 
             // Anything without pre-release identifiers should be true
@@ -1004,10 +1019,13 @@ namespace McSherry.SemanticVersioning.Ranges
                     patch: rng.Next()
                     );
 
-                Assert.IsTrue(
-                    condition:  vr3.SatisfiedBy(sv),
-                    message:    $"Failure, T3: {sv}"
-                    );
+                foreach (var vr in vr3)
+                {
+                    Assert.IsTrue(
+                        condition: vr.Range.SatisfiedBy(sv),
+                        message: $"Failure, {vr.Name}, T3: {sv}"
+                        );
+                }
             }
 
             // Anything with them should be false
@@ -1034,10 +1052,13 @@ namespace McSherry.SemanticVersioning.Ranges
                         );
                 }
 
-                Assert.IsFalse(
-                    condition:  vr3.SatisfiedBy(sv),
-                    message:    $"Failure: {sv}"
-                    );
+                foreach (var vr in vr3)
+                {
+                    Assert.IsFalse(
+                        condition: vr.Range.SatisfiedBy(sv),
+                        message: $"Failure, {vr.Name}, F3: {sv}"
+                        );
+                }
             }
 
             IEnumerable<string> GetRandomIdentifiers()
