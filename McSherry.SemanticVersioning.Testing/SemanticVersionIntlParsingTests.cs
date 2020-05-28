@@ -847,11 +847,6 @@ namespace McSherry.SemanticVersioning
                 ("V3.7",    "1.0.x-alpha",  wcard),
                 ("V3.8",    "1.x-beta",     wcard),
                 ("V3.9",    "x-rc",         wcard),
-
-                // And although not part of the 'node-semver' specification, it
-                // makes the most sense not to allow multiple wildcards.
-                ("V3.10",   "1.x.x",        wcard),
-                ("V3.11",   "x.x.x",        wcard),
             };
 
             foreach (var vector in vectors3)
