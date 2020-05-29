@@ -953,6 +953,8 @@ namespace McSherry.SemanticVersioning.Ranges
             var vr2d = new VersionRange("1.*.*");
             var vr2e = new VersionRange("1.x.x");
             var vr2f = new VersionRange("1.X.X");
+            var vr2g = new VersionRange("1.x.X");
+            var vr2h = new VersionRange("1.*.X");
 
             (string VID, SemanticVersion Version, bool Expected)[] vectors2 =
             {
@@ -987,6 +989,8 @@ namespace McSherry.SemanticVersioning.Ranges
             Test2("Asterisk, redundant", vr2d);
             Test2("Lowercase, redundant", vr2e);
             Test2("Uppercase, redundant", vr2f);
+            Test2("Mixed (xX), redundant", vr2g);
+            Test2("Mixed (*X), redundant", vr2h);
 
 
             // Tests for the case where the major version is a wildcard
@@ -1006,6 +1010,8 @@ namespace McSherry.SemanticVersioning.Ranges
                 ("Uppercase, one", new VersionRange("X")),
                 ("Asterisk, two", new VersionRange("*.*")),
                 ("Lowercase, three", new VersionRange("x.x.x")),
+                ("Mixed, two", new VersionRange("x.*")),
+                ("Mixed, three", new VersionRange("x.*.X")),
             };
 
             var rng = new Random();

@@ -853,7 +853,7 @@ namespace McSherry.SemanticVersioning
                 ("V3.3",    "x",        ParseMode.Lenient),
                 ("V3.4",    "1.x.0",    wcard),
                 ("V3.5",    "x.2",      wcard),
-                ("V3.6",    "x.2.3",    wcard),
+                ("V3.6",    "X.2.3",    wcard),
                 ("V3.7",    "*.*.15",   wcard),
 
                 // Wildcards with pre-release identifiers or build metadata make
