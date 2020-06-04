@@ -44,4 +44,4 @@ For information on the acceptable format specifier, see the
 documentation.
 
 [3]: ./IFormattable.ToString(String,IFormatProvider).md#remarks
-[4]: ./IFormattable.ToString(String,IFormatProvider)
+[4]: ./IFormattable.ToString(String,IFormatProvider).md

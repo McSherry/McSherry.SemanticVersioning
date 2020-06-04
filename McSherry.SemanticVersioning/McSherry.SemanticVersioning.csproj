@@ -5,7 +5,7 @@
         <Title>Semantic Versioning for .NET</Title>
         <AssemblyName>McSherry.SemanticVersioning</AssemblyName>
         <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
-        <Version>1.3.0</Version>
+        <Version>1.4.0</Version>
         <PackageId>McSherry.SemanticVersioning</PackageId>
         <Authors>Liam McSherry</Authors>
         <Copyright>2015-20 © Liam McSherry</Copyright>
@@ -14,42 +14,7 @@
         <PackageLicenseUrl>https://github.com/McSherry/McSherry.SemanticVersioning/blob/v1.3.0/LICENCE.txt</PackageLicenseUrl>
         <Description>A comprehensive library for working with Semantic Versions (2.0.0), version ranges (node-semver v6.0.0), and Monotonic Versions (1.2).</Description>
         <PackageTags>semantic;sem;version;ver;versioning;semantic versioning;semver;2.0.0;monotonic;mo;mover;monotonic versioning;library;lib</PackageTags>
-<PackageReleaseNotes>This minor update adds new features and corrections.
-        
-### Features
-        
- o Advanced version range syntax is now supported
-   Support for 'node-semver' caret, tilde, hyphen, and X-range operators in
-   VersionRange is added, allowing more complex comparisons to be done simply.
-      
- o Semantic versions can now be parsed greedily
-   By passing the [ParseMode.Greedy] flag, the [SemanticVersion] parser can now
-   be configured to attempt to return a valid version at the first error it
-   encounters. This is intended to allow including information after a version
-   string that the caller is able to handle.
-   
- o Semantic version parser now exposes [IEnumerator(char)] to callers
-   This enables a caller to pick up where the parser left off. Used in
-   combination with greedy parsing, it makes the job of the caller in
-   processing anything stored after a version string easier. It would, for
-   example, make converting a [System.Version] of '1.0.0.0' to a semantic
-   version easier than it is currently.
-   
- o Version range comparisons are no longer transparently memoized
-   The [VersionRange] class now exposes an instance [MemoizationAgent] member,
-   which enables caching the results of comparisons and which is disabled by
-   default. This enables consumers to provide their own caching mechanism
-   without potentially causing unexplained high memory usage.
-   
-
-### Bug fixes
-
- o Version range comparisons where one [SemanticVersion] has pre-release
-   identifiers and the other doesn't are now performed correctly. Prior to
-   this, a comparison would be erroneously performed if the right-hand version
-   had identifiers and the left-hand version didn't.
-    
-</PackageReleaseNotes>
+        <PackageReleaseNotes>This minor update adds new features, new targets, and corrections. Full release notes are available from GitHub, with the key feature in this release being support for free-form formatting via custom format strings.</PackageReleaseNotes>
         
         <!-- Build-related information -->
         <TargetFrameworks>
