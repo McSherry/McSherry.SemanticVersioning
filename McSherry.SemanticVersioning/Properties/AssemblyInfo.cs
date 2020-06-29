@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-20 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +23,9 @@ using System.Runtime.InteropServices;
 
 using CLSCompliantAttribute = System.CLSCompliantAttribute;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-//[assembly: AssemblyTitle("Semantic Versioning for .NET")]
-//[assembly: AssemblyProduct("Semantic Versioning for .NET")]
-//[assembly: AssemblyCopyright("Copyright 2015-16 © Liam McSherry")]
+// Since the introduction of the new 'csproj' format, there's no need to specify
+// author, version, etc. metadata in an 'AssemblyInfo.cs' file, so we're only
+// using it here since it's the most appropriate place to put assembly attributes.
 [assembly: AssemblyCulture("")]
 [assembly: InternalsVisibleTo("McSherry.SemanticVersioning.Testing")]
 [assembly: CLSCompliant(true)]
-
-// We're using Semantic Versioning for the library, but this doesn't translate
-// exactly to .NET versioning. To get around this, we're going to specify two
-// version attributes:
-//
-//  [AssemblyInformationalVersion]: We're using this for the "actual" (semantic)
-//                                  version number.
-//
-//               [AssemblyVersion]: This will track the "actual" version number's 
-//                                  major and minor versions. This should allow any 
-//                                  patched versions to be swapped out without 
-//                                  needing a recompile (e.g. you built against 
-//                                  v1.0.0, but you should be able to use v1.0.1 or
-//                                  v1.0.2 without needing to recompile).
-//
-//[assembly: AssemblyVersion("1.2.0.0")]
-//[assembly: AssemblyInformationalVersion("1.2.0")]
