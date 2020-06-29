@@ -79,9 +79,9 @@ inherited.
 - **[CompatibleWith(SemanticVersion)][15]**  
   Determines whether the specified [SemanticVersion][7] is
   backwards-compatible with the current version.
-- **[Deconstruct(out Int32, out Int32, out Int32)][A14]**
+- **[Deconstruct(out Int32, out Int32, out Int32)][A14]**  
   Deconstructs the current version.
-- **[Deconstruct(out Int32, out Int32)][B14]**
+- **[Deconstruct(out Int32, out Int32)][B14]**  
   Deconstructs the current version.
 - **[Equals(Object)][16]**  
   Determines whether the specified object is equal to the current
@@ -104,6 +104,8 @@ inherited.
 - **[`IFormattable` ToString(String, IFormatProvider)][22]**  
   Formats the value of the current [SemanticVersion][7] as specified.
 
+[A14]: ./Deconstruct(Int32,Int32,Int32).md
+[B14]: ./Deconstruct(Int32,Int32).md
 [14]: ./CompareTo(SemanticVersion).md
 [15]: ./CompatibleWith(SemanticVersion).md
 [16]: ./Equals(Object).md
