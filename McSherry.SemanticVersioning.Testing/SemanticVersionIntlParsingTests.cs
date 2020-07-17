@@ -311,38 +311,49 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void Parse_Valid()
         {
+            // TODO: Refactor to use parameterised tests.
+
             // These example strings are all taken from the
             // SemVer spec (2.0.0), so if we can't parse these
             // then something is amiss.
-            string vs0 = "1.0.1",
-                   vs1 = "1.10.0",
-                   vs2 = "1.0.0-alpha",
-                   vs3 = "1.0.0-alpha.1",
-                   vs4 = "1.0.0-0.3.7",
-                   vs5 = "1.0.0-x.7.z.92",
-                   vs6 = "1.0.0+20130313144700",
-                   vs7 = "1.0.0-beta+exp.sha.5114f85";
+            string vs0  = "1.0.1",
+                   vs1  = "1.10.0",
+                   vs2  = "1.0.0-alpha",
+                   vs3  = "1.0.0-alpha.1",
+                   vs4  = "1.0.0-0.3.7",
+                   vs5  = "1.0.0-x.7.z.92",
+                   vs6  = "1.0.0+20130313144700",
+                   vs7  = "1.0.0-beta+exp.sha.5114f85",
+                   vs8  = "1.0.0--doublehyphen+-startinghyphen",
+                   vs9  = "1.0.0-secondhas.-hyphen+secondhas.-hyphen",
+                   vs10 = "1.0.0--.--+-.--";
 
             // These won't throw unless something is seriously
             // wrong, so we're quite free to do this.
-            ParseResult pr0 = Parser.Parse(vs0, ParseMode.Strict);
-            ParseResult pr1 = Parser.Parse(vs1, ParseMode.Strict);
-            ParseResult pr2 = Parser.Parse(vs2, ParseMode.Strict);
-            ParseResult pr3 = Parser.Parse(vs3, ParseMode.Strict);
-            ParseResult pr4 = Parser.Parse(vs4, ParseMode.Strict);
-            ParseResult pr5 = Parser.Parse(vs5, ParseMode.Strict);
-            ParseResult pr6 = Parser.Parse(vs6, ParseMode.Strict);
-            ParseResult pr7 = Parser.Parse(vs7, ParseMode.Strict);
+            ParseResult pr0  = Parser.Parse(vs0, ParseMode.Strict);
+            ParseResult pr1  = Parser.Parse(vs1, ParseMode.Strict);
+            ParseResult pr2  = Parser.Parse(vs2, ParseMode.Strict);
+            ParseResult pr3  = Parser.Parse(vs3, ParseMode.Strict);
+            ParseResult pr4  = Parser.Parse(vs4, ParseMode.Strict);
+            ParseResult pr5  = Parser.Parse(vs5, ParseMode.Strict);
+            ParseResult pr6  = Parser.Parse(vs6, ParseMode.Strict);
+            ParseResult pr7  = Parser.Parse(vs7, ParseMode.Strict);
+            ParseResult pr8  = Parser.Parse(vs8, ParseMode.Strict);
+            ParseResult pr9  = Parser.Parse(vs9, ParseMode.Strict);
+            ParseResult pr10 = Parser.Parse(vs10, ParseMode.Strict);
 
             SemanticVersion
-                   sv0 = pr0.Version,
-                   sv1 = pr1.Version,
-                   sv2 = pr2.Version,
-                   sv3 = pr3.Version,
-                   sv4 = pr4.Version,
-                   sv5 = pr5.Version,
-                   sv6 = pr6.Version,
-                   sv7 = pr7.Version;
+                   sv0  = pr0.Version,
+                   sv1  = pr1.Version,
+                   sv2  = pr2.Version,
+                   sv3  = pr3.Version,
+                   sv4  = pr4.Version,
+                   sv5  = pr5.Version,
+                   sv6  = pr6.Version,
+                   sv7  = pr7.Version,
+                   sv8  = pr8.Version,
+                   sv9  = pr9.Version,
+                   sv10 = pr10.Version;
 
             #region Check status
             Assert.AreEqual(ParseResultType.Success, pr0.Type,
@@ -361,6 +372,12 @@ namespace McSherry.SemanticVersioning
                             "Parse unexpectedly failed (6).");
             Assert.AreEqual(ParseResultType.Success, pr7.Type,
                             "Parse unexpectedly failed (7).");
+            Assert.AreEqual(ParseResultType.Success, pr8.Type,
+                            "Parse unexpectedly failed (8).");
+            Assert.AreEqual(ParseResultType.Success, pr9.Type,
+                            "Parse unexpectedly failed (9).");
+            Assert.AreEqual(ParseResultType.Success, pr10.Type,
+                            "Parse unexpectedly failed (10).");
             #endregion
             #region Check [SemanticVersion] properties
             Assert.AreEqual(1, sv0.Major, "Major version incorrect (0).");
@@ -428,6 +445,30 @@ namespace McSherry.SemanticVersioning
             Assert.IsTrue(sv7.Metadata.SequenceEqual(new[] { "exp", "sha",
                                                              "5114f85" }),
                           "Build metadata items incorrect (7).");
+
+            Assert.AreEqual(1, sv8.Major, "Major version incorrect (8).");
+            Assert.AreEqual(0, sv8.Minor, "Minor version incorrect (8).");
+            Assert.AreEqual(0, sv8.Patch, "Patch version incorrect (8).");
+            Assert.IsTrue(sv8.Identifiers.SequenceEqual(new[] { "-doublehyphen" }),
+                          "Pre-release identifiers incorrect (8).");
+            Assert.IsTrue(sv8.Metadata.SequenceEqual(new[] { "-startinghyphen" }),
+                          "Build metadata items incorrect (8).");
+
+            Assert.AreEqual(1, sv9.Major, "Major version incorrect (9).");
+            Assert.AreEqual(0, sv9.Minor, "Minor version incorrect (9).");
+            Assert.AreEqual(0, sv9.Patch, "Patch version incorrect (9).");
+            Assert.IsTrue(sv9.Identifiers.SequenceEqual(new[] { "secondhas", "-hyphen" }),
+                          "Pre-release identifiers incorrect (9).");
+            Assert.IsTrue(sv9.Metadata.SequenceEqual(new[] { "secondhas", "-hyphen" }),
+                          "Build metadata items incorrect (9).");
+
+            Assert.AreEqual(1, sv10.Major, "Major version incorrect (10).");
+            Assert.AreEqual(0, sv10.Minor, "Minor version incorrect (10).");
+            Assert.AreEqual(0, sv10.Patch, "Patch version incorrect (10).");
+            Assert.IsTrue(sv10.Identifiers.SequenceEqual(new[] { "-", "--" }),
+                          "Pre-release identifiers incorrect (10).");
+            Assert.IsTrue(sv10.Metadata.SequenceEqual(new[] { "-", "--" }),
+                          "Build metadata items incorrect (10).");
             #endregion
         }
         /// <summary>
