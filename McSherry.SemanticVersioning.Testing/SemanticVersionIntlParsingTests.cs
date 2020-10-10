@@ -70,118 +70,78 @@ namespace McSherry.SemanticVersioning
             Assert.AreEqual(1, dict.Count);
         }
 
+
         /// <summary>
         /// <para>
         /// Tests the <see cref="SemanticVersion"/> parser's internal
         /// normalisation method to ensure it correctly handles whitespace.
         /// </para>
         /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Normalisation_WhiteSpace()
+        [DataRow("\t   {0}")]
+        [DataRow("{0}\t   ")]
+        [DataRow("\t {0}\t ")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Normalise(string format)
+        {
+            var seed = "1.2.3";
+            var formatted = String.Format(format, seed);
+
+            var seedRes = Parser.Normalise(ref seed, ParseMode.Strict);
+            var fmtRes = Parser.Normalise(ref formatted, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.Success, seedRes);
+            Assert.AreEqual(ParseResultType.Success, fmtRes);
+
+            Assert.AreEqual(seed, formatted);
+        }
+
+        [DataRow(null)]
+        [DataRow("")]
+        [DataRow(" \t  ")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Normalise_NullString(string input)
+        {
+            var res = Parser.Normalise(ref input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.NullString, res);
+        }
+
+        [DataRow("v1.2.3")]
+        [DataRow("V1.2.3")]
+        [DataRow("€1.2.3")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Normalise_PreTrioInvalidChar(string input)
+        {
+            var res = Parser.Normalise(ref input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.PreTrioInvalidChar, res);
+        }
+
+        [DataRow("{0}")]
+        [DataRow("v{0}")]
+        [DataRow("V{0}")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Normalise_AllowPrefix(string format)
         {
             const string Seed = "1.2.3";
 
-            (string VID, string Input)[] vectors =
-            {
-                ("V1.1", $"\t   {Seed}"),   // Leading whitespace
-                ("V1.2", $"{Seed}\t   "),   // Trailing whitespace
-                ("V1.3", $"\t {Seed}\t "),  // Leading and trailing
-            };
+            var formatted = String.Format(format, Seed);
 
-            foreach (var vector in vectors)
-            {
-                string normalised = vector.Input;
+            var res = Parser.Normalise(ref formatted, ParseMode.AllowPrefix);
 
-                Assert.AreEqual(
-                    expected:   ParseResultType.Success,
-                    actual:     Normalise(ref normalised, ParseMode.Strict),
-                    message:    $"Failure: Bad return, {vector.VID}"
-                    );
-
-                Assert.AreEqual(
-                    expected:   Seed,
-                    actual:     normalised,
-                    message:    $"Failure: Normalisation, {vector.VID}"
-                    );
-            }
+            Assert.AreEqual(ParseResultType.Success, res);
+            Assert.AreEqual(Seed, formatted);
         }
-        /// <summary>
-        /// <para>
-        /// Tests that the <see cref="Normalise(ref string, ParseMode)"/> method
-        /// responds correctly to bad input in <see cref="ParseMode.Strict"/>
-        /// mode.
-        /// </para>
-        /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Normalisation_BadInput()
+
+        [DataRow("€1.2.3")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Normalise_AllowPrefix_PreTrioInvalidChar(string input)
         {
-            const ParseResultType NullString = ParseResultType.NullString;
-            const ParseResultType PreTrioInvalidChar = ParseResultType.PreTrioInvalidChar;
+            var res = Parser.Normalise(ref input, ParseMode.AllowPrefix);
 
-            const ParseMode Strict = ParseMode.Strict;
-
-            (string VID, string Input, ParseResultType Expected, ParseMode Mode)[] vectors =
-            {
-                ("V1.1",    null,           NullString,         Strict),
-                ("V1.2",    String.Empty,   NullString,         Strict),
-                ("V1.3",    " \t  ",        NullString,         Strict),
-                ("V1.4",    "v1.2.3",       PreTrioInvalidChar, Strict),
-                ("V1.5",    "V1.2.3",       PreTrioInvalidChar, Strict),
-                ("V1.6",    "€1.2.3",       PreTrioInvalidChar, Strict),
-            };
-
-            foreach (var vector in vectors)
-            {
-                var input = vector.Input;
-
-                Assert.AreEqual(
-                    expected:   vector.Expected,
-                    actual:     Normalise(ref input, vector.Mode),
-                    message:    $"Failure: vector {vector.VID}"
-                    );
-            }
+            Assert.AreEqual(ParseResultType.PreTrioInvalidChar, res);
         }
-        /// <summary>
-        /// <para>
-        /// Tests that <see cref="Normalise(ref string, ParseMode)"/> behaves
-        /// correctly when passed the <see cref="ParseMode.AllowPrefix"/> flag.
-        /// </para>
-        /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Normalisation_AllowPrefix()
-        {
-            const ParseResultType Success = ParseResultType.Success;
-            const ParseResultType PreTrioInvalidChar = ParseResultType.PreTrioInvalidChar;
 
-            (string VID, string Input, ParseResultType OutputType, string OutputString)[] vectors =
-            {
-                ("V1.1",    "1.2.3",    Success,            "1.2.3"),
-                ("V1.2",    "v1.2.3",   Success,            "1.2.3"),
-                ("V1.3",    "V1.2.3",   Success,            "1.2.3"),
-                ("V1.4",    "€1.2.3",   PreTrioInvalidChar, null),
-            };
-
-            foreach (var vector in vectors)
-            {
-                string input = vector.Input;
-
-                Assert.AreEqual(
-                    expected:   vector.OutputType,
-                    actual:     Normalise(ref input, ParseMode.AllowPrefix),
-                    message:    $"Failure: Bad status, vector {vector.VID}"
-                    );
-
-                // If we're not expecting an error...
-                if (vector.OutputString != null)
-                {
-                    Assert.AreEqual(
-                        expected:   vector.OutputString,
-                        actual:     input,
-                        message:    $"Failure: Normalisation, vector {vector.VID}"
-                        );
-                }
-            }
-        }
 
         /// <summary>
         /// <para>
