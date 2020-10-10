@@ -21,15 +21,16 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using static McSherry.SemanticVersioning.SemanticVersion;
-using static McSherry.SemanticVersioning.SemanticVersion.Parser;
-using static System.Linq.Enumerable;
 using System.Text;
 
 namespace McSherry.SemanticVersioning
 {
-    using CompSt = ComponentState;
+    using Parser            = SemanticVersion.Parser;
+    using ParseResult       = SemanticVersion.ParseResult;
+    using ParseResultType   = SemanticVersion.ParseResultType;
+    using InternalModes     = SemanticVersion.InternalModes;
+    using ComponentState    = SemanticVersion.ComponentState;
+
 
     /// <summary>
     /// <para>
@@ -41,6 +42,7 @@ namespace McSherry.SemanticVersioning
     public class SemanticVersionIntlParsingTests
     {
         private const string Category = "Semantic Version Parsing Internals";
+
 
         /// <summary>
         /// <para>
@@ -470,8 +472,9 @@ namespace McSherry.SemanticVersioning
         {
             IEnumerator<char> parseIter, tryParseIter;
 
-            Parse(verString, mode, out parseIter);
-            Assert.IsTrue(TryParse(verString, mode, out _, out tryParseIter));
+            SemanticVersion.Parse(verString, mode, out parseIter);
+
+            Assert.IsTrue(SemanticVersion.TryParse(verString, mode, out _, out tryParseIter));
 
             var leftovers = new[] { parseIter, tryParseIter }
                 .Select(iter =>
