@@ -143,124 +143,97 @@ namespace McSherry.SemanticVersioning
         }
 
 
-        /// <summary>
-        /// <para>
-        /// Tests that the <see cref="ParseResult"/> constructor
-        /// accepting an error code works as expected.
-        /// </para>
-        /// </summary>
         [TestMethod, TestCategory(Category)]
-        public void ParseResult_ErrorCodes()
+        public void ParseResult_Ctor_FailOnSuccessCode()
         {
-            ParseResult
-                pr0 = new ParseResult(ParseResultType.NullString),
-                pr1 = new ParseResult(ParseResultType.PreTrioInvalidChar),
-                pr2 = new ParseResult(ParseResultType.TrioInvalidChar),
-                pr3 = new ParseResult(ParseResultType.TrioItemLeadingZero),
-                pr4 = new ParseResult(ParseResultType.TrioItemMissing),
-                pr5 = new ParseResult(ParseResultType.TrioItemOverflow),
-                pr6 = new ParseResult(ParseResultType.IdentifierMissing),
-                pr7 = new ParseResult(ParseResultType.IdentifierInvalid),
-                pr8 = new ParseResult(ParseResultType.MetadataMissing),
-                pr9 = new ParseResult(ParseResultType.MetadataInvalid);
-
-            // The [ParseResult] struct has a method, [CreateException],
-            // that will handily create the appropriate exception to throw
-            // for us. We want to make sure that it's returning the correct
-            // type of exception.
-            Assert.IsTrue(pr0.CreateException() is ArgumentNullException,
-                          "Incorrect exception type (0).");
-
-            Assert.IsTrue(pr1.CreateException() is FormatException,
-                          "Incorrect exception type (1).");
-            Assert.IsTrue(pr2.CreateException() is FormatException,
-                          "Incorrect exception type (2).");
-            Assert.IsTrue(pr3.CreateException() is FormatException,
-                          "Incorrect exception type (3).");
-
-            Assert.IsTrue(pr4.CreateException() is ArgumentException,
-                          "Incorrect exception type (4).");
-
-            Assert.IsTrue(pr5.CreateException() is OverflowException,
-                          "Incorrect exception type (5).");
-
-            Assert.IsTrue(pr6.CreateException() is ArgumentException,
-                          "Incorrect exception type (6).");
-
-            Assert.IsTrue(pr7.CreateException() is FormatException,
-                          "Incorrect exception type (7).");
-
-            Assert.IsTrue(pr8.CreateException() is ArgumentException,
-                          "Incorrect exception type (8).");
-
-            Assert.IsTrue(pr9.CreateException() is FormatException,
-                          "Incorrect exception type (9).");
-
-            // Next, we want to make sure that an attempt to create a 
-            // fail-state [ParseResult] with the [Success] status fails.
-            new Action(() => new ParseResult(ParseResultType.Success))
-                .AssertThrowsExact<ArgumentException>(
-                    "Attempt to create result with status [Success] did " +
-                    "not throw.");
-
-            // Then we want to test that calling [CreateException] on a
-            // [ParseResult] without an error code throws an exception.
-            new Action(() => new ParseResult(new SemanticVersion(1, 0))
-                                .CreateException())
-                .AssertThrows<InvalidOperationException>(
-                    "Call to [CreateException] with status [Success] did " +
-                    "not throw.");
-
-            // And, last but not least, we want to make sure that an
-            // invalid error code throws an exception.
-            new Action(() => new ParseResult((ParseResultType)(-4025820)))
-                .AssertThrowsExact<ArgumentException>(
-                    "Did not throw on invalid error code.");
+            Assert.ThrowsException<ArgumentException>(
+                () => new ParseResult(error: ParseResultType.Success)
+                );
         }
-        /// <summary>
-        /// <para>
-        /// Tests that the <see cref="ParseResult.GetErrorMessage"/> method
-        /// works as expected.
-        /// </para>
-        /// </summary>
+
         [TestMethod, TestCategory(Category)]
-        public void ParseResult_ErrorMessages()
+        public void ParseResult_CreateException_FailOnSuccess()
         {
-            // We're not going to test the contents of the error
-            // messages as that would be a pain when changing them,
-            // we're just going to test that an error message is produced
-            // when we pass in the right parameters.
+            Assert.ThrowsException<InvalidOperationException>(
+                new ParseResult((SemanticVersion)"1.0").CreateException
+                );
+        }
 
-            // These ones should all produce valid error messages.
-            var prt_arr = new[]
-            {
-                 ParseResultType.NullString,
-                 ParseResultType.PreTrioInvalidChar,
-                 ParseResultType.TrioInvalidChar,
-                 ParseResultType.TrioItemLeadingZero,
-                 ParseResultType.TrioItemMissing,
-                 ParseResultType.TrioItemOverflow,
-                 ParseResultType.IdentifierMissing,
-                 ParseResultType.IdentifierInvalid,
-                 ParseResultType.MetadataMissing,
-                 ParseResultType.MetadataInvalid,
-            };
+        [DataRow(ParseResultType.NullString)]
+        [DataTestMethod, TestCategory(Category)]
+        public void ParseResult_CreateException_ArgumentNullException(int error)
+        {
+            var pr = new ParseResult((ParseResultType)error);
 
-            for (int i = 0; i < prt_arr.Length; i++)
-            {
-                Assert.IsFalse(String.IsNullOrWhiteSpace(
-                                new ParseResult(prt_arr[i]).GetErrorMessage()),
-                               $"Did not return valid error message ({i}).");
-            }
+            var ex = pr.CreateException();
 
-            // Like we did in our [CreateException] unit test, we want to make
-            // sure that calling [GetErrorMessage] on a [ParseResult] without an
-            // error message throws.
-            new Action(() => new ParseResult(new SemanticVersion(1, 0))
-                    .GetErrorMessage())
-                .AssertThrows<InvalidOperationException>(
-                    "Call to [GetErrorMessage] with status [Success] did " +
-                    "not throw.");
+            Assert.IsInstanceOfType(ex, typeof(ArgumentNullException));
+        }
+
+        [DataRow(ParseResultType.NullString)]
+        [DataRow(ParseResultType.TrioItemMissing)]
+        [DataRow(ParseResultType.IdentifierMissing)]
+        [DataRow(ParseResultType.MetadataMissing)]
+        [DataTestMethod, TestCategory(Category)]
+        public void ParseResult_CreateException_ArgumentException(int error)
+        {
+            var pr = new ParseResult((ParseResultType)error);
+
+            var ex = pr.CreateException();
+
+            Assert.IsInstanceOfType(ex, typeof(ArgumentException));
+        }
+
+        [DataRow(ParseResultType.PreTrioInvalidChar)]
+        [DataRow(ParseResultType.TrioInvalidChar)]
+        [DataRow(ParseResultType.TrioItemLeadingZero)]
+        [DataRow(ParseResultType.IdentifierInvalid)]
+        [DataRow(ParseResultType.MetadataInvalid)]
+        [DataTestMethod, TestCategory(Category)]
+        public void ParseResult_CreateException_FormatException(int error)
+        {
+            var pr = new ParseResult((ParseResultType)error);
+
+            var ex = pr.CreateException();
+
+            Assert.IsInstanceOfType(ex, typeof(FormatException));
+        }
+
+        [DataRow(ParseResultType.TrioItemOverflow)]
+        [DataTestMethod, TestCategory(Category)]
+        public void ParseResult_CreateException_OverflowException(int error)
+        {
+            var pr = new ParseResult((ParseResultType)error);
+
+            var ex = pr.CreateException();
+
+            Assert.IsInstanceOfType(ex, typeof(OverflowException));
+        }
+
+
+        [TestMethod, TestCategory(Category)]
+        public void ParseResult_GetErrorMessage()
+        {
+            // Testing the actual contents of error messages makes things a bit
+            // brittle, so we just test that every non-success result type produces
+            // a non-null, non-empty, non-whitespace error message.
+
+            var failureResults = Enum.GetValues(typeof(ParseResultType))
+                                     .Cast<ParseResultType>()
+                                     .Where(prt => prt != ParseResultType.Success)
+                                     .Select(prt => new ParseResult(prt));
+
+            Assert.IsFalse(
+                failureResults.Any(pr => String.IsNullOrWhiteSpace(pr.GetErrorMessage()))
+                );
+        }
+
+        [TestMethod, TestCategory(Category)]
+        public void ParseResult_GetErrorMessage_FailOnSuccess()
+        {
+            Assert.ThrowsException<InvalidOperationException>(
+                new ParseResult((SemanticVersion)"1.0").GetErrorMessage
+                );
         }
 
 
