@@ -390,72 +390,26 @@ namespace McSherry.SemanticVersioning
         /// flag works as expected.
         /// </para>
         /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Parse_Valid_AllowPrefixFlag()
+        [DataRow("1.0.1")]
+        [DataRow("1.10.0")]
+        [DataRow("1.0.0-alpha")]
+        [DataRow("1.0.0-alpha.1")]
+        [DataRow("1.0.0-0.3.7")]
+        [DataRow("1.0.0-x.7.z.92")]
+        [DataRow("1.0.0+20130313144700")]
+        [DataRow("1.0.0-beta+exp.sha.5114f85")]
+        [DataRow("1.0.0--.--+-.--")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_AllowPrefix(string verString)
         {
-            // These versions parsing correctly is tested in another unit
-            // test, so we don't have to worry about them.
-            string vs0 = "1.0.1",
-                   vs1 = "1.10.0",
-                   vs2 = "1.0.0-alpha",
-                   vs3 = "1.0.0-alpha.1",
-                   vs4 = "1.0.0-0.3.7",
-                   vs5 = "1.0.0-x.7.z.92",
-                   vs6 = "1.0.0+20130313144700",
-                   vs7 = "1.0.0-beta+exp.sha.5114f85";
+            var basic = Parser.Parse(verString, ParseMode.Strict).Version;
 
-            // These won't throw unless something is seriously
-            // wrong, so we're quite free to do this.
-            var sv0 = Parser.Parse(vs0, ParseMode.Strict).Version;
-            var sv1 = Parser.Parse(vs1, ParseMode.Strict).Version;
-            var sv2 = Parser.Parse(vs2, ParseMode.Strict).Version;
-            var sv3 = Parser.Parse(vs3, ParseMode.Strict).Version;
-            var sv4 = Parser.Parse(vs4, ParseMode.Strict).Version;
-            var sv5 = Parser.Parse(vs5, ParseMode.Strict).Version;
-            var sv6 = Parser.Parse(vs6, ParseMode.Strict).Version;
-            var sv7 = Parser.Parse(vs7, ParseMode.Strict).Version;
+            var prefixed = new[] { $"v{verString}", $"V{verString}" }
+                            .Select(s => Parser.Parse(s, ParseMode.AllowPrefix).Version);
 
-            // The prefix may be either "v" or "V", so we need to test
-            // that both are accepted.
-            #region Lowercase
-            var psv0 = Parser.Parse("v" + vs0, ParseMode.AllowPrefix).Version;
-            var psv1 = Parser.Parse("v" + vs1, ParseMode.AllowPrefix).Version;
-            var psv2 = Parser.Parse("v" + vs2, ParseMode.AllowPrefix).Version;
-            var psv3 = Parser.Parse("v" + vs3, ParseMode.AllowPrefix).Version;
-            var psv4 = Parser.Parse("v" + vs4, ParseMode.AllowPrefix).Version;
-            var psv5 = Parser.Parse("v" + vs5, ParseMode.AllowPrefix).Version;
-            var psv6 = Parser.Parse("v" + vs6, ParseMode.AllowPrefix).Version;
-            var psv7 = Parser.Parse("v" + vs7, ParseMode.AllowPrefix).Version;
-            
-            Assert.AreEqual(sv0, psv0, "Prefix parsing unexpectedly failed (0).");
-            Assert.AreEqual(sv1, psv1, "Prefix parsing unexpectedly failed (1).");
-            Assert.AreEqual(sv2, psv2, "Prefix parsing unexpectedly failed (2).");
-            Assert.AreEqual(sv3, psv3, "Prefix parsing unexpectedly failed (3).");
-            Assert.AreEqual(sv4, psv4, "Prefix parsing unexpectedly failed (4).");
-            Assert.AreEqual(sv5, psv5, "Prefix parsing unexpectedly failed (5).");
-            Assert.AreEqual(sv6, psv6, "Prefix parsing unexpectedly failed (6).");
-            Assert.AreEqual(sv7, psv7, "Prefix parsing unexpectedly failed (7).");
-            #endregion
-            #region Uppercase
-            var uv0 = Parser.Parse("V" + vs0, ParseMode.AllowPrefix).Version;
-            var uv1 = Parser.Parse("V" + vs1, ParseMode.AllowPrefix).Version;
-            var uv2 = Parser.Parse("V" + vs2, ParseMode.AllowPrefix).Version;
-            var uv3 = Parser.Parse("V" + vs3, ParseMode.AllowPrefix).Version;
-            var uv4 = Parser.Parse("V" + vs4, ParseMode.AllowPrefix).Version;
-            var uv5 = Parser.Parse("V" + vs5, ParseMode.AllowPrefix).Version;
-            var uv6 = Parser.Parse("V" + vs6, ParseMode.AllowPrefix).Version;
-            var uv7 = Parser.Parse("V" + vs7, ParseMode.AllowPrefix).Version;
-
-            Assert.AreEqual(sv0, uv0, "Prefix parsing unexpectedly failed (8).");
-            Assert.AreEqual(sv1, uv1, "Prefix parsing unexpectedly failed (9).");
-            Assert.AreEqual(sv2, uv2, "Prefix parsing unexpectedly failed (10).");
-            Assert.AreEqual(sv3, uv3, "Prefix parsing unexpectedly failed (11).");
-            Assert.AreEqual(sv4, uv4, "Prefix parsing unexpectedly failed (12).");
-            Assert.AreEqual(sv5, uv5, "Prefix parsing unexpectedly failed (13).");
-            Assert.AreEqual(sv6, uv6, "Prefix parsing unexpectedly failed (14).");
-            Assert.AreEqual(sv7, uv7, "Prefix parsing unexpectedly failed (15).");
-            #endregion
+            Assert.IsTrue(prefixed.All(v => v == basic));
         }
+        
         /// <summary>
         /// <para>
         /// Tests that the <see cref="Parse(string, ParseMode, out IEnumerator{char})"/>
