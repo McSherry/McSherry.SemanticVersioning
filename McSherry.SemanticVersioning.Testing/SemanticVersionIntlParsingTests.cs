@@ -302,6 +302,7 @@ namespace McSherry.SemanticVersioning
                     "not throw.");
         }
 
+
         /// <summary>
         /// <para>
         /// Tests that strictly parsing basic <see cref="SemanticVersion"/> strings works
@@ -357,7 +358,7 @@ namespace McSherry.SemanticVersioning
             Assert.IsTrue(id.SequenceEqual(pr.Version.Identifiers));
             Assert.IsTrue(meta.SequenceEqual(pr.Version.Metadata));
         }
-        
+
 
         /// <summary>
         /// <para>
@@ -365,61 +366,24 @@ namespace McSherry.SemanticVersioning
         /// ignores insignificant whitespace.
         /// </para>
         /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Parse_Valid_IgnoreWhiteSpace()
+        [DataRow("1.0.1")]
+        [DataRow("1.10.0")]
+        [DataRow("1.0.0-alpha")]
+        [DataRow("1.0.0-alpha.1")]
+        [DataRow("1.0.0-0.3.7")]
+        [DataRow("1.0.0-x.7.z.92")]
+        [DataRow("1.0.0+20130313144700")]
+        [DataRow("1.0.0-beta+exp.sha.5114f85")]
+        [DataRow("1.0.0--.--+-.--")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_IgnoreWhitespace(string verString)
         {
-            // These versions parsing correctly is tested in another unit
-            // test, so we don't have to worry about them.
-            SemanticVersion
-                sv0 = Parser.Parse("1.0.1", ParseMode.Strict).Version,
-                sv1 = Parser.Parse("1.10.0", ParseMode.Strict).Version,
-                sv2 = Parser.Parse("1.0.0-alpha", ParseMode.Strict).Version,
-                sv3 = Parser.Parse("1.0.0-alpha.1", ParseMode.Strict).Version,
-                sv4 = Parser.Parse("1.0.0-0.3.7", ParseMode.Strict).Version,
-                sv5 = Parser.Parse("1.0.0-x.7.z.92", ParseMode.Strict).Version,
-                sv6 = Parser.Parse("1.0.0+20130313144700",
-                                   ParseMode.Strict).Version,
-                sv7 = Parser.Parse("1.0.0-beta+exp.sha.5114f85", 
-                                   ParseMode.Strict).Version;
+            var basic = Parser.Parse(verString, ParseMode.Strict).Version;
+            var padded = Parser.Parse($"\t {verString}\t ", ParseMode.Strict).Version;
 
-            // Leading and trailing whitespace is not significant, and
-            // analogous methods (e.g. [Int32.Parse]) ignore it, so we want
-            // to make sure that we ignore it, too.
-            var ws0 = "\t " + sv0.ToString() + "\t ";
-            var ws1 = "\t " + sv1.ToString() + "\t ";
-            var ws2 = "\t " + sv2.ToString() + "\t ";
-            var ws3 = "\t " + sv3.ToString() + "\t ";
-            var ws4 = "\t " + sv4.ToString() + "\t ";
-            var ws5 = "\t " + sv5.ToString() + "\t ";
-            var ws6 = "\t " + sv6.ToString() + "\t ";
-            var ws7 = "\t " + sv7.ToString() + "\t ";
-
-            var wspr0 = Parser.Parse(ws0, ParseMode.Strict);
-            var wspr1 = Parser.Parse(ws1, ParseMode.Strict);
-            var wspr2 = Parser.Parse(ws2, ParseMode.Strict);
-            var wspr3 = Parser.Parse(ws3, ParseMode.Strict);
-            var wspr4 = Parser.Parse(ws4, ParseMode.Strict);
-            var wspr5 = Parser.Parse(ws5, ParseMode.Strict);
-            var wspr6 = Parser.Parse(ws6, ParseMode.Strict);
-            var wspr7 = Parser.Parse(ws7, ParseMode.Strict);
-
-            Assert.AreEqual(sv0, wspr0.Version,
-                            "Parser did not ignore whitespace (0).");
-            Assert.AreEqual(sv1, wspr1.Version,
-                            "Parser did not ignore whitespace (1).");
-            Assert.AreEqual(sv2, wspr2.Version,
-                            "Parser did not ignore whitespace (2).");
-            Assert.AreEqual(sv3, wspr3.Version,
-                            "Parser did not ignore whitespace (3).");
-            Assert.AreEqual(sv4, wspr4.Version,
-                            "Parser did not ignore whitespace (4).");
-            Assert.AreEqual(sv5, wspr5.Version,
-                            "Parser did not ignore whitespace (5).");
-            Assert.AreEqual(sv6, wspr6.Version,
-                            "Parser did not ignore whitespace (6).");
-            Assert.AreEqual(sv7, wspr7.Version,
-                            "Parser did not ignore whitespace (7).");
+            Assert.AreEqual(basic, padded);
         }
+
         /// <summary>
         /// <para>
         /// Tests that parsing with the <see cref="ParseMode.AllowPrefix"/>
