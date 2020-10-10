@@ -479,49 +479,40 @@ namespace McSherry.SemanticVersioning
         /// flag works as intended.
         /// </para>
         /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Parse_OptionalMinorFlag()
+        [DataRow("1", "1.0.0")]
+        [DataRow("2", "2.0.0")]
+        [DataRow("3.5", "3.5.0")]
+        [DataRow("4.7.2", "4.7.2")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_OptionalMinor(string input, string expected)
         {
-            // Tests for valid inputs
-            (string VID, string Input, SemanticVersion Expected)[] vectors1 =
-            {
-                ("V1.1", "1",       (SemanticVersion)"1.0.0"),
-                ("V1.2", "2",       (SemanticVersion)"2.0.0"),
-                ("V1.3", "3.5",     (SemanticVersion)"3.5.0"),
-                ("V1.4", "4.7.2",   (SemanticVersion)"4.7.2"),
-            };
+            // The [OptionalPatch] flag must also be specified for [OptionalMinor] to
+            // have any effect.
+            const ParseMode mode = ParseMode.OptionalPatch | InternalModes.OptionalMinor;
 
-            foreach (var vector in vectors1)
-            {
-                const ParseMode mode = InternalModes.OptionalMinor |
-                                       ParseMode.OptionalPatch;
+            var inVer = Parser.Parse(input, mode).Version;
+            var expVer = (SemanticVersion)expected;
 
-                Assert.AreEqual(
-                    expected:   vector.Expected,
-                    actual:     SemanticVersion.Parse(vector.Input, mode),
-                    message:    $"Failure: vector {vector.VID}"
-                    );
-            }
-
-
-            // Tests for invalid inputs that should throw [ArgumentException]
-            (string VID, string Input, ParseMode Mode)[] vectors2 =
-            {
-                ("V2.1", "1", ParseMode.Strict),
-                ("V2.2", "2", ParseMode.Lenient),
-                ("V2.3", "3", ParseMode.OptionalPatch),
-                ("V2.4", "4", InternalModes.OptionalMinor),
-                ("V2.5", "4..0", InternalModes.OptionalMinor | ParseMode.OptionalPatch),
-            };
-
-            foreach (var vector in vectors2)
-            {
-                Assert.ThrowsException<ArgumentException>(
-                    action:     () => SemanticVersion.Parse(vector.Input, vector.Mode),
-                    message:    $"Failure: vector {vector.VID}"
-                    );
-            }
+            Assert.AreEqual(expVer, inVer);
         }
+
+        /// <summary>
+        /// Tests that the inclusion of <see cref="InternalModes.OptionalMinor"/> has
+        /// not affected validation in other parsing modes.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="mode"></param>
+        [DataRow("1", ParseMode.Strict)]
+        [DataRow("2", ParseMode.Lenient)]
+        [DataRow("3", ParseMode.OptionalPatch)]
+        [DataRow("4", InternalModes.OptionalMinor)]
+        [DataRow("4..0", InternalModes.OptionalMinor | ParseMode.OptionalPatch)]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_OptionalMinor_Failure(string input, ParseMode mode)
+        {
+            Assert.ThrowsException<ArgumentException>(() => SemanticVersion.Parse(input, mode));
+        }
+
 
         /// <summary>
         /// <para>
