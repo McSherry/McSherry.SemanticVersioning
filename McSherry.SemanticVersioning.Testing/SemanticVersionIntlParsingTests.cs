@@ -448,78 +448,29 @@ namespace McSherry.SemanticVersioning
 
             Assert.IsTrue(leftovers.All(l => l == expected));
         }
-        
+
         /// <summary>
         /// <para>
         /// Tests that parsing with the <see cref="ParseMode.OptionalPatch"/>
         /// flag works as expected.
         /// </para>
         /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Parse_Valid_OptionalPatchFlag()
+        [DataRow("1.0.1")]
+        [DataRow("1.10.0")]
+        [DataRow("1.0.0-alpha")]
+        [DataRow("1.0.0-alpha.1")]
+        [DataRow("1.0.0-0.3.7")]
+        [DataRow("1.0.0-x.7.z.92")]
+        [DataRow("1.0.0+20130313144700")]
+        [DataRow("1.0.0-beta+exp.sha.5114f85")]
+        [DataRow("1.0.0--.--+-.--")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_OptionalPatch(string verString)
         {
-            // These versions parsing correctly is tested in another unit
-            // test, so we don't have to worry about them.
-            string vs0 = "1.0.1",
-                   vs1 = "1.10.0",
-                   vs2 = "1.0.0-alpha",
-                   vs3 = "1.0.0-alpha.1",
-                   vs4 = "1.0.0-0.3.7",
-                   vs5 = "1.0.0-x.7.z.92",
-                   vs6 = "1.0.0+20130313144700",
-                   vs7 = "1.0.0-beta+exp.sha.5114f85";
+            var basic = Parser.Parse(verString, ParseMode.Strict).Version;
+            var noPatch = Parser.Parse($"{basic:M.mppRRDD}", ParseMode.OptionalPatch).Version;
 
-            // These won't throw unless something is seriously
-            // wrong, so we're quite free to do this.
-            var sv0 = Parser.Parse(vs0, ParseMode.Strict).Version;
-            var sv1 = Parser.Parse(vs1, ParseMode.Strict).Version;
-            var sv2 = Parser.Parse(vs2, ParseMode.Strict).Version;
-            var sv3 = Parser.Parse(vs3, ParseMode.Strict).Version;
-            var sv4 = Parser.Parse(vs4, ParseMode.Strict).Version;
-            var sv5 = Parser.Parse(vs5, ParseMode.Strict).Version;
-            var sv6 = Parser.Parse(vs6, ParseMode.Strict).Version;
-            var sv7 = Parser.Parse(vs7, ParseMode.Strict).Version;
-
-            string ofvs0 = "1.0.1",
-                   ofvs1 = "1.10",
-                   ofvs2 = "1.0-alpha",
-                   ofvs3 = "1.0-alpha.1",
-                   ofvs4 = "1.0-0.3.7",
-                   ofvs5 = "1.0-x.7.z.92",
-                   ofvs6 = "1.0+20130313144700",
-                   ofvs7 = "1.0-beta+exp.sha.5114f85";
-
-            Assert.AreEqual(sv0,
-                            Parser.Parse(ofvs0, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (0).");
-
-            Assert.AreEqual(sv1,
-                            Parser.Parse(ofvs1, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (1).");
-
-            Assert.AreEqual(sv2,
-                            Parser.Parse(ofvs2, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (2).");
-
-            Assert.AreEqual(sv3,
-                            Parser.Parse(ofvs3, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (3).");
-
-            Assert.AreEqual(sv4,
-                            Parser.Parse(ofvs4, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (4).");
-
-            Assert.AreEqual(sv5,
-                            Parser.Parse(ofvs5, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (5).");
-
-            Assert.AreEqual(sv6,
-                            Parser.Parse(ofvs6, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (6).");
-
-            Assert.AreEqual(sv7,
-                            Parser.Parse(ofvs7, ParseMode.OptionalPatch).Version,
-                            "[OptionalPatch] parsing unexpectedly failed (7).");
+            Assert.AreEqual(basic, noPatch);
         }
 
         /// <summary>
