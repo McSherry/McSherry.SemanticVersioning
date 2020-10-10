@@ -912,6 +912,15 @@ namespace McSherry.SemanticVersioning
             Assert.AreEqual(expected, greedy);
         }
 
+        [DataRow("v1")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Greedy_FormatException(string input)
+        {
+            Assert.ThrowsException<FormatException>(
+                () => SemanticVersion.Parse(input, ParseMode.Greedy)
+                );
+        }
+
 
         /// <summary>
         /// <para>
