@@ -360,7 +360,6 @@ namespace McSherry.SemanticVersioning
             Assert.IsTrue(meta.SequenceEqual(pr.Version.Metadata));
         }
 
-
         /// <summary>
         /// <para>
         /// Ensures that the <see cref="SemanticVersion"/> parser
@@ -384,6 +383,115 @@ namespace McSherry.SemanticVersioning
 
             Assert.AreEqual(basic, padded);
         }
+
+        [DataRow(null)]
+        [DataRow("")]
+        [DataRow("  \t  ")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_NullString(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.NullString, pi.Type);
+        }
+
+        [DataRow("ẅ1.0.0")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_PreTrioInvalidChar(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.PreTrioInvalidChar, pi.Type);
+        }
+
+        [DataRow("1ñ.0.0")]
+        [DataRow("1.û0.0")]
+        [DataRow("1.0.ç0")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_TrioInvalidChar(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.TrioInvalidChar, pi.Type);
+        }
+
+        [DataRow("01.0.0")]
+        [DataRow("1.00.0")]
+        [DataRow("1.0.00")]
+        public void Parse_Strict_TrioItemLeadingZero(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.TrioItemLeadingZero, pi.Type);
+        }
+
+        [DataRow("1.0")]
+        [DataRow("1.0-rc")]
+        [DataRow("1.0+rc")]
+        [DataRow("1")]
+        [DataRow("1-rc")]
+        [DataRow("1+rc")]
+        [DataRow("1..0")]
+        [DataRow("1.0.")]
+        [DataRow("1.0.-rc")]
+        [DataRow("1.0.+rc")]
+        public void Parse_Strict_TrioItemMissing(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.TrioItemMissing, pi.Type);
+        }
+
+        [DataRow("2147483649.0.0")]
+        [DataRow("1.2147483649.0")]
+        [DataRow("1.1.2147483649")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_TrioItemOverflow(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.TrioItemOverflow, pi.Type);
+        }
+
+        [DataRow("1.0.0-")]
+        [DataRow("1.0.0-rc.")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_IdentifierMissing(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.IdentifierMissing, pi.Type);
+        }
+
+        [DataRow("1.0.0-öffentlich")]
+        [DataRow("1.0.0-00.2")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_IdentifierInvalid(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.IdentifierInvalid, pi.Type);
+        }
+
+        [DataRow("1.0.0+")]
+        [DataRow("1.0.0+a972bae.")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_MetadataMissing(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.MetadataMissing, pi.Type);
+        }
+
+        [DataRow("1.0.0+schlüssel.534a")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_MetadataInvalid(string input)
+        {
+            var pi = Parser.Parse(input, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.MetadataInvalid, pi.Type);
+        }
+
 
         /// <summary>
         /// <para>
@@ -473,6 +581,20 @@ namespace McSherry.SemanticVersioning
             Assert.AreEqual(basic, noPatch);
         }
 
+        [DataRow("1.0.", ParseResultType.TrioItemMissing)]
+        [DataRow("1.0.-rc", ParseResultType.TrioItemMissing)]
+        [DataRow("1.0.+a972bae", ParseResultType.TrioItemMissing)]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_OptionalPatch_Failure(string input, int result)
+        {
+            var pi = Parser.Parse(input, ParseMode.OptionalPatch);
+
+            // The [ParseResultType] enum isn't publicly accessible and the test
+            // runner seems to ignore non-public tests, so a cast is the workaround.
+            Assert.AreEqual((ParseResultType)result, pi.Type);
+        }
+
+
         /// <summary>
         /// <para>
         /// Tests that parsing with the <see cref="InternalModes.OptionalMinor"/>
@@ -513,6 +635,7 @@ namespace McSherry.SemanticVersioning
             Assert.ThrowsException<ArgumentException>(() => SemanticVersion.Parse(input, mode));
         }
  
+
         /// <summary>
         /// Tests that <see cref="SemanticVersion.ParseInfo"/> provides the correct
         /// component states when all components are present.
@@ -789,157 +912,6 @@ namespace McSherry.SemanticVersioning
             Assert.AreEqual(expected, greedy);
         }
 
-
-        /// <summary>
-        /// <para>
-        /// Tests that parsing <see cref="SemanticVersion"/> strings works
-        /// as expected when the parser is given an invalid string.
-        /// </para>
-        /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Parse_Invalid()
-        {
-            string[] versionStrings =
-            {
-                // These ones are testing "Strict" specifically, but
-                // should apply to all modes.
-                
-                // NullString
-                null,                   // 0
-                String.Empty,           // 1
-                " \t ",                 // 2
-                
-                // PreTrioInvalidChar
-                "ẅ1.0.0",               // 3
-
-                // TrioInvalidChar
-                "1ñ.0.0",               // 4
-                "1.û0.0",               // 5
-                "1.0.ç0",               // 6
-
-                // TrioItemLeadingZero
-                "01.0.0",               // 7
-                "1.00.0",               // 8
-                "1.0.00",               // 9
-
-                // TrioItemMissing
-                "1.0-rc",               // 10
-                "1-rc",                 // 11
-                "1..0",                 // 12
-
-                // TrioItemOverflow
-                "1.2147483649.0",       // 13
-
-                // IdentifierMissing
-                "1.0.0-",               // 14
-                "1.0.0-rc.",            // 15
-
-                // IdentifierInvalid
-                "1.0.0-öffentlich",     // 16
-                "1.0.0-00.2",           // 17
-
-                // MetadataMissing
-                "1.0.0+",               // 18
-                "1.0.0+a972bae.",       // 19
-
-                // MetadataInvalid
-                "1.0.0+schlüssel.534a", // 20
-
-
-                // These ones are testing [OptionalPatch]-specific
-                // behaviour.
-
-                // This specifically makes sure that it won't count
-                // a patch omitted but with the period separator
-                // present valid.
-
-                // TrioItemMissing
-                "1.0.",                 // 21
-                "1.0.-rc",              // 22
-                "1.0.+a972bae",         // 23
-            };
-            ParseMode[] modes =
-            {
-                ParseMode.Strict,       // 0
-                ParseMode.Strict,       // 1
-                ParseMode.Strict,       // 2
-                ParseMode.Strict,       // 3
-                ParseMode.Strict,       // 4
-                ParseMode.Strict,       // 5
-                ParseMode.Strict,       // 6
-                ParseMode.Strict,       // 7
-                ParseMode.Strict,       // 8
-                ParseMode.Strict,       // 9
-                ParseMode.Strict,       // 10
-                ParseMode.Strict,       // 11
-                ParseMode.Strict,       // 12
-                ParseMode.Strict,       // 13
-                ParseMode.Strict,       // 14
-                ParseMode.Strict,       // 15
-                ParseMode.Strict,       // 16
-                ParseMode.Strict,       // 17
-                ParseMode.Strict,       // 18
-                ParseMode.Strict,       // 19
-                ParseMode.Strict,       // 20
-
-                ParseMode.OptionalPatch,// 21
-                ParseMode.OptionalPatch,// 22
-                ParseMode.OptionalPatch,// 23
-            };
-            ParseResultType[] results =
-            {
-                ParseResultType.NullString,         // 0
-                ParseResultType.NullString,         // 1
-                ParseResultType.NullString,         // 2
-                
-                ParseResultType.PreTrioInvalidChar, // 3
-                
-                ParseResultType.TrioInvalidChar,    // 4
-                ParseResultType.TrioInvalidChar,    // 5
-                ParseResultType.TrioInvalidChar,    // 6
-
-                ParseResultType.TrioItemLeadingZero,// 7
-                ParseResultType.TrioItemLeadingZero,// 8
-                ParseResultType.TrioItemLeadingZero,// 9
-
-                ParseResultType.TrioItemMissing,    // 10
-                ParseResultType.TrioItemMissing,    // 11
-                ParseResultType.TrioItemMissing,    // 12
-
-                ParseResultType.TrioItemOverflow,   // 13
-
-                ParseResultType.IdentifierMissing,  // 14
-                ParseResultType.IdentifierMissing,  // 15
-                
-                ParseResultType.IdentifierInvalid,  // 16
-                ParseResultType.IdentifierInvalid,  // 17
-
-                ParseResultType.MetadataMissing,    // 18
-                ParseResultType.MetadataMissing,    // 19
-                
-                ParseResultType.MetadataInvalid,    // 20
-
-
-                ParseResultType.TrioItemMissing,    // 21
-                ParseResultType.TrioItemMissing,    // 22
-                ParseResultType.TrioItemMissing,    // 23
-            };
-
-            // We can't do the test if we don't have a result for
-            // each version string we put in.
-            Assert.IsTrue(versionStrings.Length == results.Length,
-                          "Unit test incorrectly configured.");
-
-            // Iterate through the test strings and compare them to
-            // the expected result.
-            for (int i = 0; i < results.Length; i++)
-            {
-                Assert.AreEqual(
-                    results[i], Parser.Parse(versionStrings[i], modes[i]).Type,
-                    $"Did not produce expected status ({i})."
-                    );
-            }
-        }
 
         /// <summary>
         /// <para>
