@@ -304,173 +304,61 @@ namespace McSherry.SemanticVersioning
 
         /// <summary>
         /// <para>
-        /// Tests that parsing <see cref="SemanticVersion"/> strings works
+        /// Tests that strictly parsing basic <see cref="SemanticVersion"/> strings works
         /// as expected when using valid version strings.
         /// </para>
         /// </summary>
-        [TestMethod, TestCategory(Category)]
-        public void Parse_Valid()
+        [DataRow("1.0.1", 1, 0, 1)]
+        [DataRow("1.10.0", 1, 10, 0)]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_Basic(string verString, int major, int minor, int patch)
         {
-            // TODO: Refactor to use parameterised tests.
+            var pr = Parser.Parse(verString, ParseMode.Strict);
 
-            // These example strings are all taken from the
-            // SemVer spec (2.0.0), so if we can't parse these
-            // then something is amiss.
-            string vs0  = "1.0.1",
-                   vs1  = "1.10.0",
-                   vs2  = "1.0.0-alpha",
-                   vs3  = "1.0.0-alpha.1",
-                   vs4  = "1.0.0-0.3.7",
-                   vs5  = "1.0.0-x.7.z.92",
-                   vs6  = "1.0.0+20130313144700",
-                   vs7  = "1.0.0-beta+exp.sha.5114f85",
-                   vs8  = "1.0.0--doublehyphen+-startinghyphen",
-                   vs9  = "1.0.0-secondhas.-hyphen+secondhas.-hyphen",
-                   vs10 = "1.0.0--.--+-.--";
+            Assert.AreEqual(ParseResultType.Success, pr.Type);
 
-            // These won't throw unless something is seriously
-            // wrong, so we're quite free to do this.
-            ParseResult pr0  = Parser.Parse(vs0, ParseMode.Strict);
-            ParseResult pr1  = Parser.Parse(vs1, ParseMode.Strict);
-            ParseResult pr2  = Parser.Parse(vs2, ParseMode.Strict);
-            ParseResult pr3  = Parser.Parse(vs3, ParseMode.Strict);
-            ParseResult pr4  = Parser.Parse(vs4, ParseMode.Strict);
-            ParseResult pr5  = Parser.Parse(vs5, ParseMode.Strict);
-            ParseResult pr6  = Parser.Parse(vs6, ParseMode.Strict);
-            ParseResult pr7  = Parser.Parse(vs7, ParseMode.Strict);
-            ParseResult pr8  = Parser.Parse(vs8, ParseMode.Strict);
-            ParseResult pr9  = Parser.Parse(vs9, ParseMode.Strict);
-            ParseResult pr10 = Parser.Parse(vs10, ParseMode.Strict);
+            var (pMaj, pMin, pPat) = pr.Version;
 
-            SemanticVersion
-                   sv0  = pr0.Version,
-                   sv1  = pr1.Version,
-                   sv2  = pr2.Version,
-                   sv3  = pr3.Version,
-                   sv4  = pr4.Version,
-                   sv5  = pr5.Version,
-                   sv6  = pr6.Version,
-                   sv7  = pr7.Version,
-                   sv8  = pr8.Version,
-                   sv9  = pr9.Version,
-                   sv10 = pr10.Version;
+            Assert.AreEqual(major, pMaj);
+            Assert.AreEqual(minor, pMin);
+            Assert.AreEqual(patch, pPat);
 
-            #region Check status
-            Assert.AreEqual(ParseResultType.Success, pr0.Type,
-                            "Parse unexpectedly failed (0).");
-            Assert.AreEqual(ParseResultType.Success, pr1.Type,
-                            "Parse unexpectedly failed (1).");
-            Assert.AreEqual(ParseResultType.Success, pr2.Type,
-                            "Parse unexpectedly failed (2).");
-            Assert.AreEqual(ParseResultType.Success, pr3.Type,
-                            "Parse unexpectedly failed (3).");
-            Assert.AreEqual(ParseResultType.Success, pr4.Type,
-                            "Parse unexpectedly failed (4).");
-            Assert.AreEqual(ParseResultType.Success, pr5.Type,
-                            "Parse unexpectedly failed (5).");
-            Assert.AreEqual(ParseResultType.Success, pr6.Type,
-                            "Parse unexpectedly failed (6).");
-            Assert.AreEqual(ParseResultType.Success, pr7.Type,
-                            "Parse unexpectedly failed (7).");
-            Assert.AreEqual(ParseResultType.Success, pr8.Type,
-                            "Parse unexpectedly failed (8).");
-            Assert.AreEqual(ParseResultType.Success, pr9.Type,
-                            "Parse unexpectedly failed (9).");
-            Assert.AreEqual(ParseResultType.Success, pr10.Type,
-                            "Parse unexpectedly failed (10).");
-            #endregion
-            #region Check [SemanticVersion] properties
-            Assert.AreEqual(1, sv0.Major, "Major version incorrect (0).");
-            Assert.AreEqual(0, sv0.Minor, "Minor version incorrect (0).");
-            Assert.AreEqual(1, sv0.Patch, "Patch version incorrect (0).");
-            Assert.IsTrue(sv0.Identifiers.SequenceEqual(Empty<string>()),
-                          "Pre-release identifiers incorrect (0).");
-            Assert.IsTrue(sv0.Metadata.SequenceEqual(Empty<string>()),
-                          "Build metadata items incorrect (0).");
-
-            Assert.AreEqual(1, sv1.Major, "Major version incorrect (1).");
-            Assert.AreEqual(10, sv1.Minor, "Minor version incorrect (1).");
-            Assert.AreEqual(0, sv1.Patch, "Patch version incorrect (1).");
-            Assert.IsTrue(sv1.Identifiers.SequenceEqual(Empty<string>()),
-                          "Pre-release identifiers incorrect (1).");
-            Assert.IsTrue(sv1.Metadata.SequenceEqual(Empty<string>()),
-                          "Build metadata items incorrect (1).");
-
-            Assert.AreEqual(1, sv2.Major, "Major version incorrect (2).");
-            Assert.AreEqual(0, sv2.Minor, "Minor version incorrect (2).");
-            Assert.AreEqual(0, sv2.Patch, "Patch version incorrect (2).");
-            Assert.IsTrue(sv2.Identifiers.SequenceEqual(new[] { "alpha" }),
-                          "Pre-release identifiers incorrect (2).");
-            Assert.IsTrue(sv2.Metadata.SequenceEqual(Empty<string>()),
-                          "Build metadata items incorrect (2).");
-
-            Assert.AreEqual(1, sv3.Major, "Major version incorrect (3).");
-            Assert.AreEqual(0, sv3.Minor, "Minor version incorrect (3).");
-            Assert.AreEqual(0, sv3.Patch, "Patch version incorrect (3).");
-            Assert.IsTrue(sv3.Identifiers.SequenceEqual(new[] { "alpha", "1" }),
-                          "Pre-release identifiers incorrect (3).");
-            Assert.IsTrue(sv3.Metadata.SequenceEqual(Empty<string>()),
-                          "Build metadata items incorrect (3).");
-
-            Assert.AreEqual(1, sv4.Major, "Major version incorrect (4).");
-            Assert.AreEqual(0, sv4.Minor, "Minor version incorrect (4).");
-            Assert.AreEqual(0, sv4.Patch, "Patch version incorrect (4).");
-            Assert.IsTrue(sv4.Identifiers.SequenceEqual(new[] { "0", "3", "7" }),
-                          "Pre-release identifiers incorrect (4).");
-            Assert.IsTrue(sv4.Metadata.SequenceEqual(Empty<string>()),
-                          "Build metadata items incorrect (4).");
-
-            Assert.AreEqual(1, sv5.Major, "Major version incorrect (5).");
-            Assert.AreEqual(0, sv5.Minor, "Minor version incorrect (5).");
-            Assert.AreEqual(0, sv5.Patch, "Patch version incorrect (5).");
-            Assert.IsTrue(sv5.Identifiers.SequenceEqual(new[] { "x", "7", "z",
-                                                                "92" }),
-                          "Pre-release identifiers incorrect (5).");
-            Assert.IsTrue(sv5.Metadata.SequenceEqual(Empty<string>()),
-                          "Build metadata items incorrect (5).");
-
-            Assert.AreEqual(1, sv6.Major, "Major version incorrect (6).");
-            Assert.AreEqual(0, sv6.Minor, "Minor version incorrect (6).");
-            Assert.AreEqual(0, sv6.Patch, "Patch version incorrect (6).");
-            Assert.IsTrue(sv6.Identifiers.SequenceEqual(Empty<string>()),
-                          "Pre-release identifiers incorrect (6).");
-            Assert.IsTrue(sv6.Metadata.SequenceEqual(new[] { "20130313144700" }),
-                          "Build metadata items incorrect (6).");
-
-            Assert.AreEqual(1, sv7.Major, "Major version incorrect (7).");
-            Assert.AreEqual(0, sv7.Minor, "Minor version incorrect (7).");
-            Assert.AreEqual(0, sv7.Patch, "Patch version incorrect (7).");
-            Assert.IsTrue(sv7.Identifiers.SequenceEqual(new[] { "beta" }),
-                          "Pre-release identifiers incorrect (7).");
-            Assert.IsTrue(sv7.Metadata.SequenceEqual(new[] { "exp", "sha",
-                                                             "5114f85" }),
-                          "Build metadata items incorrect (7).");
-
-            Assert.AreEqual(1, sv8.Major, "Major version incorrect (8).");
-            Assert.AreEqual(0, sv8.Minor, "Minor version incorrect (8).");
-            Assert.AreEqual(0, sv8.Patch, "Patch version incorrect (8).");
-            Assert.IsTrue(sv8.Identifiers.SequenceEqual(new[] { "-doublehyphen" }),
-                          "Pre-release identifiers incorrect (8).");
-            Assert.IsTrue(sv8.Metadata.SequenceEqual(new[] { "-startinghyphen" }),
-                          "Build metadata items incorrect (8).");
-
-            Assert.AreEqual(1, sv9.Major, "Major version incorrect (9).");
-            Assert.AreEqual(0, sv9.Minor, "Minor version incorrect (9).");
-            Assert.AreEqual(0, sv9.Patch, "Patch version incorrect (9).");
-            Assert.IsTrue(sv9.Identifiers.SequenceEqual(new[] { "secondhas", "-hyphen" }),
-                          "Pre-release identifiers incorrect (9).");
-            Assert.IsTrue(sv9.Metadata.SequenceEqual(new[] { "secondhas", "-hyphen" }),
-                          "Build metadata items incorrect (9).");
-
-            Assert.AreEqual(1, sv10.Major, "Major version incorrect (10).");
-            Assert.AreEqual(0, sv10.Minor, "Minor version incorrect (10).");
-            Assert.AreEqual(0, sv10.Patch, "Patch version incorrect (10).");
-            Assert.IsTrue(sv10.Identifiers.SequenceEqual(new[] { "-", "--" }),
-                          "Pre-release identifiers incorrect (10).");
-            Assert.IsTrue(sv10.Metadata.SequenceEqual(new[] { "-", "--" }),
-                          "Build metadata items incorrect (10).");
-            #endregion
+            Assert.IsFalse(pr.Version.Identifiers.Any());
+            Assert.IsFalse(pr.Version.Metadata.Any());
         }
+
+        /// <summary>
+        /// Tests that strictly parsing <see cref="SemanticVersion"/> strings with
+        /// build metadata and pre-release identifiers works as expected when
+        /// using valid version strings.
+        /// </summary>
+        [DataRow("1.0.0-alpha", new[] { "alpha" }, new string[0])]
+        [DataRow("1.0.0-alpha.1", new[] { "alpha", "1" }, new string[0])]
+        [DataRow("1.0.0-0.3.7", new[] { "0", "3", "7" }, new string[0])]
+        [DataRow("1.0.0-x.7.z.92", new[] { "x", "7", "z", "92" }, new string[0])]
+        [DataRow("1.0.0+20130313144700", new string[0], new[] { "20130313144700" })]
+        [DataRow("1.0.0-beta+exp.sha.5114f85", new[] { "beta" }, new[] { "exp", "sha", "5114f85" })]
+        [DataRow("1.0.0--doublehyphen+-startinghyphen", new[] { "-doublehyphen" }, new[] { "-startinghyphen" })]
+        [DataRow("1.0.0-secondhas.-hyphen+secondhas.-hyphen", new[] { "secondhas", "-hyphen" }, new[] { "secondhas", "-hyphen" })]
+        [DataRow("1.0.0--.--+-.--", new[] { "-", "--" }, new[] { "-", "--" })]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_Strict_MetaAndIDs(string verString, string[] id, string[] meta)
+        {
+            var pr = Parser.Parse(verString, ParseMode.Strict);
+
+            Assert.AreEqual(ParseResultType.Success, pr.Type);
+
+            var (pMaj, pMin, pPat) = pr.Version;
+
+            Assert.AreEqual(1, pMaj);
+            Assert.AreEqual(0, pMin);
+            Assert.AreEqual(0, pPat);
+
+            Assert.IsTrue(id.SequenceEqual(pr.Version.Identifiers));
+            Assert.IsTrue(meta.SequenceEqual(pr.Version.Metadata));
+        }
+        
+
         /// <summary>
         /// <para>
         /// Ensures that the <see cref="SemanticVersion"/> parser
