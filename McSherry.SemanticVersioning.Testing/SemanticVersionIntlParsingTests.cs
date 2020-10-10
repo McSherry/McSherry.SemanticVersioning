@@ -512,130 +512,210 @@ namespace McSherry.SemanticVersioning
         {
             Assert.ThrowsException<ArgumentException>(() => SemanticVersion.Parse(input, mode));
         }
+ 
+        /// <summary>
+        /// Tests that <see cref="SemanticVersion.ParseInfo"/> provides the correct
+        /// component states when all components are present.
+        /// </summary>
+        [DataRow(ParseMode.OptionalPatch)]
+        [DataRow(ParseMode.OptionalPatch | InternalModes.OptionalMinor)]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates_AllPresent(ParseMode mode)
+        {
+            var pi = SemanticVersion.Parse("1.2.3", mode).ParseInfo;
 
+            Assert.AreEqual(ComponentState.Present, pi.MajorState);
+            Assert.AreEqual(ComponentState.Present, pi.MinorState);
+            Assert.AreEqual(ComponentState.Present, pi.PatchState);
+        }
 
         /// <summary>
-        /// <para>
-        /// Tests that component states are correctly indicated in parse
-        /// metadata provided with a semantic version.
-        /// </para>
+        /// Tests that <see cref="SemanticVersion.ParseInfo"/> provides the correct
+        /// component states the patch component is omitted.
+        /// </summary>
+        [DataRow(ParseMode.OptionalPatch)]
+        [DataRow(ParseMode.OptionalPatch | InternalModes.OptionalMinor)]
+        [DataRow(ParseMode.Lenient)]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates_PatchOmitted(ParseMode mode)
+        {
+            var pi = SemanticVersion.Parse("1.2", mode).ParseInfo;
+
+            Assert.AreEqual(ComponentState.Present, pi.MajorState);
+            Assert.AreEqual(ComponentState.Present, pi.MinorState);
+            Assert.AreEqual(ComponentState.Omitted, pi.PatchState);
+        }
+
+        /// <summary>
+        /// Tests that <see cref="SemanticVersion.ParseInfo"/> provides the correct
+        /// component states when the patch and minor components are omitted.
         /// </summary>
         [TestMethod, TestCategory(Category)]
-        public void Parse_ComponentStates()
+        public void Parse_ComponentStates_MinorPatchOmitted()
         {
-            const ParseMode patch = ParseMode.OptionalPatch;
-            const ParseMode both  = patch | InternalModes.OptionalMinor;
-            const ParseMode wcard = InternalModes.AllowWildcard;
+            const ParseMode mode = ParseMode.OptionalPatch | InternalModes.OptionalMinor;
 
-            const CompSt present = CompSt.Present;
-            const CompSt omitted = CompSt.Omitted;
-            const CompSt wildcard = CompSt.Wildcard;
+            var pi = SemanticVersion.Parse("5", mode).ParseInfo;
 
-            // Tests for valid input
-            (
-                string VID, 
-                string Input, 
-                ParseMode Mode, 
-                (CompSt Major, CompSt Minor, CompSt Patch) Expected
-            )[] vectors1 =
-            {
-                ("V1.1",  "1.0.0",  patch,              (present, present, present)),
-                ("V1.2",  "2.0",    patch,              (present, present, omitted)),
-                ("V1.3",  "3.0.0",  both,               (present, present, present)),
-                ("V1.4",  "4.0",    both,               (present, present, omitted)),
-                ("V1.5",  "5",      both,               (present, omitted, omitted)),
-                ("V1.6",  "5.0",    ParseMode.Lenient,  (present, present, omitted)),
-                ("V1.7",  "6.0.x",  wcard,              (present, present, wildcard)),
-                ("V1.8",  "6.0.X",  wcard,              (present, present, wildcard)),
-                ("V1.9",  "6.0.*",  wcard,              (present, present, wildcard)),
-                ("V1.10", "6.x",    wcard,              (present, wildcard, wildcard)),
-                ("V1.11", "6.X",    wcard,              (present, wildcard, wildcard)),
-                ("V1.12", "6.*",    wcard,              (present, wildcard, wildcard)),
-                ("V1.13", "x",      wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.14", "X",      wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.15", "*",      wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.16", "x.x.x",  wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.17", "x.x",    wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.19", "*.*.*",  wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.18", "*.*",    wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.20", "X.X.X",  wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.21", "X.X",    wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.22", "x.X.*",  wcard,              (wildcard, wildcard, wildcard)),
-                ("V1.23", "7.X.X",  wcard,              (present, wildcard, wildcard)),
-                ("V1.24", "7.x.x",  wcard,              (present, wildcard, wildcard)),
-                ("V1.25", "7.*.*",  wcard,              (present, wildcard, wildcard)),
-                ("V1.26", "7.x.X",  wcard,              (present, wildcard, wildcard)),
-                ("V1.27", "7.*.X",  wcard,              (present, wildcard, wildcard)),
-                ("V1.28", "7.X.*",  wcard,              (present, wildcard, wildcard)),
-            };
+            Assert.AreEqual(ComponentState.Present, pi.MajorState);
+            Assert.AreEqual(ComponentState.Omitted, pi.MinorState);
+            Assert.AreEqual(ComponentState.Omitted, pi.PatchState);
+        }
 
-            foreach (var vector in vectors1)
-            {
-                // Appease the unassigned variable checker
-                ParseMetadata info = null;
+        /// <summary>
+        /// Tests that <see cref="SemanticVersion.ParseInfo"/> provides the correct
+        /// component states when the patch component is a wildcard.
+        /// </summary>
+        [DataRow("6.0.x")]
+        [DataRow("6.0.X")]
+        [DataRow("6.0.*")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates_PatchWildcard(string input)
+        {
+            var pi = SemanticVersion.Parse(input, InternalModes.AllowWildcard).ParseInfo;
 
-                try
-                {
-                    info = SemanticVersion.Parse(vector.Input, vector.Mode).ParseInfo;
-                }
-                catch (Exception ex)
-                {
-                    Assert.Fail(
-                        message:    $"Parse failure: vector {vector.VID}",
-                        parameters: ex
-                        );
-                }
+            Assert.AreEqual(ComponentState.Present, pi.MajorState);
+            Assert.AreEqual(ComponentState.Present, pi.MinorState);
+            Assert.AreEqual(ComponentState.Wildcard, pi.PatchState);
+        }
 
-                Assert.AreEqual(
-                    expected:   vector.Expected,
-                    actual:     (info.MajorState, info.MinorState, info.PatchState),
-                    message:    $"Failure: vector {vector.VID}"
-                    );
-            }
+        /// <summary>
+        /// Tests that <see cref="SemanticVersion.ParseInfo"/> provides the correct
+        /// component states when the minor and patch components are wildcards.
+        /// </summary>
+        [DataRow("6.x")]
+        [DataRow("6.X")]
+        [DataRow("6.*")]
+        [DataRow("7.x.x")]
+        [DataRow("7.x.X")]
+        [DataRow("7.x.*")]
+        [DataRow("7.X.x")]
+        [DataRow("7.X.X")]
+        [DataRow("7.X.*")]
+        [DataRow("7.*.x")]
+        [DataRow("7.*.X")]
+        [DataRow("7.*.*")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates_MinorPatchWildcard(string input)
+        {
+            var pi = SemanticVersion.Parse(input, InternalModes.AllowWildcard).ParseInfo;
 
+            Assert.AreEqual(ComponentState.Present, pi.MajorState);
+            Assert.AreEqual(ComponentState.Wildcard, pi.MinorState);
+            Assert.AreEqual(ComponentState.Wildcard, pi.PatchState);
+        }
 
-            // Tests for invalid input which should throw [ArgumentException]
+        /// <summary>
+        /// Tests that <see cref="SemanticVersion.ParseInfo"/> provides the correct
+        /// component states when all components are wildcards.
+        /// </summary>
+        [DataRow("x")]
+        [DataRow("X")]
+        [DataRow("*")]
+        // All possible 2-wildcard combos, read like a truth table.
+        [DataRow("x.x")]
+        [DataRow("x.X")]
+        [DataRow("x.*")]
+        [DataRow("X.x")]
+        [DataRow("X.X")]
+        [DataRow("X.*")]
+        [DataRow("*.x")]
+        [DataRow("*.X")]
+        [DataRow("*.*")]
+        // All possible 3-wildcard combos (3**3 = 27), read like a truth table:
+        //
+        //      o Left column changes every 3**2 = 9 items
+        //      o Middle changes every 3**1 = 3 items
+        //      o Right column changes every 3**0 = 1 items
+        //
+        [DataRow("x.x.x")]
+        [DataRow("x.x.X")]
+        [DataRow("x.x.*")]
+        [DataRow("x.X.x")]
+        [DataRow("x.X.X")]
+        [DataRow("x.X.*")]
+        [DataRow("x.*.x")]
+        [DataRow("x.*.X")]
+        [DataRow("x.*.*")]
+        [DataRow("X.x.x")]
+        [DataRow("X.x.X")]
+        [DataRow("X.x.*")]
+        [DataRow("X.X.x")]
+        [DataRow("X.X.X")]
+        [DataRow("X.X.*")]
+        [DataRow("X.*.x")]
+        [DataRow("X.*.X")]
+        [DataRow("X.*.*")]
+        [DataRow("*.x.x")]
+        [DataRow("*.x.X")]
+        [DataRow("*.x.*")]
+        [DataRow("*.X.x")]
+        [DataRow("*.X.X")]
+        [DataRow("*.X.*")]
+        [DataRow("*.*.x")]
+        [DataRow("*.*.X")]
+        [DataRow("*.*.*")]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates_AllWildcard(string input)
+        {
+            var pi = SemanticVersion.Parse(input, InternalModes.AllowWildcard).ParseInfo;
+
+            Assert.AreEqual(ComponentState.Wildcard, pi.MajorState);
+            Assert.AreEqual(ComponentState.Wildcard, pi.MinorState);
+            Assert.AreEqual(ComponentState.Wildcard, pi.PatchState);
+        }
+
+        /// <summary>
+        /// Tests that the combinations of component states and <see cref="ParseMode"/>s
+        /// anticipated to cause an <see cref="ArgumentException"/> do so.
+        /// </summary>
+        [TestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates_ArgumentException()
+        {
             Assert.ThrowsException<ArgumentException>(
-                action:     () => SemanticVersion.Parse("5", ParseMode.Lenient),
-                message:    $"Failure: vector V2"
+                () => SemanticVersion.Parse("5", ParseMode.Lenient)
+                );
+        }
+
+        /// <summary>
+        /// Tests that combinations of component states and <see cref="ParseMode"/>s
+        /// anticipated to cause a <see cref="FormatException"/> do so.
+        /// </summary>
+        [DataRow("1.2.x", ParseMode.Lenient)]
+        [DataRow("1.x", ParseMode.Lenient)]
+        [DataRow("x", ParseMode.Lenient)]
+        [DataRow("1.x.0", InternalModes.AllowWildcard)]
+        [DataRow("x.2", InternalModes.AllowWildcard)]
+        [DataRow("X.2.3", InternalModes.AllowWildcard)]
+        [DataRow("*.*.15", InternalModes.AllowWildcard)]
+        // A wildcard with pre-release identifiers or build metadata doesn't really
+        // make sense, and 'node-semver' appears to ignore them anyway.
+        [DataRow("1.0.x-alpha", InternalModes.AllowWildcard)]
+        [DataRow("1.x-beta", InternalModes.AllowWildcard)]
+        [DataRow("1.x.x-beta", InternalModes.AllowWildcard)]
+        [DataRow("x.x.x-rc", InternalModes.AllowWildcard)]
+        [DataRow("X.X-rc", InternalModes.AllowWildcard)]
+        [DataRow("*-rc", InternalModes.AllowWildcard)]
+        [DataRow("1.0.x+alpha", InternalModes.AllowWildcard)]
+        [DataRow("1.x+beta", InternalModes.AllowWildcard)]
+        [DataRow("1.x.x+beta", InternalModes.AllowWildcard)]
+        [DataRow("x.x.x+rc", InternalModes.AllowWildcard)]
+        [DataRow("X.X+rc", InternalModes.AllowWildcard)]
+        [DataRow("*+rc", InternalModes.AllowWildcard)]
+        [DataTestMethod, TestCategory(Category)]
+        public void Parse_ComponentStates_FormatException(string input, ParseMode mode)
+        {
+            // Regular
+            Assert.ThrowsException<FormatException>(
+                () => SemanticVersion.Parse(input, mode)
                 );
 
-            // Tests for invalid input which should throw [FormatException]
-            (string VID, string Input, ParseMode mode)[] vectors3 =
-            {
-                ("V3.1",    "1.2.x",    ParseMode.Lenient),
-                ("V3.2",    "1.x",      ParseMode.Lenient),
-                ("V3.3",    "x",        ParseMode.Lenient),
-                ("V3.4",    "1.x.0",    wcard),
-                ("V3.5",    "x.2",      wcard),
-                ("V3.6",    "X.2.3",    wcard),
-                ("V3.7",    "*.*.15",   wcard),
-
-                // Wildcards with pre-release identifiers or build metadata make
-                // no logical sense, and don't appear to work in 'node-semver' anyway
-                ("V3.8",    "1.0.x-alpha",  wcard),
-                ("V3.9",    "1.x-beta",     wcard),
-                ("V3.10",   "1.x.x-beta",   wcard),
-                ("V3.11",   "x.x.x-rc",     wcard),
-                ("V3.12",   "X.X-rc",       wcard),
-                ("V3.13",   "*-rc",         wcard),
-
-                ("V3.14",   "1.0.x+alpha",  wcard),
-                ("V3.15",   "1.x+beta",     wcard),
-                ("V3.16",   "1.x.x+beta",   wcard),
-                ("V3.17",   "x.x.x+rc",     wcard),
-                ("V3.18",   "X.X+rc",       wcard),
-                ("V3.19",   "*+rc",         wcard),
-            };
-
-            foreach (var vector in vectors3)
-            {
-                Assert.ThrowsException<FormatException>(
-                    action:  () => SemanticVersion.Parse(vector.Input, vector.mode),
-                    message: $"Failure: vector {vector.VID}"
-                    );
-            }
+            // When outputing the enumerator
+            Assert.ThrowsException<FormatException>(
+                () => SemanticVersion.Parse(input, mode, out _)
+                );
         }
+
 
         /// <summary>
         /// <para>
