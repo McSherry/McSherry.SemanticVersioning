@@ -10,7 +10,8 @@
             net46;
             netcoreapp1.0;
             netcoreapp2.1;
-            netcoreapp3.1
+            netcoreapp3.1;
+            net5
         </TargetFrameworks>
     </PropertyGroup>
     
