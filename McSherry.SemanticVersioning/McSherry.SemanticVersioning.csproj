@@ -30,6 +30,10 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DebugType>portable</DebugType>
+        
+        <!-- Builds sometimes seem to fail when targeting old .NET Core, etc. This
+             should disable using the package files that cause the failure. -->
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     </PropertyGroup>
     
     <!-- .NET 4.5 -->

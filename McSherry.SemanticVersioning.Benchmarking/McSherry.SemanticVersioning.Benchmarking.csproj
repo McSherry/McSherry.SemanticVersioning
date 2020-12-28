@@ -4,6 +4,10 @@
     <OutputType>Library</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
+
+    <!-- Builds sometimes seem to fail when targeting old .NET Core, etc. This
+            should disable using the package files that cause the failure. -->
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>
 
   <ItemGroup>
