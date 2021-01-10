@@ -17,7 +17,7 @@ semantic versions.
 - Practically full support[**\***][10] for [`node-semver`][9] version ranges (up to v6.0.0)
 - Provides parsing, comparison, and formatting
 - Flexible and configurable parsing to suit nearly any application
-- Targets .NET Framework 4.5/4.6, .NET Core 1.0/2.1/3.1, and .NET Standard 1.0
+- Targets .NET 5, .NET Core 1.0/2.1/3.1, .NET Standard 1.0, and .NET Framework 4.5/4.6
 - Common Language Specification (CLS) compliant
 
 [7]: <https://semver.org/spec/v2.0.0.html>
@@ -106,4 +106,4 @@ and the [markdown documentation][4]).
 
 The project is licensed under the MIT licence.
 
-Copyright &copy; 2015-20 Liam McSherry.
+Copyright &copy; 2015-21 Liam McSherry.

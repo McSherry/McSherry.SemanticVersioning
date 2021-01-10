@@ -5,16 +5,16 @@
         <Title>Semantic Versioning for .NET</Title>
         <AssemblyName>McSherry.SemanticVersioning</AssemblyName>
         <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
-        <Version>1.4.0</Version>
+        <Version>1.4.1</Version>
         <PackageId>McSherry.SemanticVersioning</PackageId>
         <Authors>Liam McSherry</Authors>
-        <Copyright>2015-20 © Liam McSherry</Copyright>
+        <Copyright>2015-21 © Liam McSherry</Copyright>
         <PackageProjectUrl>https://github.com/McSherry/McSherry.SemanticVersioning</PackageProjectUrl>
         <RepositoryUrl>https://github.com/McSherry/McSherry.SemanticVersioning</RepositoryUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>A comprehensive library for working with Semantic Versions (2.0.0), version ranges (node-semver v6.0.0), and Monotonic Versions (1.2).</Description>
         <PackageTags>semantic;sem;version;ver;versioning;semantic versioning;semver;2.0.0;monotonic;mo;mover;monotonic versioning;library;lib</PackageTags>
-        <PackageReleaseNotes>This minor update adds new features, new targets, and corrections. Full release notes are available from GitHub, with the key feature in this release being support for free-form formatting via custom format strings.</PackageReleaseNotes>
+        <PackageReleaseNotes>This patch release adds a .NET 5 build target.</PackageReleaseNotes>
         
         <!-- Build-related information -->
         <TargetFrameworks>
