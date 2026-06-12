@@ -5,7 +5,7 @@
         <Title>Semantic Versioning for .NET</Title>
         <AssemblyName>McSherry.SemanticVersioning</AssemblyName>
         <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
-        <Version>1.4.1</Version>
+        <Version>1.5.0</Version>
         <PackageId>McSherry.SemanticVersioning</PackageId>
         <Authors>Liam McSherry</Authors>
         <Copyright>2015-26 (c) Liam McSherry</Copyright>
@@ -14,7 +14,7 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>A comprehensive library for working with Semantic Versions (2.0.0), version ranges (node-semver v6.0.0), and Monotonic Versions (1.2).</Description>
         <PackageTags>semantic;sem;version;ver;versioning;semantic versioning;semver;2.0.0;monotonic;mo;mover;monotonic versioning;library;lib</PackageTags>
-        <PackageReleaseNotes>This patch release adds a .NET 5 build target.</PackageReleaseNotes>
+        <PackageReleaseNotes>This minor release updates the build targets to modern, supported ones. It also enables nullable reference types and pins the minimum C# version at 8.0.</PackageReleaseNotes>
 
         <!-- Opt-in features -->
         <LangVersion>8.0</LangVersion>
