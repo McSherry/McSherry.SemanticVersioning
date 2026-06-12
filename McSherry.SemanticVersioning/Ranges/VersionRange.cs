@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-19 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -206,7 +206,7 @@ namespace McSherry.SemanticVersioning.Ranges
         /// are surrounded by <c><see langword="lock"/> (<see cref="SynchronizationObject"/>)</c>.
         /// </para>
         /// </remarks>
-        public IDictionary<SemanticVersion, bool> MemoizationAgent
+        public IDictionary<SemanticVersion, bool>? MemoizationAgent
         {
             get; set;
         }

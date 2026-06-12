@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-19 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,7 @@
 // SOFTWARE.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -189,8 +190,8 @@ namespace McSherry.SemanticVersioning.Ranges
             private readonly bool _successfulCreation;
             // Property backing fields.
             private readonly ParseResultType _type;
-            private readonly ResultSet _results;
-            private readonly Lazy<Exception> _innerEx;
+            private readonly ResultSet? _results;
+            private readonly Lazy<Exception?>? _innerEx;
 
             /// <summary>
             /// <para>
@@ -297,7 +298,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 _type = error;
                 _results = null;
-                _innerEx = new Lazy<Exception>(() => null);
+                _innerEx = new Lazy<Exception?>(() => null);
                 _successfulCreation = true;
             }
             /// <summary>
@@ -313,15 +314,11 @@ namespace McSherry.SemanticVersioning.Ranges
             /// <param name="innerException">
             /// The inner exception to store in the parse result.
             /// </param>
-            /// <exception cref="ArgumentNullException">
-            /// Thrown when <paramref name="innerException"/> is null.
-            /// </exception>
             /// <exception cref="ArgumentException">
             /// Thrown when <paramref name="error"/> is invalid
             /// or unrecognised.
             /// </exception>
-            public ParseResult(ParseResultType error, 
-                               Lazy<Exception> innerException)
+            public ParseResult(ParseResultType error, Lazy<Exception> innerException)
             {
                 if (error == Success)
                 {
@@ -329,15 +326,6 @@ namespace McSherry.SemanticVersioning.Ranges
                         message:    "A failure-state [VR.ParseResult] cannot " +
                                     "be created with the [Success] status.",
                         paramName:  nameof(error));
-                }
-
-                if (innerException == null)
-                {
-                    throw new ArgumentNullException(
-                        paramName:  nameof(innerException),
-                        message:    "The provided inner exception cannot " +
-                                    "be null."
-                        );
                 }
 
                 if (!Enum.IsDefined(typeof(ParseResultType), error))
@@ -361,7 +349,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 _type = error;
                 _results = null;
-                _innerEx = innerException;
+                _innerEx = innerException!;
                 _successfulCreation = true;
             }
 
@@ -377,14 +365,14 @@ namespace McSherry.SemanticVersioning.Ranges
             /// parser.
             /// </para>
             /// </summary>
-            public ResultSet ComparatorSets => VerifyResult(_results);
+            public ResultSet ComparatorSets => VerifyResult(_results!);
             /// <summary>
             /// <para>
             /// The exception that is stored in the parse result to
             /// provide additional error information.
             /// </para>
             /// </summary>
-            private Exception InnerException => VerifyResult(_innerEx.Value);
+            private Exception InnerException => VerifyResult(_innerEx!.Value!);
 
             /// <summary>
             /// <para>
@@ -669,7 +657,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 // Where we'll store the lefthand version of a binary infix
                 // operator, if we encounter one.
-                string leftVerStr = null;
+                string? leftVerStr = null;
 
                 // The default modes for the parser, and temporary modes which
                 // are reset after a version string is parsed.
@@ -796,7 +784,7 @@ namespace McSherry.SemanticVersioning.Ranges
                             if (@operator < 0)
                             {
                                 // Identify the operator
-                                @operator = OperatorMap[new string(input.Value, 1)];
+                                @operator = OperatorMap[new string(input!.Value, 1)];
                                 // Consume input and return
                                 PushState(State.UnarySimple, State.Consume);
                             }
@@ -849,7 +837,7 @@ namespace McSherry.SemanticVersioning.Ranges
                             if (builder.Length == 0)
                             {
                                 // Accumulate
-                                builder.Append(input.Value);
+                                builder.Append(input!.Value);
 
                                 // Consume and repeat
                                 PushState(State.UnaryComplex, State.Consume);
@@ -1118,7 +1106,7 @@ namespace McSherry.SemanticVersioning.Ranges
                                 // to allow wildcards.
                                 tempMode = InternalModes.AllowWildcard;
 
-                                var sv = CollectVersion(leftVerStr);
+                                var sv = CollectVersion(leftVerStr!);
 
                                 PushState(State.Terminate);
 
@@ -1180,7 +1168,7 @@ namespace McSherry.SemanticVersioning.Ranges
                                         // Try to parse whatever we have
                                         tempMode = InternalModes.AllowWildcard;
 
-                                        var sv = CollectVersion(leftVerStr);
+                                        var sv = CollectVersion(leftVerStr!);
 
                                         // If it's not valid, terminate.
                                         if (sv == null)
@@ -1214,7 +1202,7 @@ namespace McSherry.SemanticVersioning.Ranges
                             {
                                 tempMode = InternalModes.AllowWildcard;
 
-                                var sv = CollectVersion(leftVerStr);
+                                var sv = CollectVersion(leftVerStr!);
 
                                 if (sv == null)
                                 {
@@ -1281,7 +1269,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 return result;
 
 
-                SemanticVersion CollectVersion(string verString)
+                SemanticVersion? CollectVersion(string verString)
                 {
                     var verParse = SemanticVersion.Parser.Parse(
                         input:  verString,
@@ -1292,7 +1280,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                     if (verParse.Type == SemanticVersion.ParseResultType.Success)
                     {
-                        return verParse.Version;
+                        return verParse.Version!;
                     }
                     else
                     {
@@ -1319,7 +1307,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
                 bool HasWildcard(SemanticVersion sv)
                 {
-                    return sv.ParseInfo.MajorState == ComponentState.Wildcard ||
+                    return sv.ParseInfo!.MajorState == ComponentState.Wildcard ||
                            sv.ParseInfo.MinorState == ComponentState.Wildcard ||
                            sv.ParseInfo.PatchState == ComponentState.Wildcard;
                 }
@@ -1392,7 +1380,7 @@ namespace McSherry.SemanticVersioning.Ranges
         /// <returns>
         /// True on success, false on failure.
         /// </returns>
-        public static bool TryParse(string range, out VersionRange result)
+        public static bool TryParse(string range, [NotNullWhen(true)] out VersionRange? result)
         {
             var parseResult = Parser.Parse(range);
 

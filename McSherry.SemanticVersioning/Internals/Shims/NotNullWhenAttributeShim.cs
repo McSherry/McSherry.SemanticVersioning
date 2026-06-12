@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2020 Liam McSherry
+// Copyright (c) 2026 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,21 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-#if COMMON_SHIMS
-namespace System.Runtime.Serialization
+
+namespace McSherry.SemanticVersioning.Internals.Shims
 {
+#if COMMON_SHIMS
     /// <summary>
+    /// <para>
     /// A shim to allow .NET Standard configurations to build.
+    /// </para>
     /// </summary>
     [AttributeUsage(AttributeTargets.All)]
-    internal sealed class OptionalFieldAttribute : Attribute
+    internal sealed class NotNullWhenAttribute : Attribute
     {
-
+        public NotNullWhenAttribute(bool value)
+        {
+            
+        }
     }
-}
 #endif
+}

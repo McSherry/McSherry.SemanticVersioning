@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-19 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -92,7 +92,7 @@ namespace McSherry.SemanticVersioning
         /// True if the provided <see cref="SemanticVersion"/>s are
         /// equal in value. False if otherwise.
         /// </returns>
-        public static bool operator ==(SemanticVersion l, SemanticVersion r)
+        public static bool operator ==(SemanticVersion? l, SemanticVersion? r)
         {
             // If only one of the two operands is null, they are not equal.
             if (ReferenceEquals(l, null) ^ ReferenceEquals(r, null))
@@ -124,7 +124,7 @@ namespace McSherry.SemanticVersioning
         /// True if the provided <see cref="SemanticVersion"/>s are
         /// not equal in value. False if otherwise.
         /// </returns>
-        public static bool operator !=(SemanticVersion l, SemanticVersion r)
+        public static bool operator !=(SemanticVersion? l, SemanticVersion? r)
         {
             return !(l == r);
         }
@@ -145,7 +145,7 @@ namespace McSherry.SemanticVersioning
         /// True if <paramref name="l"/> has greater precedence than
         /// <paramref name="r"/>. False if otherwise.
         /// </returns>
-        public static bool operator >(SemanticVersion l, SemanticVersion r)
+        public static bool operator >(SemanticVersion? l, SemanticVersion? r)
         {
             // If they're equal, then one cannot have greater precedence than
             // the other. Similarly, if [l] is null, it cannot have greater
@@ -174,7 +174,7 @@ namespace McSherry.SemanticVersioning
         /// True if <paramref name="l"/> has lesser precedence than
         /// <paramref name="r"/>. False if otherwise.
         /// </returns>
-        public static bool operator <(SemanticVersion l, SemanticVersion r)
+        public static bool operator <(SemanticVersion? l, SemanticVersion? r)
         {
             // No need for extra code, we can just swap the operands around and
             // use our already-defined [operator>] implementation.
@@ -198,7 +198,7 @@ namespace McSherry.SemanticVersioning
         /// greater than the precedence of <paramref name="r"/>. False if
         /// otherwise.
         /// </returns>
-        public static bool operator >=(SemanticVersion l, SemanticVersion r)
+        public static bool operator >=(SemanticVersion? l, SemanticVersion? r)
         {
             return l?.EquivalentTo(r) == true || l == r || (l > r);
         }
@@ -219,7 +219,7 @@ namespace McSherry.SemanticVersioning
         /// True if the precedence of <paramref name="l"/> is equal to or less
         /// than the precedence of <paramref name="r"/>. False if otherwise.
         /// </returns>
-        public static bool operator <=(SemanticVersion l, SemanticVersion r)
+        public static bool operator <=(SemanticVersion? l, SemanticVersion? r)
         {
             return l?.EquivalentTo(r) == true || l == r || (l < r);
         }
@@ -268,7 +268,7 @@ namespace McSherry.SemanticVersioning
         private readonly int _major, _minor, _patch;
         private readonly List<string> _prIds, _metadata;
         [OptionalField]
-        private readonly ParseMetadata _parseInfo;
+        private readonly ParseMetadata? _parseInfo;
 
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace McSherry.SemanticVersioning
         /// parsed or, if this instance wasn't parsed, null.
         /// </para>
         /// </summary>
-        internal ParseMetadata ParseInfo => _parseInfo;
+        internal ParseMetadata? ParseInfo => _parseInfo;
 
         internal SemanticVersion(
             int major, int minor, int patch,
@@ -595,7 +595,7 @@ namespace McSherry.SemanticVersioning
         /// the value of <see cref="Metadata"/> is ignored.
         /// </para>
         /// </remarks>
-        public bool EquivalentTo(SemanticVersion semver)
+        public bool EquivalentTo(SemanticVersion? semver)
         {
             // If [semver] is null, we can't be equivalent to it.
             if (object.ReferenceEquals(semver, null))
@@ -793,7 +793,7 @@ namespace McSherry.SemanticVersioning
         /// metadata.
         /// </para>
         /// </remarks>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return this.Equals(obj as SemanticVersion);
         }
@@ -860,7 +860,7 @@ namespace McSherry.SemanticVersioning
         /// metadata.
         /// </para>
         /// </remarks>
-        public bool Equals(SemanticVersion semver)
+        public bool Equals(SemanticVersion? semver)
         {
             // This is an instance method and so requires an instance to work,
             // so if we're passed [null] it can't be equal.
@@ -919,7 +919,7 @@ namespace McSherry.SemanticVersioning
         ///     </item>
         /// </list>
         /// </returns>
-        public int CompareTo(SemanticVersion semver)
+        public int CompareTo(SemanticVersion? semver)
         {
             // If what we're comparing to is null, then it must
             // be the lowest precedence because it has no value.

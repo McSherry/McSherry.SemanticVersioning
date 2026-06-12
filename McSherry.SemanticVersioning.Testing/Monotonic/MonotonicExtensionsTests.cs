@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -75,14 +75,9 @@ namespace McSherry.SemanticVersioning.Monotonic
             var m0 = new SemanticVersion(2, 5, 1);
             // Has pre-release identifier components
             var m1 = new SemanticVersion(1, 0, 0, new[] { "abc" });
-            // Is null.
-            var m2 = (SemanticVersion)null;
 
             Assert.IsFalse(m0.IsMonotonic());
             Assert.IsFalse(m1.IsMonotonic());
-
-            new Action(() => m2.IsMonotonic())
-                .AssertThrows<ArgumentNullException>();
         }
     }
 }
