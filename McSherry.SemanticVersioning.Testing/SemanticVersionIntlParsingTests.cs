@@ -82,7 +82,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("\t   {0}")]
         [DataRow("{0}\t   ")]
         [DataRow("\t {0}\t ")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Normalise(string format)
         {
             var seed = "1.2.3";
@@ -100,7 +100,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(null)]
         [DataRow("")]
         [DataRow(" \t  ")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Normalise_NullString(string input)
         {
             var res = Parser.Normalise(ref input, ParseMode.Strict);
@@ -111,7 +111,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("v1.2.3")]
         [DataRow("V1.2.3")]
         [DataRow("€1.2.3")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Normalise_PreTrioInvalidChar(string input)
         {
             var res = Parser.Normalise(ref input, ParseMode.Strict);
@@ -122,7 +122,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("{0}")]
         [DataRow("v{0}")]
         [DataRow("V{0}")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Normalise_AllowPrefix(string format)
         {
             const string Seed = "1.2.3";
@@ -136,7 +136,7 @@ namespace McSherry.SemanticVersioning
         }
 
         [DataRow("€1.2.3")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Normalise_AllowPrefix_PreTrioInvalidChar(string input)
         {
             var res = Parser.Normalise(ref input, ParseMode.AllowPrefix);
@@ -162,10 +162,10 @@ namespace McSherry.SemanticVersioning
         }
 
         [DataRow(ParseResultType.NullString)]
-        [DataTestMethod, TestCategory(Category)]
-        public void ParseResult_CreateException_ArgumentNullException(int error)
+        [TestMethod, TestCategory(Category)]
+        internal void ParseResult_CreateException_ArgumentNullException(ParseResultType error)
         {
-            var pr = new ParseResult((ParseResultType)error);
+            var pr = new ParseResult(error);
 
             var ex = pr.CreateException();
 
@@ -176,10 +176,10 @@ namespace McSherry.SemanticVersioning
         [DataRow(ParseResultType.TrioItemMissing)]
         [DataRow(ParseResultType.IdentifierMissing)]
         [DataRow(ParseResultType.MetadataMissing)]
-        [DataTestMethod, TestCategory(Category)]
-        public void ParseResult_CreateException_ArgumentException(int error)
+        [TestMethod, TestCategory(Category)]
+        internal void ParseResult_CreateException_ArgumentException(ParseResultType error)
         {
-            var pr = new ParseResult((ParseResultType)error);
+            var pr = new ParseResult(error);
 
             var ex = pr.CreateException();
 
@@ -191,10 +191,10 @@ namespace McSherry.SemanticVersioning
         [DataRow(ParseResultType.TrioItemLeadingZero)]
         [DataRow(ParseResultType.IdentifierInvalid)]
         [DataRow(ParseResultType.MetadataInvalid)]
-        [DataTestMethod, TestCategory(Category)]
-        public void ParseResult_CreateException_FormatException(int error)
+        [TestMethod, TestCategory(Category)]
+        internal void ParseResult_CreateException_FormatException(ParseResultType error)
         {
-            var pr = new ParseResult((ParseResultType)error);
+            var pr = new ParseResult(error);
 
             var ex = pr.CreateException();
 
@@ -202,10 +202,10 @@ namespace McSherry.SemanticVersioning
         }
 
         [DataRow(ParseResultType.TrioItemOverflow)]
-        [DataTestMethod, TestCategory(Category)]
-        public void ParseResult_CreateException_OverflowException(int error)
+        [TestMethod, TestCategory(Category)]
+        internal void ParseResult_CreateException_OverflowException(ParseResultType error)
         {
-            var pr = new ParseResult((ParseResultType)error);
+            var pr = new ParseResult(error);
 
             var ex = pr.CreateException();
 
@@ -247,7 +247,7 @@ namespace McSherry.SemanticVersioning
         /// </summary>
         [DataRow("1.0.1", 1, 0, 1)]
         [DataRow("1.10.0", 1, 10, 0)]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_Basic(string verString, int major, int minor, int patch)
         {
             var pr = Parser.Parse(verString, ParseMode.Strict);
@@ -278,7 +278,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.0.0--doublehyphen+-startinghyphen", new[] { "-doublehyphen" }, new[] { "-startinghyphen" })]
         [DataRow("1.0.0-secondhas.-hyphen+secondhas.-hyphen", new[] { "secondhas", "-hyphen" }, new[] { "secondhas", "-hyphen" })]
         [DataRow("1.0.0--.--+-.--", new[] { "-", "--" }, new[] { "-", "--" })]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_MetaAndIDs(string verString, string[] id, string[] meta)
         {
             var pr = Parser.Parse(verString, ParseMode.Strict);
@@ -310,7 +310,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.0.0+20130313144700")]
         [DataRow("1.0.0-beta+exp.sha.5114f85")]
         [DataRow("1.0.0--.--+-.--")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_IgnoreWhitespace(string verString)
         {
             var basic = Parser.Parse(verString, ParseMode.Strict).Version;
@@ -322,7 +322,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(null)]
         [DataRow("")]
         [DataRow("  \t  ")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_NullString(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -331,7 +331,7 @@ namespace McSherry.SemanticVersioning
         }
 
         [DataRow("ẅ1.0.0")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_PreTrioInvalidChar(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -342,7 +342,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1ñ.0.0")]
         [DataRow("1.û0.0")]
         [DataRow("1.0.ç0")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_TrioInvalidChar(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -353,6 +353,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("01.0.0")]
         [DataRow("1.00.0")]
         [DataRow("1.0.00")]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_TrioItemLeadingZero(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -370,6 +371,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.0.")]
         [DataRow("1.0.-rc")]
         [DataRow("1.0.+rc")]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_TrioItemMissing(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -380,7 +382,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("2147483649.0.0")]
         [DataRow("1.2147483649.0")]
         [DataRow("1.1.2147483649")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_TrioItemOverflow(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -390,7 +392,7 @@ namespace McSherry.SemanticVersioning
 
         [DataRow("1.0.0-")]
         [DataRow("1.0.0-rc.")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_IdentifierMissing(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -400,7 +402,7 @@ namespace McSherry.SemanticVersioning
 
         [DataRow("1.0.0-öffentlich")]
         [DataRow("1.0.0-00.2")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_IdentifierInvalid(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -410,7 +412,7 @@ namespace McSherry.SemanticVersioning
 
         [DataRow("1.0.0+")]
         [DataRow("1.0.0+a972bae.")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_MetadataMissing(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -419,7 +421,7 @@ namespace McSherry.SemanticVersioning
         }
 
         [DataRow("1.0.0+schlüssel.534a")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Strict_MetadataInvalid(string input)
         {
             var pi = Parser.Parse(input, ParseMode.Strict);
@@ -443,7 +445,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.0.0+20130313144700")]
         [DataRow("1.0.0-beta+exp.sha.5114f85")]
         [DataRow("1.0.0--.--+-.--")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_AllowPrefix(string verString)
         {
             var basic = Parser.Parse(verString, ParseMode.Strict).Version;
@@ -467,7 +469,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.0.0 !", " !", ParseMode.Greedy)]
         [DataRow("1.0 SDF", " SDF", ParseMode.Greedy)]
         [DataRow("1.0.0.0", ".0", ParseMode.Greedy)]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_OutputsIEnumeratorT(string verString, string expected, ParseMode mode)
         {
             IEnumerator<char> parseIter, tryParseIter;
@@ -508,7 +510,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.0.0+20130313144700")]
         [DataRow("1.0.0-beta+exp.sha.5114f85")]
         [DataRow("1.0.0--.--+-.--")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_OptionalPatch(string verString)
         {
             var basic = Parser.Parse(verString, ParseMode.Strict).Version;
@@ -520,14 +522,14 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.0.", ParseResultType.TrioItemMissing)]
         [DataRow("1.0.-rc", ParseResultType.TrioItemMissing)]
         [DataRow("1.0.+a972bae", ParseResultType.TrioItemMissing)]
-        [DataTestMethod, TestCategory(Category)]
-        public void Parse_OptionalPatch_Failure(string input, int result)
+        [TestMethod, TestCategory(Category)]
+        internal void Parse_OptionalPatch_Failure(string input, ParseResultType result)
         {
             var pi = Parser.Parse(input, ParseMode.OptionalPatch);
 
             // The [ParseResultType] enum isn't publicly accessible and the test
             // runner seems to ignore non-public tests, so a cast is the workaround.
-            Assert.AreEqual((ParseResultType)result, pi.Type);
+            Assert.AreEqual(result, pi.Type);
         }
 
 
@@ -541,7 +543,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("2", "2.0.0")]
         [DataRow("3.5", "3.5.0")]
         [DataRow("4.7.2", "4.7.2")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_OptionalMinor(string input, string expected)
         {
             // The [OptionalPatch] flag must also be specified for [OptionalMinor] to
@@ -565,7 +567,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("3", ParseMode.OptionalPatch)]
         [DataRow("4", InternalModes.OptionalMinor)]
         [DataRow("4..0", InternalModes.OptionalMinor | ParseMode.OptionalPatch)]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_OptionalMinor_Failure(string input, ParseMode mode)
         {
             Assert.Throws<ArgumentException>(() => SemanticVersion.Parse(input, mode));
@@ -578,7 +580,7 @@ namespace McSherry.SemanticVersioning
         /// </summary>
         [DataRow(ParseMode.OptionalPatch)]
         [DataRow(ParseMode.OptionalPatch | InternalModes.OptionalMinor)]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_ComponentStates_AllPresent(ParseMode mode)
         {
             var pi = SemanticVersion.Parse("1.2.3", mode).ParseInfo;
@@ -595,7 +597,7 @@ namespace McSherry.SemanticVersioning
         [DataRow(ParseMode.OptionalPatch)]
         [DataRow(ParseMode.OptionalPatch | InternalModes.OptionalMinor)]
         [DataRow(ParseMode.Lenient)]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_ComponentStates_PatchOmitted(ParseMode mode)
         {
             var pi = SemanticVersion.Parse("1.2", mode).ParseInfo;
@@ -628,7 +630,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("6.0.x")]
         [DataRow("6.0.X")]
         [DataRow("6.0.*")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_ComponentStates_PatchWildcard(string input)
         {
             var pi = SemanticVersion.Parse(input, InternalModes.AllowWildcard).ParseInfo;
@@ -654,7 +656,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("7.*.x")]
         [DataRow("7.*.X")]
         [DataRow("7.*.*")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_ComponentStates_MinorPatchWildcard(string input)
         {
             var pi = SemanticVersion.Parse(input, InternalModes.AllowWildcard).ParseInfo;
@@ -714,7 +716,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("*.*.x")]
         [DataRow("*.*.X")]
         [DataRow("*.*.*")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_ComponentStates_AllWildcard(string input)
         {
             var pi = SemanticVersion.Parse(input, InternalModes.AllowWildcard).ParseInfo;
@@ -761,7 +763,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("x.x.x+rc", InternalModes.AllowWildcard)]
         [DataRow("X.X+rc", InternalModes.AllowWildcard)]
         [DataRow("*+rc", InternalModes.AllowWildcard)]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_ComponentStates_FormatException(string input, ParseMode mode)
         {
             // Regular
@@ -808,7 +810,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.05", "1.0.0")]
         [DataRow("1.05.0", "1.0.0")]
         [DataRow("1.1.05", "1.1.0")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Greedy(string input, string output)
         {
             var greedy = SemanticVersion.Parse(input, ParseMode.Greedy);
@@ -829,7 +831,7 @@ namespace McSherry.SemanticVersioning
         [DataRow("1.5+abc!!£R", "1.5.0+abc")]
         [DataRow("1.5-ab..cd", "1.5.0-ab")]
         [DataRow("1.5+ab..cd", "1.5.0+ab")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Greedy_OptionalPatch(string input, string output)
         {
             var greedy = SemanticVersion.Parse(input, ParseMode.Greedy | ParseMode.OptionalPatch);
@@ -839,7 +841,7 @@ namespace McSherry.SemanticVersioning
         }
 
         [DataRow("v1", "1.0.0")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Greedy_AllowPrefix(string input, string output)
         {
             var greedy = SemanticVersion.Parse(input, ParseMode.Greedy | ParseMode.AllowPrefix);
@@ -849,7 +851,7 @@ namespace McSherry.SemanticVersioning
         }
 
         [DataRow("v1")]
-        [DataTestMethod, TestCategory(Category)]
+        [TestMethod, TestCategory(Category)]
         public void Parse_Greedy_FormatException(string input)
         {
             Assert.Throws<FormatException>(
