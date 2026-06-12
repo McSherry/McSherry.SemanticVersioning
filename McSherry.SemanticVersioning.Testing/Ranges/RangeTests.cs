@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-20 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -1169,7 +1169,7 @@ namespace McSherry.SemanticVersioning.Ranges
 
             foreach (var vector in vectors4)
             {
-                Assert.ThrowsException<FormatException>(
+                Assert.Throws<FormatException>(
                     action:     () => new VersionRange(vector.Range),
                     message:    $"Failure: vector {vector.VID}"
                     );

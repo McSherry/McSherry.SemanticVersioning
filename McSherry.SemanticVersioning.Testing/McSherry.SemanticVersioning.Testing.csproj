@@ -3,16 +3,15 @@
     <PropertyGroup>
         <AssemblyName>McSherry.SemanticVersioning.Testing</AssemblyName>
         <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
-        <Copyright>2015-20 (c) Liam McSherry</Copyright>
+        <Copyright>2015-26 (c) Liam McSherry</Copyright>
             
         <TargetFrameworks>
-            net45;
-            net46;
-            netcoreapp1.0;
-            netcoreapp2.1;
-            netcoreapp3.1;
-            net5
+            net8.0;
+            net10.0;
         </TargetFrameworks>
+        <OutputType>Exe</OutputType>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+        <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
 
         <!-- Builds sometimes seem to fail when targeting old .NET Core, etc. This
              should disable using the package files that cause the failure. -->
@@ -20,31 +19,13 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+        <PackageReference Include="System.ValueTuple" Version="4.6.2" />
         
-        <PackageReference Include="MSTest.TestAdapter" Version="2.1.1" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.1.1" />
+        <PackageReference Include="MSTest" Version="4.2.3" />
         
         <ProjectReference Include="..\McSherry.SemanticVersioning\McSherry.SemanticVersioning.csproj" />
         
         <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
     </ItemGroup>
-
-    <!-- All but .NET Core 1.0 -->
-    <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp1.0' ">
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
-        <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.6.1" />
-    </ItemGroup>
-    
-    <!-- .NET Core 1.0 -->
-    <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
-        <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.2.0" />
-    </ItemGroup>
-    
-    <!-- .NET Framework -->
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' Or '$(TargetFramework)' == 'net46' ">
-        <DefineConstants>NETFW</DefineConstants>
-    </PropertyGroup>
     
 </Project>

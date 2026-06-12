@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
 
     <!-- Builds sometimes seem to fail when targeting old .NET Core, etc. This
@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+      <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
       
       <ProjectReference Include="..\McSherry.SemanticVersioning\McSherry.SemanticVersioning.csproj" />
   </ItemGroup>

@@ -203,7 +203,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Custom_IndexedPrereleaseID_Failure(string version, int index)
         {
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => ((SemanticVersion)version).ToString($"r{index}")
                 );
         }
@@ -216,7 +216,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Custom_Reserved_rr(string version)
         {
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => ((SemanticVersion)version).ToString("rr")
                 );
         }
@@ -260,7 +260,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Custom_IndexedMetadata_Failure(string version, int index)
         {
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => ((SemanticVersion)version).ToString($"d{index}")
                 );
         }
@@ -273,7 +273,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Custom_Reserved_dd(string version)
         {
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => ((SemanticVersion)version).ToString("dd")
                 );
         }
@@ -297,7 +297,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Custom_VerbatimErrors(string specifiers)
         {
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => ((SemanticVersion)Str_AllComponents).ToString(specifiers)
                 );
         }
@@ -307,7 +307,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Custom_IntParseOverflow(string specifiers)
         {
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => ((SemanticVersion)Str_AllComponents).ToString(specifiers)
                 );
         }

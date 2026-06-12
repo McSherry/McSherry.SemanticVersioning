@@ -8,7 +8,7 @@
         <Version>1.4.1</Version>
         <PackageId>McSherry.SemanticVersioning</PackageId>
         <Authors>Liam McSherry</Authors>
-        <Copyright>2015-21 © Liam McSherry</Copyright>
+        <Copyright>2015-26 (c) Liam McSherry</Copyright>
         <PackageProjectUrl>https://github.com/McSherry/McSherry.SemanticVersioning</PackageProjectUrl>
         <RepositoryUrl>https://github.com/McSherry/McSherry.SemanticVersioning</RepositoryUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -18,13 +18,10 @@
         
         <!-- Build-related information -->
         <TargetFrameworks>
-            net45;
-            net46;
-            netstandard1.0;
-            netcoreapp1.0;
-            netcoreapp2.1;
-            netcoreapp3.1;
-            net5
+            netstandard2.0;
+            net8.0;
+            net10.0;
+            netcoreapp3.1
         </TargetFrameworks>
         <OutputType>Library</OutputType>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -36,34 +33,4 @@
         <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     </PropertyGroup>
     
-    <!-- .NET 4.5 -->
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-        
-    </ItemGroup>
-    
-    <!-- .NET 4.6 -->
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-        
-    </ItemGroup>
-    
-    <!-- .NET Standard 1.0 -->
-    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.0' ">
-    
-    </ItemGroup>
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.0' ">
-        <!-- 
-            The library uses a number of methods/objects not provided
-            by .NET Standard, and defining this constant compiles in
-            replacements that allow the library to work.
-        -->
-        <DefineConstants>COMMON_SHIMS</DefineConstants>
-    </PropertyGroup>
-    
-    <!-- .NET Core 1.0 -->
-    <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
-    
-    </ItemGroup>
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0'">
-        <DefineConstants>COMMON_SHIMS</DefineConstants>
-    </PropertyGroup>
 </Project>
