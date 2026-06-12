@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-18 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -86,7 +86,7 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// <paramref name="x"/> or <paramref name="y"/> is not a valid
         /// monotonic version.
         /// </exception>
-        public int Compare(SemanticVersion x, SemanticVersion y)
+        public int Compare(SemanticVersion? x, SemanticVersion? y)
         {
             const string NonMonMsg =
                 "A non-monotonic version cannot be compared using " +
@@ -114,11 +114,20 @@ namespace McSherry.SemanticVersioning.Monotonic
 
             // If only one of the parameters is null, the null
             // one will have precedence.
-            if (x == null ^ y == null)
-                return x == null ? XGreater : YGreater;
+            if (x is null && y != null)
+                return XGreater;
+
+            if (y is null && x != null)
+                return YGreater;
 
             // If both are equal (including if both are null), then
             // the parameters have the same precedence.
+            //
+            // We have a redundant check here so that the nullability analyser
+            // can figure out for itself that neither [x] nor [y] is null.
+            if (x == null || y == null)
+                return Equal;
+
             if (x == y)
                 return Equal;
 

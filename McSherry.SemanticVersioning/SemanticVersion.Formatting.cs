@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-20 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -164,7 +164,7 @@ namespace McSherry.SemanticVersioning
             /// should be formatted.
             /// </param>
             /// <returns></returns>
-            public static string Format(SemanticVersion semver, string format)
+            public static string Format(SemanticVersion semver, string? format)
             {
                 var sb = new StringBuilder();
 
@@ -172,7 +172,9 @@ namespace McSherry.SemanticVersioning
                 // We'll probably be passed the general format specifier most of
                 // the time, so we can return that format without getting into
                 // parsing the format string.
-                if (String.IsNullOrEmpty(format) || format == SemanticVersionFormat.Default)
+                //
+                // We have a redundant check for the nullability analyser.
+                if (format is null || String.IsNullOrEmpty(format) || format == SemanticVersionFormat.Default)
                 {
                     // The basics are always present
                     sb.AppendFormat("{0}.{1}.{2}", semver.Major, semver.Minor, semver.Patch);
@@ -199,7 +201,7 @@ namespace McSherry.SemanticVersioning
                 }
                 
 
-                IEnumerator<char> iter = null;
+                IEnumerator<char>? iter = null;
                 char? current = null;
                 int pos = -1;
 
@@ -566,7 +568,7 @@ namespace McSherry.SemanticVersioning
         /// Thrown when the format pattern given in <paramref name="format"/>
         /// is not recognised or is invalid.
         /// </exception>
-        string IFormattable.ToString(string format, IFormatProvider provider)
+        string IFormattable.ToString(string? format, IFormatProvider? provider)
         {
             return Formatter.Format(this, format);
         }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-16 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -54,21 +54,9 @@ namespace McSherry.SemanticVersioning.Monotonic
         /// and has no <see cref="SemanticVersion.Identifiers"/>.
         /// </para>
         /// </remarks>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="version"/> is null.
-        /// </exception>
         public static bool IsMonotonic(this SemanticVersion version)
         {
-            if (version == null)
-            {
-                throw new ArgumentNullException(
-                    message:    "The specified version cannot be null.",
-                    paramName:  nameof(version)
-                    );
-            }
-
-            return version.Patch == 0 &&
-                   version.Identifiers.Count == 0;
+            return version.Patch == 0 && version.Identifiers.Count == 0;
         }
     }
 }

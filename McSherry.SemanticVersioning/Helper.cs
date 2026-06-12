@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-19 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -174,7 +175,7 @@ namespace McSherry.SemanticVersioning
         /// </returns>
         public static IReadOnlyDictionary<K, V> AsReadOnly<K, V>(
             this IDictionary<K, V> dictionary
-            )
+            ) where K : notnull
         {
             return new ReadOnlyDictionary<K, V>(dictionary);
         }

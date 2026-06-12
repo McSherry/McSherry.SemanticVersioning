@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-19 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -319,12 +319,6 @@ namespace McSherry.SemanticVersioning.Ranges
             new Action(() => new ParseResult((ParseResultType)(-1), ex))
                     .AssertThrowsExact<ArgumentException>(
                         "Did not throw on invalid status code (1).");
-
-            // Make sure that a null exception provider fails.
-            new Action(
-                () => new ParseResult(ParseResultType.InvalidVersion, null))
-                .AssertThrows<ArgumentNullException>(
-                    "Did not throw on null exception provider.");
 
             // Tests that accessing the properties of a default-constructed
             // [ParseResult] fails with an exception.
