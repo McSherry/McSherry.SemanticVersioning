@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-20 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -148,7 +148,7 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void ParseResult_Ctor_FailOnSuccessCode()
         {
-            Assert.ThrowsException<ArgumentException>(
+            Assert.Throws<ArgumentException>(
                 () => new ParseResult(error: ParseResultType.Success)
                 );
         }
@@ -156,7 +156,7 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void ParseResult_CreateException_FailOnSuccess()
         {
-            Assert.ThrowsException<InvalidOperationException>(
+            Assert.Throws<InvalidOperationException>(
                 new ParseResult((SemanticVersion)"1.0").CreateException
                 );
         }
@@ -233,7 +233,7 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void ParseResult_GetErrorMessage_FailOnSuccess()
         {
-            Assert.ThrowsException<InvalidOperationException>(
+            Assert.Throws<InvalidOperationException>(
                 new ParseResult((SemanticVersion)"1.0").GetErrorMessage
                 );
         }
@@ -568,7 +568,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Parse_OptionalMinor_Failure(string input, ParseMode mode)
         {
-            Assert.ThrowsException<ArgumentException>(() => SemanticVersion.Parse(input, mode));
+            Assert.Throws<ArgumentException>(() => SemanticVersion.Parse(input, mode));
         }
  
 
@@ -731,7 +731,7 @@ namespace McSherry.SemanticVersioning
         [TestMethod, TestCategory(Category)]
         public void Parse_ComponentStates_ArgumentException()
         {
-            Assert.ThrowsException<ArgumentException>(
+            Assert.Throws<ArgumentException>(
                 () => SemanticVersion.Parse("5", ParseMode.Lenient)
                 );
         }
@@ -765,12 +765,12 @@ namespace McSherry.SemanticVersioning
         public void Parse_ComponentStates_FormatException(string input, ParseMode mode)
         {
             // Regular
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => SemanticVersion.Parse(input, mode)
                 );
 
             // When outputing the enumerator
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => SemanticVersion.Parse(input, mode, out _)
                 );
         }
@@ -852,7 +852,7 @@ namespace McSherry.SemanticVersioning
         [DataTestMethod, TestCategory(Category)]
         public void Parse_Greedy_FormatException(string input)
         {
-            Assert.ThrowsException<FormatException>(
+            Assert.Throws<FormatException>(
                 () => SemanticVersion.Parse(input, ParseMode.Greedy)
                 );
         }
