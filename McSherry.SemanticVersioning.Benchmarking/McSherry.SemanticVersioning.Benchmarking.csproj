@@ -4,6 +4,7 @@
     <OutputType>Library</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>McSherry.SemanticVersioning</RootNamespace>
+    <OutputType>Exe</OutputType>
 
     <!-- Builds sometimes seem to fail when targeting old .NET Core, etc. This
             should disable using the package files that cause the failure. -->
