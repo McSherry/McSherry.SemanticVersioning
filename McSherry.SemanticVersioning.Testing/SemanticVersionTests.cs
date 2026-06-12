@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -636,7 +636,7 @@ namespace McSherry.SemanticVersioning
 
             // These tests are mentioned by the MSDN docs, so we're going to
             // use them here just to make sure everything is working fine.
-            Assert.AreEqual(cmp[1].CompareTo(cmp[1]), 0,
+            Assert.AreEqual(0, cmp[1].CompareTo(cmp[1]),
                             "Comparison failed (9).");
             Assert.AreEqual(cmp[1].CompareTo(cmp[2]),
                             -cmp[2].CompareTo(cmp[1]),
