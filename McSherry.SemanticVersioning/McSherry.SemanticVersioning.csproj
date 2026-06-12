@@ -15,6 +15,9 @@
         <Description>A comprehensive library for working with Semantic Versions (2.0.0), version ranges (node-semver v6.0.0), and Monotonic Versions (1.2).</Description>
         <PackageTags>semantic;sem;version;ver;versioning;semantic versioning;semver;2.0.0;monotonic;mo;mover;monotonic versioning;library;lib</PackageTags>
         <PackageReleaseNotes>This patch release adds a .NET 5 build target.</PackageReleaseNotes>
+
+        <!-- Opt-in features -->
+        <LangVersion>8.0</LangVersion>
         
         <!-- Build-related information -->
         <TargetFrameworks>
