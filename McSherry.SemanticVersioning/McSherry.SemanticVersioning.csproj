@@ -18,6 +18,7 @@
 
         <!-- Opt-in features -->
         <LangVersion>8.0</LangVersion>
+        <Nullable>Enable</Nullable>
         
         <!-- Build-related information -->
         <TargetFrameworks>
@@ -34,6 +35,19 @@
         <!-- Builds sometimes seem to fail when targeting old .NET Core, etc. This
              should disable using the package files that cause the failure. -->
         <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+    </PropertyGroup>
+    
+    <!-- .NET Standard 2.0 -->
+    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    
+    </ItemGroup>
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+        <!-- 
+            The library uses a number of methods/objects not provided
+            by .NET Standard, and defining this constant compiles in
+            replacements that allow the library to work.
+        -->
+        <DefineConstants>COMMON_SHIMS</DefineConstants>
     </PropertyGroup>
     
 </Project>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-20 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,7 @@
 // SOFTWARE.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -387,7 +388,7 @@ namespace McSherry.SemanticVersioning
             /// the parsing was successful.
             /// </para>
             /// </summary>
-            public SemanticVersion Version
+            public SemanticVersion? Version
             {
                 get;
             }
@@ -538,7 +539,7 @@ namespace McSherry.SemanticVersioning
         {
             public ParseMetadata(
                 ComponentState major, ComponentState minor, ComponentState patch,
-                IEnumerator<char> enumerator)
+                IEnumerator<char>? enumerator)
             {
                 // We can't have subordinate versions if a superior version is
                 // a wildcard. It doesn't really make logical sense, and doesn't
@@ -613,7 +614,7 @@ namespace McSherry.SemanticVersioning
             /// the last character in the version string.
             /// </para>
             /// </summary>
-            public IEnumerator<char> Enumerator
+            public IEnumerator<char>? Enumerator
             {
                 get;
             }
@@ -943,7 +944,7 @@ namespace McSherry.SemanticVersioning
                     // If we encountered an invalid character and we're able to
                     // accept wildcards, we want to check for wildcards.
                     else if (result == ParseResultType.TrioInvalidChar &&
-                        allowWildcards && input.Value.IsRangeWildcard())
+                        allowWildcards && input!.Value.IsRangeWildcard())
                     {
                         majorState = ComponentState.Wildcard;
                         minorState = ComponentState.Wildcard;
@@ -1466,7 +1467,7 @@ namespace McSherry.SemanticVersioning
                 if (normaliseResult != ParseResultType.Success)
                     return new ParseResult(normaliseResult);
 
-                SemanticVersion cacheResult = null;
+                SemanticVersion? cacheResult;
                 ParseResult result;
 
                 // We don't know what the memoization agent actually is, and
@@ -1488,7 +1489,7 @@ namespace McSherry.SemanticVersioning
                     // If they haven't configured an agent, we'll go straight to
                     // parsing. We'll also do this if the input isn't in the
                     // cache.
-                    if (MemoizationAgent?.TryGetValue(input, out cacheResult) != true)
+                    if (!(MemoizationAgent?.TryGetValue(input, out cacheResult) ?? false))
                     {
                         // There is no cache, or the item isn't in the cache.
                         // This means we have to try and parse the input.
@@ -1502,10 +1503,14 @@ namespace McSherry.SemanticVersioning
                         // who won't be expecting them or able to handle them.
                         //
                         // Similarly, we don't cache greedily-parsed versions, as
-                        // these are expected to include invalid input. 
-                        if (result.Type == ParseResultType.Success &&
-                            !(InternalModes.HasAny(mode) || mode.HasFlag(ParseMode.Greedy)))
-                            MemoizationAgent?.Add(input, result.Version);
+                        // these are expected to include invalid input.
+                        if (result.Type == ParseResultType.Success)
+                        {
+                            cacheResult = result.Version;
+
+                            if (!InternalModes.HasAny(mode) && !mode.HasFlag(ParseMode.Greedy))
+                                MemoizationAgent?.Add(input, result.Version!);
+                        }
                     }
                     // The item was in our cache. Our result is what we've
                     // retrieved from our cache.
@@ -1591,7 +1596,7 @@ namespace McSherry.SemanticVersioning
             // If the parsing was successful, return the created version.
             if (result.Type == ParseResultType.Success)
             {
-                enumerator = result.Version.ParseInfo.Enumerator;
+                enumerator = result.Version!.ParseInfo!.Enumerator!;
 
                 return result.Version;
             }
@@ -1704,15 +1709,15 @@ namespace McSherry.SemanticVersioning
         /// </remarks>
         public static bool TryParse(
             string version, ParseMode mode, out SemanticVersion semver,
-            out IEnumerator<char> enumerator)
+            [NotNullWhen(true)] out IEnumerator<char>? enumerator)
         {
             var result = Parser.Parse(version, mode);
 
             // We don't need to perform any checks here. Either we had
             // a success and [Version] has a value, or we didn't and it's
             // null.
-            semver = result.Version;
-            enumerator = result.Version?.ParseInfo.Enumerator;
+            semver = result.Version!;
+            enumerator = result.Version?.ParseInfo!.Enumerator;
 
             // Only [ParseResultType.Success] indicates a successful parsing
             // and the producing of a [SemanticVersion] instance.
@@ -1787,7 +1792,7 @@ namespace McSherry.SemanticVersioning
         /// by <c><see langword="lock"/> (MemoizationAgent)</c>.
         /// </para>
         /// </remarks>
-        public static IDictionary<string, SemanticVersion> MemoizationAgent
+        public static IDictionary<string, SemanticVersion>? MemoizationAgent
         {
             get;
             set;

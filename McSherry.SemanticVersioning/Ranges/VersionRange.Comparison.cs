@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2015-19 Liam McSherry
+﻿// Copyright (c) 2015-26 Liam McSherry
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -243,7 +243,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 //
                 // If no minor version is specified, the tilde operator allows
                 // minor- and patch-level changes.
-                if (comparator.ParseInfo.MinorState == ComponentState.Omitted)
+                if (comparator.ParseInfo!.MinorState == ComponentState.Omitted)
                 {
                     lower = new SemanticVersion(
                         major:       comparator.Major,
@@ -306,7 +306,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 // this will always return true (barring any non-comparability
                 // due to pre-release identifiers, but we leave handling that
                 // to [VersionRange]).
-                if (comparator.ParseInfo.MajorState == ComponentState.Wildcard)
+                if (comparator.ParseInfo!.MajorState == ComponentState.Wildcard)
                 {
                     return (sv) => true;
                 }
@@ -400,11 +400,7 @@ namespace McSherry.SemanticVersioning.Ranges
                         );
                 }
 
-                return new UnaryComparator(impl)
-                {
-                    Operator = op,
-                    Version = semver
-                };
+                return new UnaryComparator(impl, op, semver);
             }
 
             private readonly Predicate<SemanticVersion> _cmpFn;
@@ -418,7 +414,13 @@ namespace McSherry.SemanticVersioning.Ranges
             /// <param name="impl">
             /// The function to use as the comparison function.
             /// </param>
-            private UnaryComparator(Predicate<SemanticVersion> impl)
+            /// <param name="op">
+            /// The operator that comparator is to implement.
+            /// </param>
+            /// <param name="ver">
+            /// The version against which the comparator is to compare.
+            /// </param>
+            private UnaryComparator(Predicate<SemanticVersion> impl, Operator op, SemanticVersion ver)
             {
                 if (impl == null)
                 {
@@ -430,6 +432,8 @@ namespace McSherry.SemanticVersioning.Ranges
                 }
 
                 _cmpFn = impl;
+                Operator = op;
+                Version = ver;
             }
 
             /// <summary>
@@ -438,7 +442,6 @@ namespace McSherry.SemanticVersioning.Ranges
             public Operator Operator
             {
                 get;
-                private set;
             }
             /// <summary>
             /// <para>
@@ -448,7 +451,6 @@ namespace McSherry.SemanticVersioning.Ranges
             public SemanticVersion Version
             {
                 get;
-                private set;
             }
 
             bool IComparator.SatisfiedBy(SemanticVersion comparand)
@@ -497,8 +499,8 @@ namespace McSherry.SemanticVersioning.Ranges
                 // Anything omitted in the left-hand version resets to zero.
                 var lower = new SemanticVersion(
                     major:       lhs.Major,
-                    minor:       lhs.ParseInfo.MinorState == ComponentState.Omitted ? 0 : lhs.Minor,
-                    patch:       lhs.ParseInfo.PatchState == ComponentState.Omitted ? 0 : lhs.Patch,
+                    minor:       lhs.ParseInfo!.MinorState == ComponentState.Omitted ? 0 : lhs.Minor,
+                    patch:       lhs.ParseInfo!.PatchState == ComponentState.Omitted ? 0 : lhs.Patch,
                     identifiers: lhs.Identifiers,
                     metadata:    lhs.Metadata
                     );
@@ -509,7 +511,7 @@ namespace McSherry.SemanticVersioning.Ranges
                 // If the minor version is omitted, the major is incremented by
                 // one, the others are reset to zero, and it's a less-than
                 // comparison only.
-                if (rhs.ParseInfo.MinorState == ComponentState.Omitted)
+                if (rhs.ParseInfo!.MinorState == ComponentState.Omitted)
                 {
                     var upper = new SemanticVersion(
                         major: rhs.Major + 1,
@@ -584,11 +586,7 @@ namespace McSherry.SemanticVersioning.Ranges
             {
                 if (ComparerFactories.TryGetValue(op, out var fact))
                 {
-                    return new BinaryComparator(fact(lhs, rhs))
-                    {
-                        LeftVersion = lhs,
-                        RightVersion = rhs,
-                    };
+                    return new BinaryComparator(fact(lhs, rhs), lhs, rhs);
                 }
                 else
                 {
@@ -602,9 +600,11 @@ namespace McSherry.SemanticVersioning.Ranges
 
             private readonly Predicate<SemanticVersion> _cmp;
 
-            private BinaryComparator(Predicate<SemanticVersion> impl)
+            private BinaryComparator(Predicate<SemanticVersion> impl, SemanticVersion lhs, SemanticVersion rhs)
             {
                 _cmp = impl;
+                LeftVersion = lhs;
+                RightVersion = rhs;
             }
 
 
@@ -617,7 +617,6 @@ namespace McSherry.SemanticVersioning.Ranges
             public SemanticVersion LeftVersion
             {
                 get;
-                private set;
             }
             /// <summary>
             /// <para>
@@ -628,7 +627,6 @@ namespace McSherry.SemanticVersioning.Ranges
             public SemanticVersion RightVersion
             {
                 get;
-                private set;
             }
 
 

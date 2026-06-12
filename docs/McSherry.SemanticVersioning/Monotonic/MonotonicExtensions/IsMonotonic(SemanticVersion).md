@@ -26,11 +26,6 @@ Determines whether a [SemanticVersion][2] is a valid monotonic version.
 
 True if _`version`_ is a valid monotonic version, false if otherwise.
 
-## Exceptions
-
-- **`System.ArgumentNullException`**  
-  _`version`_ is null.
-
 ## Remarks
 
 A [SemanticVersion][2] is considered a valid version if it: has no
